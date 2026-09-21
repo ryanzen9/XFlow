@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "../styles/theme.css";
+@source "./";
+@source "../ui";
+
+html,
+body,
+#root {
+  width: 388px;
+  min-height: 580px;
+}

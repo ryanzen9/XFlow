@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 120,
+  "semi": true,
+  "singleQuote": false,
+  "sortPackageJson": true,
+  "sortTailwindcss": {
+    "stylesheet": "./src/dashboard/styles/dashboard.css",
+    "functions": ["cn"]
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "node_modules/**",
+    "output/**",
+    ".playwright-cli/**",
+    ".agents/**",
+    ".claude/**",
+    "coverage/**",
+    "bun.lock"
+  ]
+}

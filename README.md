@@ -1,0 +1,163 @@
+# XFlow
+
+XFlow 是一个基于 Jev 的 Manifest V3 浏览器扩展。支持配置自定义策略，屏蔽过滤 x 上的相关内容与评论。
+
+- 数据安全可控：数据全程本地存储无留痕。使用 S3 对象存储协议，支持自定义的多设备同步。
+- 多渠道支持：支持多渠道（OpenRouter、Vercel AI Gateway 和 TypeSafe 官方渠道）Api 相关配置。
+- 多策略支持：支持灵活，高定制的策略管理和实时内容过滤和样式处理。
+- 缓存优化：支持 命中缓存 以及 策略标记，减少 token 消耗提升响应速度。
+
+## Quick Start
+
+### 1. Chrome Installation
+
+1. 打开 `chrome 扩展商店`，搜索 `XFlow` 并安装。
+2. 打开 XFlow Dashboard，在「API Keys」中保存至少一个渠道凭证并选中该渠道。
+3. 打开或刷新 `https://x.com/home`，XFlow 即可开始工作。
+
+### 2. Chrome Developer Mode Installation
+
+1. clone 该项目，在本地打开终端进入项目根目录。
+2. 运行 `bun install` 安装依赖， 运行 `bun run build` 构建扩展。
+3. 打开 `chrome://extensions`，开启“开发者模式”。
+4. 点击“加载已解压的扩展程序”，选择本项目的 `dist/` 目录。
+5. 打开 XFlow Dashboard，在「API Keys」中保存至少一个渠道凭证并选中该渠道。
+6. 打开或刷新 `https://x.com/home`，XFlow 即可开始工作。
+
+## Features
+
+[x] 流式监听时间线与评论区，过滤相关内容。
+[x] 每个场景可以配置多条策略、提示词、敏感度和优先级，自定义样式。
+[x] 支持 OpenRouter、Vercel AI Gateway 和 TypeSafe 官方渠道。
+[] Popup、Dashboard 的样式优化与多语言支持。
+[] 支持多设备同步, 支持 s3 协议。
+[] 支持缓存优化，减少 token 消耗并提升响应速度。
+[] 支持内容标记，优化策略表现。
+[] 策略命中日志以及命中数据看板的支持。
+
+## Requirements
+
+- [Bun](https://bun.sh/) 1.3.13 或兼容版本
+- Chrome、Edge 或其他支持 Manifest V3 的 Chromium 浏览器
+- 至少一个受支持渠道的 API Key
+
+## Build and install
+
+```bash
+bun install
+bun run check
+```
+
+`bun run check` 会依次执行格式检查、Lint、TypeScript、Bun 测试和生产构建。构建结果位于 `dist/`。
+
+在 Chrome 中安装：
+
+1. 打开 `chrome://extensions`，开启“开发者模式”。
+2. 点击“加载已解压的扩展程序”，选择本项目的 `dist/` 目录。
+3. 打开 XFlow Dashboard，在「API Keys」中保存至少一个渠道凭证并选中该渠道。
+4. 打开或刷新 `https://x.com/home`。
+
+每次重新构建后，需要在扩展管理页点击“重新加载”，并刷新已经打开的 X 页面。
+
+## Configuration
+
+### General
+
+「通用」提供时间线、评论区总开关与模型昵称。开关立即生效；昵称只用于 Hover 展示，不改变实际模型。
+
+### API Keys
+
+三个渠道的 Key 可以独立保存、替换或清除。后台只调用当前明确选中的渠道，不会在失败时将内容自动转发到其他服务。界面仅展示 Key 的末四位，无法读回完整值。
+
+| Provider          | Model               |
+| ----------------- | ------------------- |
+| OpenRouter        | `typesafe/jev-1.13` |
+| Vercel AI Gateway | `typesafe-ai/jev`   |
+| TypeSafe          | `jev-latest`        |
+
+### Strategies
+
+「策略」包含「时间线博文」和「评论区」两个 Tab，每个 Tab 都有独立策略表。后台按照 P1、P2… 顺序判断，采用第一条达到自身阈值的策略；高优先级未命中时才继续采用后续结果。
+
+敏感度越高，触发遮罩所需概率越低。例如敏感度 70 对应 30% 阈值。保存策略会让所属场景先平滑揭示旧遮罩，再按新配置重新分析，因此可能产生新的 API 请求。
+
+Hover 文案支持：
+
+- `{{strategy.name}}`
+- `{{strategy.hitrate}}`
+- `{{strategy.threshold}}`
+- `{{model.nickname}}`
+- `{{model.id}}`
+- `{{surface}}`
+
+自定义 CSS 只允许 Dashboard 中列出的遮罩选择器和视觉属性，不会直接注入任意页面 CSS。
+
+### Data and S3 sync
+
+「数据」页只展示可修改的应用配置。`schemaVersion`、`configVersion` 与 `updatedAt` 由持久化层维护，不能通过 JSON 编辑器覆盖。
+
+S3 同步使用 path-style URL：`{endpoint}/{bucket}/{objectKey}`。首次启用时扩展会请求 Endpoint 权限；之后在配置写入、浏览器启动和每 15 分钟定时检查时自动同步：
+
+- 本地版本较新或远程对象不存在：推送本地配置。
+- 远程版本较新：拉取并应用远程配置。
+- 版本相同：不覆盖。
+
+Bucket 需要允许扩展来源执行 GET、PUT 和 CORS 预检。
+
+## Privacy and permissions
+
+- 只有启用范围内、从 X 页面提取的文本会发送到当前选中的 Provider。
+- Provider API Key 与 S3 凭据保存在 `chrome.storage.local`，没有额外加密。
+- Content Script 只能访问不含密钥的 session 设置镜像。
+- 配置 JSON 和 S3 远程对象不包含 Provider API Key 或 S3 凭据。
+- 固定主机权限仅包含 X/Twitter 与三个 Provider；任意 S3 HTTPS Endpoint 通过可选权限在用户操作下授予。
+
+加载扩展前，请自行审阅 `manifest.json` 与所选 Provider 的数据政策。不要在测试、Issue、日志或截图中提交真实凭据。
+
+## Development
+
+```bash
+bun run format          # 写入 Oxfmt 格式
+bun run format:check    # 检查格式
+bun run lint            # Oxlint，warning 视为失败
+bun run lint:fix        # 修复可自动处理的规则
+bun run typecheck       # TypeScript 静态检查
+bun test                # Bun 单元测试
+bun run build           # 构建 dist/
+bun run check           # 完整质量门禁
+bun run preview:dashboard
+```
+
+Dashboard 预览使用独立的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。`scripts/qa/` 中保留关键浏览器验收流程，供 Playwright CLI 在预览环境中执行；这些脚本只断言行为，不生成或提交截图。
+
+## Project structure
+
+```text
+.
+├── docs/
+│   ├── architecture.md       # 数据流、信任边界与持久化
+│   └── blur-veil-design.md   # 遮罩交互和动画规范
+├── scripts/
+│   ├── build.ts              # Bun 生产构建
+│   ├── preview-dashboard.ts  # 无真实凭据的本地预览
+│   └── qa/                   # 浏览器验收流程
+├── src/
+│   ├── background/           # Service Worker、Review Service、Provider Adapter
+│   ├── content/              # DOM 提取、控制器、Blur Veil 与动画
+│   ├── dashboard/            # 完整配置界面
+│   ├── popup/                # 扩展弹窗
+│   ├── shared/               # 协议、配置、持久化与纯函数
+│   ├── styles/               # 共享主题 token
+│   └── ui/                   # 共享 UI utility 与主题组件
+├── dashboard.html
+├── popup.html
+└── manifest.json
+```
+
+更完整的模块关系、数据边界和状态机见 [架构文档](docs/architecture.md)。动画行为以 [Blur Veil 设计规范](docs/blur-veil-design.md) 为准。
+
+## Known limitations
+
+- X/Twitter DOM 变化可能导致内容提取失效，需要同步更新选择器与测试夹具。
+- 本仓库尚未添加开源许可证；公开仓库不等于自动授予复制、修改或分发权利。
+- 如有侵权，请及时联系我们删除相关内容。

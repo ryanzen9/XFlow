@@ -1,0 +1,39 @@
+{
+  "name": "x-filter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A privacy-conscious Manifest V3 extension that filters X timelines and replies with Jev.",
+  "type": "module",
+  "scripts": {
+    "build": "bun run scripts/build.ts",
+    "format": "bunx oxfmt --write .",
+    "format:check": "bunx oxfmt --check .",
+    "lint": "bunx oxlint . --deny-warnings",
+    "lint:fix": "bunx oxlint . --fix",
+    "preview:dashboard": "bun run build && bun run scripts/preview-dashboard.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test",
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun test && bun run build"
+  },
+  "dependencies": {
+    "@openrouter/sdk": "^1.3.8",
+    "@typesafe-ai/sdk": "^0.6.0",
+    "ai": "^7.0.107",
+    "clsx": "^2.1.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwind-merge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "@types/bun": "latest",
+    "@types/chrome": "^0.3.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "oxfmt": "^0.68.0",
+    "oxlint": "^1.83.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5"
+  },
+  "packageManager": "bun@1.3.13"
+}

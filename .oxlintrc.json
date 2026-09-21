@@ -1,0 +1,58 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "react", "jsx-a11y", "promise"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "eqeqeq": "error",
+    "react/react-in-jsx-scope": "off",
+    "jsx-a11y/prefer-tag-over-role": "off"
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "node": true,
+    "webextensions": true,
+    "worker": true
+  },
+  "globals": {
+    "Bun": "readonly"
+  },
+  "ignorePatterns": ["dist/**", "node_modules/**", "output/**", ".playwright-cli/**", "coverage/**"],
+  "settings": {
+    "react": {
+      "version": "19.3"
+    }
+  },
+  "overrides": [
+    {
+      "files": ["scripts/qa/**/*.cjs"],
+      "rules": {
+        "no-unused-expressions": "off",
+        "no-shadow": "off",
+        "unicorn/consistent-function-scoping": "off",
+        "unicorn/no-array-sort": "off"
+      }
+    },
+    {
+      "files": ["src/background/services/jev.ts"],
+      "rules": {
+        "no-underscore-dangle": "off"
+      }
+    },
+    {
+      "files": ["src/dashboard/components/DataPanel.tsx"],
+      "rules": {
+        "react/set-state-in-effect": "off"
+      }
+    },
+    {
+      "files": ["src/dashboard/components/StrategyList.tsx"],
+      "rules": {
+        "jsx-a11y/control-has-associated-label": "off"
+      }
+    }
+  ]
+}

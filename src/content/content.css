@@ -1,0 +1,275 @@
+article[data-xfilter-state] {
+  overflow: clip;
+  position: relative !important;
+}
+
+article[data-xfilter-state] > :not(.xfilter-veil-host) {
+  transform-origin: center;
+}
+
+article[data-xfilter-state="obscuring"] > :not(.xfilter-veil-host) {
+  animation: xfilter-obscure-content 360ms cubic-bezier(0.2, 0, 0, 1) both;
+  pointer-events: none !important;
+  will-change: filter, opacity;
+}
+
+article[data-xfilter-state="obscured"] > :not(.xfilter-veil-host) {
+  filter: blur(12px) contrast(0.7) saturate(0.8);
+  opacity: 0.78;
+  pointer-events: none !important;
+}
+
+article[data-xfilter-state="revealing"] > :not(.xfilter-veil-host) {
+  animation: xfilter-reveal-content 300ms cubic-bezier(0.2, 0, 0, 1) 40ms both;
+  pointer-events: none !important;
+  will-change: filter, opacity;
+}
+
+.xfilter-veil-host {
+  all: initial;
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  color: var(--xfilter-post-color, rgb(15, 20, 25));
+  font-family:
+    TwitterChirp,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  pointer-events: none;
+}
+
+article[data-xfilter-state="obscured"] > .xfilter-veil-host,
+article[data-xfilter-state="revealing"] > .xfilter-veil-host {
+  pointer-events: auto;
+}
+
+.xfilter-veil {
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.xfilter-veil::before {
+  position: absolute;
+  inset: 0;
+  background: var(--xfilter-veil-color, rgba(255, 255, 255, 0.72));
+  content: "";
+  opacity: 0;
+}
+
+.xfilter-veil__prompt {
+  position: absolute;
+  top: clamp(44px, 40%, calc(100% - 44px));
+  left: 50%;
+  display: grid;
+  gap: 3px;
+  min-width: 96px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.xfilter-veil__label,
+.xfilter-veil__action {
+  display: block;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.xfilter-veil__label {
+  display: grid;
+  color: var(--xfilter-post-color, rgb(83, 100, 113));
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.xfilter-veil__label-default,
+.xfilter-veil__label-rate {
+  grid-area: 1 / 1;
+  transition:
+    opacity 140ms ease-out,
+    transform 140ms ease-out;
+}
+
+.xfilter-veil__label-default {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.xfilter-veil__label-rate {
+  opacity: 0;
+  transform: translateY(2px);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.xfilter-veil__action {
+  color: rgb(29, 155, 240);
+  font-weight: 600;
+}
+
+article[data-xfilter-state="obscuring"] .xfilter-veil::before {
+  animation: xfilter-veil-in 300ms cubic-bezier(0.2, 0, 0, 1) 60ms both;
+}
+
+article[data-xfilter-state="obscuring"] .xfilter-veil__prompt {
+  animation: xfilter-prompt-in 180ms ease-out 180ms both;
+}
+
+article[data-xfilter-state="obscured"] .xfilter-veil::before {
+  opacity: 1;
+  transition: background-color 140ms ease-out;
+}
+
+article[data-xfilter-state="obscured"] .xfilter-veil__prompt {
+  opacity: 0.78;
+  transition: opacity 140ms ease-out;
+}
+
+article[data-xfilter-state="obscured"] .xfilter-veil:is(:hover, :focus-visible)::before {
+  background: var(--xfilter-veil-hover-color, rgba(255, 255, 255, 0.64));
+}
+
+article[data-xfilter-state="obscured"] .xfilter-veil:is(:hover, :focus-visible) .xfilter-veil__prompt {
+  opacity: 1;
+}
+
+article[data-xfilter-state="obscured"] .xfilter-veil:is(:hover, :focus-visible) .xfilter-veil__label-default {
+  opacity: 0;
+  transform: translateY(-2px);
+}
+
+article[data-xfilter-state="obscured"] .xfilter-veil:is(:hover, :focus-visible) .xfilter-veil__label-rate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+article[data-xfilter-state="revealing"] .xfilter-veil::before {
+  animation: xfilter-veil-out 240ms cubic-bezier(0.2, 0, 0, 1) 40ms both;
+}
+
+article[data-xfilter-state="revealing"] .xfilter-veil__prompt {
+  animation: xfilter-prompt-out 100ms ease-out both;
+}
+
+.xfilter-veil:focus-visible {
+  outline: none;
+}
+
+.xfilter-veil:focus-visible .xfilter-veil__action {
+  outline: 2px solid rgb(29, 155, 240);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+article[data-xfilter-motion="fast"] > :not(.xfilter-veil-host),
+article[data-xfilter-motion="fast"] .xfilter-veil::before,
+article[data-xfilter-motion="fast"] .xfilter-veil__prompt {
+  animation-duration: 120ms !important;
+  animation-delay: 0ms !important;
+}
+
+@keyframes xfilter-obscure-content {
+  0% {
+    filter: blur(0) contrast(1) saturate(1);
+    opacity: 1;
+  }
+  33% {
+    filter: blur(2px) contrast(0.85) saturate(0.8);
+    opacity: 0.92;
+  }
+  78%,
+  100% {
+    filter: blur(12px) contrast(0.7) saturate(0.8);
+    opacity: 0.78;
+  }
+}
+
+@keyframes xfilter-reveal-content {
+  0% {
+    filter: blur(12px) contrast(0.7) saturate(0.8);
+    opacity: 0.78;
+  }
+  55% {
+    filter: blur(6px) contrast(0.85) saturate(0.9);
+    opacity: 0.9;
+  }
+  82% {
+    filter: blur(2px) contrast(0.96) saturate(0.98);
+    opacity: 0.98;
+  }
+  100% {
+    filter: blur(0) contrast(1) saturate(1);
+    opacity: 1;
+  }
+}
+
+@keyframes xfilter-veil-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes xfilter-veil-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes xfilter-prompt-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.78;
+  }
+}
+
+@keyframes xfilter-prompt-out {
+  from {
+    opacity: 0.78;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  article[data-xfilter-state] > :not(.xfilter-veil-host),
+  article[data-xfilter-state] .xfilter-veil::before,
+  article[data-xfilter-state] .xfilter-veil__prompt {
+    animation-duration: 120ms !important;
+    animation-delay: 0ms !important;
+  }
+
+  .xfilter-veil__label-default,
+  .xfilter-veil__label-rate {
+    transition-duration: 120ms;
+  }
+}

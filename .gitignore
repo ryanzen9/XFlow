@@ -1,0 +1,28 @@
+# Dependencies and build artifacts
+node_modules/
+dist/
+coverage/
+output/
+*.lcov
+*.tgz
+
+# Local tools and caches
+.playwright-cli/
+.cache/
+*.tsbuildinfo
+.agents/
+.claude/
+.cursor/
+skills-lock.json
+
+# Local configuration and logs
+.env*
+!.env.example
+logs/
+*.log
+report.*.json
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store

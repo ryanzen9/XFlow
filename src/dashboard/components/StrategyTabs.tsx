@@ -1,0 +1,62 @@
+import type { KeyboardEvent } from "react";
+import type { FilterSurface } from "../../shared";
+import { cn } from "../../ui/cn";
+
+interface Props {
+  value: FilterSurface;
+  counts: Record<FilterSurface, number>;
+  onChange: (surface: FilterSurface) => void;
+}
+
+const surfaces: { id: FilterSurface; label: string; route: string }[] = [
+  { id: "timeline", label: "时间线博文", route: "/home" },
+  { id: "comments", label: "评论区", route: "/status" },
+];
+
+export function StrategyTabs({ value, counts, onChange }: Props) {
+  const selectFromKeyboard = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let next = index;
+    if (event.key === "ArrowRight") next = (index + 1) % surfaces.length;
+    else if (event.key === "ArrowLeft") next = (index - 1 + surfaces.length) % surfaces.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = surfaces.length - 1;
+    else return;
+    event.preventDefault();
+    const surface = surfaces[next]!;
+    onChange(surface.id);
+    document.getElementById(`strategy-tab-${surface.id}`)?.focus();
+  };
+
+  return (
+    <div
+      className="mb-[22px] grid max-w-[1100px] grid-cols-2 border-b border-line-strong sm:mb-[26px]"
+      role="tablist"
+      aria-label="策略场景"
+    >
+      {surfaces.map((surface, index) => (
+        <button
+          key={surface.id}
+          id={`strategy-tab-${surface.id}`}
+          type="button"
+          role="tab"
+          aria-selected={value === surface.id}
+          aria-controls={`strategy-panel-${surface.id}`}
+          tabIndex={value === surface.id ? 0 : -1}
+          onClick={() => onChange(surface.id)}
+          onKeyDown={(event) => selectFromKeyboard(event, index)}
+          className={cn(
+            "relative flex min-h-[58px] items-center justify-between bg-transparent px-3 py-2.5 text-left text-muted transition after:absolute after:right-0 after:bottom-[-2px] after:left-0 after:h-[3px] after:bg-transparent after:content-[''] hover:bg-panel/60 aria-selected:bg-surface aria-selected:text-ink aria-selected:after:bg-signal sm:min-h-16 sm:px-[18px] [&+button]:border-l [&+button]:border-line",
+          )}
+        >
+          <span>
+            <strong className="block text-xs sm:text-sm">{surface.label}</strong>
+            <small className="mt-[3px] block font-mono text-[9px] text-muted">{surface.route}</small>
+          </span>
+          <em className="grid h-[26px] min-w-[26px] place-items-center rounded-full bg-soft px-[7px] font-mono text-[10px] font-semibold text-signal not-italic">
+            {counts[surface.id]}
+          </em>
+        </button>
+      ))}
+    </div>
+  );
+}
