@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { BlurVeil } from "./BlurVeil";
+import { PostFeedback } from "./PostFeedback";
 import { defaultStrategy } from "../../shared";
 
 describe("BlurVeil", () => {
@@ -35,5 +36,21 @@ describe("BlurVeil", () => {
     expect(markup).not.toContain("Jev");
     expect(markup).not.toContain("AI");
     expect(markup).toContain("Likely spam · 80%");
+  });
+});
+
+describe("PostFeedback", () => {
+  test("offers explicit and generalizable user corrections with decision metadata", () => {
+    const markup = renderToStaticMarkup(
+      <PostFeedback
+        result={{ id: "1", probability: 0.91, decision: "blur", source: "exact-cache" }}
+        onAction={async () => {}}
+      />,
+    );
+    expect(markup).toContain("精确缓存");
+    expect(markup).toContain("仅隐藏此内容");
+    expect(markup).toContain("显示此内容");
+    expect(markup).toContain("减少类似内容");
+    expect(markup).toContain("屏蔽类似内容");
   });
 });

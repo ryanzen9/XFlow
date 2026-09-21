@@ -1,5 +1,12 @@
 import { afterAll, beforeEach, expect, test } from "bun:test";
-import { normalizeSettings, synchronizeWithS3, type ConfigurationDocument, type S3SyncSettings } from "../../shared";
+import {
+  EMPTY_USER_KNOWLEDGE,
+  normalizeSettings,
+  synchronizeWithS3,
+  type ConfigurationDocument,
+  type S3SyncSettings,
+  type UserDecisionRecord,
+} from "../../shared";
 
 const originalChrome = globalThis.chrome;
 const originalFetch = globalThis.fetch;
@@ -23,6 +30,21 @@ const documentAt = (version: number, nickname: string): ConfigurationDocument =>
   configVersion: version,
   updatedAt: `2026-09-${String(Math.min(version, 28)).padStart(2, "0")}T00:00:00.000Z`,
   config: { ...normalizeSettings({}), modelNickname: nickname, strategies: [] },
+  knowledge: EMPTY_USER_KNOWLEDGE,
+});
+
+const decisionAt = (id: string, updatedAt: number, decision: "allow" | "blur" = "blur"): UserDecisionRecord => ({
+  id,
+  scope: "content",
+  surface: "timeline",
+  policyId: "timeline",
+  contentHash: id,
+  normalizedContent: id,
+  semanticTokens: [id],
+  decision,
+  createdAt: 1,
+  updatedAt,
+  deviceId: "device",
 });
 
 beforeEach(() => {
@@ -94,7 +116,7 @@ test("pulls and applies the remote document when it has the newer version", asyn
   expect(storage.configVersion).toBe(8);
   expect(storage.modelNickname).toBe("Remote");
   expect(requests.map((request) => request.method)).toEqual(["GET", "PUT"]);
-  expect(remote?.schemaVersion).toBe(2);
+  expect(remote?.schemaVersion).toBe(3);
   expect(JSON.stringify(remote)).not.toContain("sk-or-legacy-remote");
   expect((storage.providerSecrets as { openrouter: string }).openrouter).toBe("sk-or-legacy-remote");
 });
@@ -141,4 +163,26 @@ test("automatic sync never opens a permission prompt", async () => {
   await expect(synchronizeWithS3(settings, { allowPermissionRequest: false })).rejects.toThrow("访问权限尚未授予");
   expect(permissionRequested).toBeFalse();
   expect(requests).toHaveLength(0);
+});
+
+test("unions user knowledge and resolves the same decision by last write", async () => {
+  Object.assign(storage, documentAt(4, "Local").config, {
+    configVersion: 4,
+    configUpdatedAt: documentAt(4, "Local").updatedAt,
+    userKnowledge: {
+      userDecisions: [decisionAt("shared", 3, "allow"), decisionAt("local-only", 2)],
+    },
+  });
+  remote = {
+    ...documentAt(4, "Remote"),
+    knowledge: {
+      userDecisions: [decisionAt("shared", 5, "blur"), decisionAt("remote-only", 2)],
+    },
+  };
+  const result = await synchronizeWithS3(settings);
+  expect(result.direction).toBe("pushed");
+  expect(result.document.configVersion).toBe(5);
+  expect(result.document.knowledge.userDecisions.map(({ id }) => id)).toEqual(["local-only", "remote-only", "shared"]);
+  expect(result.document.knowledge.userDecisions.find(({ id }) => id === "shared")?.decision).toBe("blur");
+  expect((storage.userKnowledge as { userDecisions: unknown[] }).userDecisions).toHaveLength(3);
 });

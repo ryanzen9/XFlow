@@ -1,4 +1,4 @@
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, mock, test } from "bun:test";
 import { normalizeSettings } from "../../shared";
 
 let submitted: any = null;
@@ -17,9 +17,26 @@ mock.module("@openrouter/sdk", () => ({
   },
 }));
 const { requestPostReviews } = await import("./jev");
+const { resetDecisionCacheForTests } = await import("./decision-cache");
+const originalChrome = globalThis.chrome;
+let storage: Record<string, unknown> = {};
 beforeEach(() => {
   submitted = null;
   answers = {};
+  storage = {};
+  resetDecisionCacheForTests();
+  globalThis.chrome = {
+    storage: {
+      local: {
+        get: async (keys: string[]) => Object.fromEntries(keys.map((key) => [key, storage[key]])),
+        set: async (patch: Record<string, unknown>) => Object.assign(storage, patch),
+      },
+    },
+  } as unknown as typeof chrome;
+});
+
+afterAll(() => {
+  globalThis.chrome = originalChrome;
 });
 
 test("evaluates applicable strategies and selects the first priority that crosses its threshold", async () => {
@@ -48,6 +65,8 @@ test("evaluates applicable strategies and selects the first priority that crosse
       {
         id: "42",
         probability: 0.91,
+        decision: "blur",
+        source: "jev",
         details: {
           strategy: settings.strategies[1]!,
           modelNickname: "My Jev",
@@ -99,5 +118,19 @@ test("disabled surface and missing credentials never attempt model evaluation", 
       })
     ).ok,
   ).toBe(false);
+  expect(submitted).toBeNull();
+});
+
+test("serves repeated content from the policy-aware cache without credentials", async () => {
+  const settings = normalizeSettings({});
+  answers = { strategy_0_post_0: { type: "noul", noul: 0.93 } };
+  const first = await requestPostReviews([{ id: "first", text: "repeatable content" }], settings, "timeline", secrets);
+  expect(first).toMatchObject({ ok: true, results: [{ source: "jev", decision: "blur" }] });
+  submitted = null;
+  const second = await requestPostReviews([{ id: "second", text: "repeatable content" }], settings, "timeline", {
+    ...secrets,
+    openrouter: "",
+  });
+  expect(second).toMatchObject({ ok: true, results: [{ id: "second", source: "exact-cache", decision: "blur" }] });
   expect(submitted).toBeNull();
 });

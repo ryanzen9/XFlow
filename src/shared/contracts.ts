@@ -1,5 +1,6 @@
 import type { VeilDetails } from "./strategy";
 import type { ProviderId, ProviderSummary } from "./providers";
+import type { ContentDecision, DecisionSource, UserDecisionAction } from "./content-decision";
 
 export interface PostInput {
   id: string;
@@ -9,6 +10,8 @@ export interface PostInput {
 export interface ReviewResult {
   id: string;
   probability: number;
+  decision: ContentDecision;
+  source: DecisionSource;
   details?: VeilDetails;
 }
 
@@ -26,6 +29,7 @@ export interface ExtensionStatus {
 export type ExtensionRequest =
   | { type: "GET_STATUS" }
   | { type: "REVIEW_POSTS"; surface: FilterSurface; posts: PostInput[] }
+  | { type: "SAVE_USER_DECISION"; surface: FilterSurface; post: PostInput; action: UserDecisionAction }
   | { type: "GET_PROVIDER_SUMMARIES" }
   | { type: "SAVE_PROVIDER_KEY"; providerId: ProviderId; apiKey: string }
   | { type: "CLEAR_PROVIDER_KEY"; providerId: ProviderId };
@@ -33,5 +37,6 @@ export type ExtensionRequest =
 export type ExtensionResponse =
   | ({ ok: true } & ExtensionStatus)
   | { ok: true; results: ReviewResult[] }
+  | { ok: true; result: ReviewResult }
   | { ok: true; providerSummaries: ProviderSummary[] }
   | { ok: false; code: "CONFIG_REQUIRED" | "DISABLED" | "API_ERROR" | "FORBIDDEN" | "INVALID_REQUEST"; error: string };

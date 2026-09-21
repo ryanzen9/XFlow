@@ -8,19 +8,41 @@
 X / Twitter DOM
       │
       ▼
-Content Script ── normalized post text ──► Background Service Worker
-      │                                         │
-      │                                         ├─ Review Service
-      │                                         ├─ Provider Registry
-      │                                         └─ Selected Jev Adapter
+Content Script ── batched post text ──► Background Service Worker
+      │                                      │
+      │                                      ├─ User decisions
+      │                                      ├─ IndexedDB cache layers
+      │                                      ├─ Review Service
+      │                                      ├─ Provider Registry
+      │                                      └─ Selected Jev Adapter (fallback)
       │                                                    │
-      ◄──────── probability + matched strategy ────────────┘
+      ◄──── decision + source + probability + strategy ────┘
       │
       ▼
 Blur Veil state machine
 ```
 
 Content Script 负责发现帖子、提取文本和渲染遮罩，不持有 API Key。后台负责策略选择、外部请求、配置迁移和自动同步。
+
+## Local-first decision pipeline
+
+```text
+User explicit decision
+        ↓ miss
+Exact cache
+        ↓ miss
+Normalized cache
+        ↓ miss
+Template cache (at least two consistent samples)
+        ↓ miss
+Semantic cache (high similarity + consistent neighbours)
+        ↓ miss
+Jev → persist reusable local results
+```
+
+文本先经过 Unicode、大小写、空白、重复标点与 URL tracking 参数归一化。模板层另外抽象 URL、Mention、Cashtag 和数字，但保留正负号与百分号，避免把 `+10%` 和 `-10%` 合并。语义层使用本地 token 集合与 Jaccard 相似度，不调用远程 Embedding 服务。
+
+Policy 指纹包含 surface、Provider、策略 ID、启用状态、优先级、Prompt 和敏感度。运行缓存以 Policy 指纹分区，配置改变后自然 miss；用户显式标注按 surface 保存，不会被新的 Jev 结果覆盖。
 
 ## Source boundaries
 
@@ -57,17 +79,19 @@ Content Script 负责发现帖子、提取文本和渲染遮罩，不持有 API 
 
 ## Persistence
 
-应用配置包括总开关、评论区开关、主题、当前渠道、模型昵称和策略集合。所有写入都通过版本化持久层：
+应用配置包括总开关、评论区开关、主题、当前渠道、模型昵称、策略集合和可同步用户知识。所有写入都通过版本化持久层：
 
 ```text
 ConfigurationDocument
 ├── schemaVersion
 ├── configVersion
 ├── updatedAt
-└── config
+├── config
+└── knowledge
+    └── userDecisions
 ```
 
-版本元数据不出现在 Dashboard 的可编辑 JSON 中。启用 S3 同步后，本地版本较新则 PUT，远程版本较新则 GET 并应用，版本相同则不覆盖。Endpoint 权限只在用户保存 S3 设置时申请；启动和定时后台同步不会弹出权限请求。
+运行时以 IndexedDB `xflow-decisions` 为本机判定数据源，包含 `userDecisions`、`exactCache`、`normalizedCache`、`templateCache` 和 `semanticCache`；其前方保留 300 条进程内热数据以减少重复 IndexedDB 查询。普通缓存 TTL 为 7 天，并按 LRU 控制总量；只将用户标注镜像到版本化配置文档。启用 S3 同步后，用户标注按 ID 合并，同一标注执行确定性的 Last Write Wins；Exact、Template、Semantic 运行缓存不会上传。Endpoint 权限只在用户保存 S3 设置时申请；启动和定时后台同步不会弹出权限请求，S3 不参与逐条内容的实时判定。
 
 ## Blur Veil state machine
 

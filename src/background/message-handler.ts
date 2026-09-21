@@ -1,6 +1,8 @@
 import {
   PROVIDERS,
   PROVIDER_IDS,
+  sanitizePost,
+  strategiesFor,
   type ExtensionRequest,
   type ExtensionResponse,
   type FilterSurface,
@@ -14,6 +16,7 @@ import {
   saveProviderKey,
 } from "./services/provider-secrets";
 import { getSettings } from "./services/settings";
+import { saveUserDecision } from "./services/decision-cache";
 
 let reviewChain: Promise<unknown> = Promise.resolve();
 
@@ -51,6 +54,16 @@ function isExtensionPage(sender: chrome.runtime.MessageSender): boolean {
   return sender.tab === undefined;
 }
 
+function isContentScript(sender: chrome.runtime.MessageSender): boolean {
+  if (sender.id !== chrome.runtime.id || !sender.tab || !sender.url) return false;
+  try {
+    const url = new URL(sender.url);
+    return url.protocol === "https:" && (url.hostname === "x.com" || url.hostname === "twitter.com");
+  } catch {
+    return false;
+  }
+}
+
 export function handleMessage(
   message: ExtensionRequest,
   sender: chrome.runtime.MessageSender,
@@ -69,6 +82,45 @@ export function handleMessage(
     Array.isArray(message.posts)
   ) {
     void queueReview(message.posts, message.surface).then(sendResponse);
+    return true;
+  }
+
+  if (message.type === "SAVE_USER_DECISION") {
+    const post = sanitizePost(message.post);
+    const actions = ["hide", "allow", "reduce-similar", "block-similar"] as const;
+    if (
+      !isContentScript(sender) ||
+      (message.surface !== "timeline" && message.surface !== "comments") ||
+      !post ||
+      !actions.includes(message.action)
+    ) {
+      sendResponse({ ok: false, code: "INVALID_REQUEST", error: "无效的用户标注请求。" });
+      return false;
+    }
+    void (async () => {
+      const settings = await getSettings();
+      const saved = await saveUserDecision(post, message.surface, message.action);
+      const strategy = saved.decision === "allow" ? undefined : strategiesFor(settings, message.surface)[0];
+      return {
+        ok: true,
+        result: {
+          id: post.id,
+          probability: saved.probability,
+          decision: saved.decision,
+          source: saved.source,
+          details: strategy
+            ? {
+                strategy,
+                modelNickname: settings.modelNickname,
+                modelId: PROVIDERS[settings.activeProvider].modelId,
+                surface: message.surface,
+              }
+            : undefined,
+        },
+      } as const;
+    })()
+      .then(sendResponse)
+      .catch(() => sendResponse({ ok: false, code: "API_ERROR", error: "保存用户标注失败，请重试。" }));
     return true;
   }
 

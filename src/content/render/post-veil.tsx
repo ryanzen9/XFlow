@@ -99,6 +99,7 @@ export function mountPostVeil(
   const inertChildren = new Map<HTMLElement, boolean>();
   for (const child of article.children) {
     if (!(child instanceof HTMLElement)) continue;
+    if (child.classList.contains("xfilter-feedback-host")) continue;
     inertChildren.set(child, child.inert);
     child.inert = true;
   }

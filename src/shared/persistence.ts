@@ -1,16 +1,19 @@
 import { normalizeSettings, type AppSettings } from "./strategy";
 import { PROVIDER_SECRETS_KEY, normalizeProviderSecrets } from "./providers";
+import { normalizeUserKnowledge, type UserKnowledge } from "./content-decision";
 
-export const CONFIG_SCHEMA_VERSION = 2;
+export const CONFIG_SCHEMA_VERSION = 3;
 export const CONFIG_VERSION_KEY = "configVersion";
 export const CONFIG_UPDATED_AT_KEY = "configUpdatedAt";
 export const S3_SYNC_KEY = "s3Sync";
+export const USER_KNOWLEDGE_KEY = "userKnowledge";
 
 export interface ConfigurationDocument {
   schemaVersion: number;
   configVersion: number;
   updatedAt: string;
   config: AppSettings;
+  knowledge: UserKnowledge;
 }
 
 export interface S3SyncSettings {
@@ -69,14 +72,15 @@ export async function readConfigurationDocument(): Promise<ConfigurationDocument
     configVersion: positiveInteger(stored[CONFIG_VERSION_KEY], 1),
     updatedAt: timestamp(stored[CONFIG_UPDATED_AT_KEY]),
     config: normalizeSettings(stored),
+    knowledge: normalizeUserKnowledge(stored[USER_KNOWLEDGE_KEY]),
   };
 }
 
 export function normalizeConfigurationDocument(value: unknown): ConfigurationDocument {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("配置文档必须是 JSON 对象。");
   const input = value as Partial<ConfigurationDocument>;
-  if (input.schemaVersion !== 1 && input.schemaVersion !== CONFIG_SCHEMA_VERSION) {
-    throw new Error(`仅支持 schemaVersion 1 或 ${CONFIG_SCHEMA_VERSION}。`);
+  if (input.schemaVersion !== 1 && input.schemaVersion !== 2 && input.schemaVersion !== CONFIG_SCHEMA_VERSION) {
+    throw new Error(`仅支持 schemaVersion 1、2 或 ${CONFIG_SCHEMA_VERSION}。`);
   }
   if (!input.config || typeof input.config !== "object" || Array.isArray(input.config))
     throw new Error("config 必须是 JSON 对象。");
@@ -87,6 +91,7 @@ export function normalizeConfigurationDocument(value: unknown): ConfigurationDoc
     configVersion: positiveInteger(input.configVersion, 1),
     updatedAt: timestamp(input.updatedAt),
     config: normalizeSettings(input.config as unknown as Record<string, unknown>),
+    knowledge: normalizeUserKnowledge(input.knowledge),
   };
 }
 
@@ -102,6 +107,18 @@ export async function writeVersionedSettings(patch: Partial<AppSettings>): Promi
   const configVersion = positiveInteger(current[CONFIG_VERSION_KEY], 0) + 1;
   const updatedAt = new Date().toISOString();
   await chrome.storage.local.set({ ...patch, [CONFIG_VERSION_KEY]: configVersion, [CONFIG_UPDATED_AT_KEY]: updatedAt });
+  return readConfigurationDocument();
+}
+
+export async function writeUserKnowledge(knowledge: UserKnowledge): Promise<ConfigurationDocument> {
+  const current = await chrome.storage.local.get([CONFIG_VERSION_KEY]);
+  const configVersion = positiveInteger(current[CONFIG_VERSION_KEY], 0) + 1;
+  const updatedAt = new Date().toISOString();
+  await chrome.storage.local.set({
+    [USER_KNOWLEDGE_KEY]: normalizeUserKnowledge(knowledge),
+    [CONFIG_VERSION_KEY]: configVersion,
+    [CONFIG_UPDATED_AT_KEY]: updatedAt,
+  });
   return readConfigurationDocument();
 }
 
@@ -126,6 +143,7 @@ export async function applyRemoteConfiguration(document: ConfigurationDocument):
   await migrateLegacyOpenRouterKey(legacyApiKey);
   await chrome.storage.local.set({
     ...normalized.config,
+    [USER_KNOWLEDGE_KEY]: normalized.knowledge,
     [CONFIG_VERSION_KEY]: normalized.configVersion,
     [CONFIG_UPDATED_AT_KEY]: normalized.updatedAt,
   });

@@ -6,6 +6,7 @@ import {
   saveS3SyncSettings,
   writeVersionedSettings,
 } from "./persistence";
+import { EMPTY_USER_KNOWLEDGE } from "./content-decision";
 import { normalizeSettings } from "./strategy";
 
 const originalChrome = globalThis.chrome;
@@ -83,6 +84,7 @@ describe("versioned configuration persistence", () => {
       configVersion: 12,
       updatedAt: "2026-09-21T00:00:00.000Z",
       config: { ...normalizeSettings({}), modelNickname: "Remote", strategies: [] },
+      knowledge: EMPTY_USER_KNOWLEDGE,
     };
     const applied = await applyRemoteConfiguration(remote);
     expect(applied.configVersion).toBe(12);
