@@ -1,6 +1,7 @@
 import {
   PROVIDERS,
   PROVIDER_IDS,
+  policyVersion,
   sanitizePost,
   strategiesFor,
   type ExtensionRequest,
@@ -87,7 +88,16 @@ export function handleMessage(
 
   if (message.type === "SAVE_USER_DECISION") {
     const post = sanitizePost(message.post);
-    const actions = ["hide", "allow", "reduce-similar", "block-similar"] as const;
+    const actions = [
+      "hide",
+      "allow",
+      "reduce-similar",
+      "block-similar",
+      "block-author",
+      "allow-author",
+      "correct-hide",
+      "correct-allow",
+    ] as const;
     if (
       !isContentScript(sender) ||
       (message.surface !== "timeline" && message.surface !== "comments") ||
@@ -99,7 +109,13 @@ export function handleMessage(
     }
     void (async () => {
       const settings = await getSettings();
-      const saved = await saveUserDecision(post, message.surface, message.action);
+      const saved = await saveUserDecision(
+        post,
+        message.surface,
+        message.action,
+        Date.now(),
+        await policyVersion(settings, message.surface),
+      );
       const strategy = saved.decision === "allow" ? undefined : strategiesFor(settings, message.surface)[0];
       return {
         ok: true,

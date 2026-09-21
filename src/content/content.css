@@ -3,6 +3,11 @@ article[data-xfilter-state] {
   position: relative !important;
 }
 
+article[data-xfilter-state]:has(.xfilter-feedback[open]) {
+  z-index: 7;
+  overflow: visible;
+}
+
 article[data-xfilter-feedback] {
   position: relative !important;
 }

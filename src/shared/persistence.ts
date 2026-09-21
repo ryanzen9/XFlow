@@ -1,6 +1,6 @@
 import { normalizeSettings, type AppSettings } from "./strategy";
 import { PROVIDER_SECRETS_KEY, normalizeProviderSecrets } from "./providers";
-import { normalizeUserKnowledge, type UserKnowledge } from "./content-decision";
+import { normalizeUserKnowledge, syncableUserKnowledge, type UserKnowledge } from "./content-decision";
 
 export const CONFIG_SCHEMA_VERSION = 3;
 export const CONFIG_VERSION_KEY = "configVersion";
@@ -72,7 +72,7 @@ export async function readConfigurationDocument(): Promise<ConfigurationDocument
     configVersion: positiveInteger(stored[CONFIG_VERSION_KEY], 1),
     updatedAt: timestamp(stored[CONFIG_UPDATED_AT_KEY]),
     config: normalizeSettings(stored),
-    knowledge: normalizeUserKnowledge(stored[USER_KNOWLEDGE_KEY]),
+    knowledge: syncableUserKnowledge(stored[USER_KNOWLEDGE_KEY]),
   };
 }
 
@@ -91,7 +91,7 @@ export function normalizeConfigurationDocument(value: unknown): ConfigurationDoc
     configVersion: positiveInteger(input.configVersion, 1),
     updatedAt: timestamp(input.updatedAt),
     config: normalizeSettings(input.config as unknown as Record<string, unknown>),
-    knowledge: normalizeUserKnowledge(input.knowledge),
+    knowledge: syncableUserKnowledge(input.knowledge),
   };
 }
 
@@ -143,7 +143,7 @@ export async function applyRemoteConfiguration(document: ConfigurationDocument):
   await migrateLegacyOpenRouterKey(legacyApiKey);
   await chrome.storage.local.set({
     ...normalized.config,
-    [USER_KNOWLEDGE_KEY]: normalized.knowledge,
+    [USER_KNOWLEDGE_KEY]: normalizeUserKnowledge(normalized.knowledge),
     [CONFIG_VERSION_KEY]: normalized.configVersion,
     [CONFIG_UPDATED_AT_KEY]: normalized.updatedAt,
   });

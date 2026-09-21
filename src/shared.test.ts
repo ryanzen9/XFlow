@@ -45,6 +45,11 @@ describe("probability helpers", () => {
 describe("post sanitization", () => {
   test("normalizes whitespace and rejects empty content", () => {
     expect(sanitizePost({ id: " 42 ", text: "hello\n  world" })).toEqual({ id: "42", text: "hello world" });
+    expect(sanitizePost({ id: "42", text: "hello", authorId: " @ExampleUser " })).toEqual({
+      id: "42",
+      text: "hello",
+      authorId: "ExampleUser",
+    });
     expect(sanitizePost({ id: "42", text: "   " })).toBeNull();
   });
 });

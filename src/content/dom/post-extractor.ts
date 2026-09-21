@@ -14,6 +14,7 @@ export function extractPost(article: HTMLElement, fallbackId: string): Extracted
 
   const statusLink = article.querySelector<HTMLAnchorElement>('a[href*="/status/"] time')?.closest("a");
   const id = statusLink?.href.match(/\/status\/(\d+)/)?.[1] ?? fallbackId;
+  const authorId = statusLink?.href.match(/(?:x\.com|twitter\.com)\/([^/]+)\/status\//)?.[1];
 
-  return { post: { id, text } };
+  return { post: { id, text, ...(authorId ? { authorId } : {}) } };
 }

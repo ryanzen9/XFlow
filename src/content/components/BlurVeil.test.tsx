@@ -44,13 +44,23 @@ describe("PostFeedback", () => {
     const markup = renderToStaticMarkup(
       <PostFeedback
         result={{ id: "1", probability: 0.91, decision: "blur", source: "exact-cache" }}
+        canLabelAuthor
         onAction={async () => {}}
       />,
     );
     expect(markup).toContain("精确缓存");
     expect(markup).toContain("仅隐藏此内容");
     expect(markup).toContain("显示此内容");
+    expect(markup).toContain("纠正当前策略判定");
     expect(markup).toContain("减少类似内容");
     expect(markup).toContain("屏蔽类似内容");
+    expect(markup).toContain("屏蔽此作者");
+    expect(markup).toContain("允许此作者内容");
+  });
+
+  test("keeps manual feedback available before a remote decision exists", () => {
+    const markup = renderToStaticMarkup(<PostFeedback onAction={async () => {}} />);
+    expect(markup).toContain("等待判定");
+    expect(markup).toContain("仅隐藏此内容");
   });
 });

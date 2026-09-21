@@ -2,7 +2,8 @@ import { useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { formatProbability, type ReviewResult, type UserDecisionAction } from "../../shared";
 
 export interface PostFeedbackProps {
-  result: ReviewResult;
+  result?: ReviewResult;
+  canLabelAuthor?: boolean;
   onAction: (action: UserDecisionAction) => Promise<void>;
 }
 
@@ -19,7 +20,7 @@ function stopEvent(event: MouseEvent<HTMLElement> | PointerEvent<HTMLElement>) {
   event.stopPropagation();
 }
 
-export function PostFeedback({ result, onAction }: PostFeedbackProps) {
+export function PostFeedback({ result, canLabelAuthor = false, onAction }: PostFeedbackProps) {
   const details = useRef<HTMLDetailsElement>(null);
   const [pending, setPending] = useState<UserDecisionAction | null>(null);
   const [error, setError] = useState("");
@@ -51,9 +52,9 @@ export function PostFeedback({ result, onAction }: PostFeedbackProps) {
       </summary>
       <div className="xfilter-feedback__menu" role="menu" aria-label="XFlow 内容标注">
         <div className="xfilter-feedback__meta">
-          <strong>{formatProbability(result.probability)}</strong>
-          <span>{SOURCE_LABELS[result.source]}</span>
-          {result.details && <span>{result.details.strategy.name}</span>}
+          <strong>{result ? formatProbability(result.probability) : "—"}</strong>
+          <span>{result ? SOURCE_LABELS[result.source] : "等待判定"}</span>
+          {result?.details && <span>{result.details.strategy.name}</span>}
         </div>
         <button type="button" role="menuitem" disabled={pending !== null} onClick={(event) => choose(event, "hide")}>
           仅隐藏此内容
@@ -61,6 +62,16 @@ export function PostFeedback({ result, onAction }: PostFeedbackProps) {
         <button type="button" role="menuitem" disabled={pending !== null} onClick={(event) => choose(event, "allow")}>
           显示此内容
         </button>
+        {result && (
+          <button
+            type="button"
+            role="menuitem"
+            disabled={pending !== null}
+            onClick={(event) => choose(event, result.decision === "allow" ? "correct-hide" : "correct-allow")}
+          >
+            纠正当前策略判定
+          </button>
+        )}
         <button
           type="button"
           role="menuitem"
@@ -77,6 +88,26 @@ export function PostFeedback({ result, onAction }: PostFeedbackProps) {
         >
           屏蔽类似内容
         </button>
+        {canLabelAuthor && (
+          <>
+            <button
+              type="button"
+              role="menuitem"
+              disabled={pending !== null}
+              onClick={(event) => choose(event, "block-author")}
+            >
+              屏蔽此作者
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              disabled={pending !== null}
+              onClick={(event) => choose(event, "allow-author")}
+            >
+              允许此作者内容
+            </button>
+          </>
+        )}
         {error && <p role="alert">{error}</p>}
       </div>
     </details>

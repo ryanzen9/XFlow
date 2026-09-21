@@ -4,6 +4,7 @@ import {
   applyRemoteConfiguration,
   readConfigurationDocument,
   saveS3SyncSettings,
+  writeUserKnowledge,
   writeVersionedSettings,
 } from "./persistence";
 import { EMPTY_USER_KNOWLEDGE } from "./content-decision";
@@ -90,5 +91,31 @@ describe("versioned configuration persistence", () => {
     expect(applied.configVersion).toBe(12);
     expect(applied.config.modelNickname).toBe("Remote");
     expect((storage.s3Sync as { secretAccessKey: string }).secretAccessKey).toBe("secret");
+  });
+
+  test("keeps regenerated semantic vectors local-only", async () => {
+    await writeUserKnowledge({
+      userDecisions: [
+        {
+          id: "timeline:semantic:sample",
+          scope: "semantic",
+          surface: "timeline",
+          policyId: "timeline",
+          contentHash: "sample",
+          normalizedContent: "sample content",
+          semanticTokens: ["sample", "content"],
+          semanticEmbedding: [0.5, 0.5],
+          templateHash: "template",
+          decision: "blur",
+          createdAt: 1,
+          updatedAt: 1,
+          deviceId: "device",
+        },
+      ],
+    });
+    expect(
+      (storage.userKnowledge as { userDecisions: Array<{ semanticEmbedding?: number[] }> }).userDecisions[0],
+    ).toHaveProperty("semanticEmbedding");
+    expect((await readConfigurationDocument()).knowledge.userDecisions[0]).not.toHaveProperty("semanticEmbedding");
   });
 });

@@ -1,10 +1,12 @@
 import {
   USER_KNOWLEDGE_KEY,
+  contentLanguage,
+  cosineSimilarity,
   exactContent,
-  jaccardSimilarity,
   mergeUserKnowledge,
   normalizeContent,
   normalizeUserKnowledge,
+  semanticEmbeddingFromTokens,
   semanticTokens,
   sha256,
   templateContent,
@@ -25,9 +27,12 @@ interface CacheEntry {
   contentHash: string;
   decision: ContentDecision;
   probability: number;
+  confidence: number;
   strategyId?: string;
   sampleCount: number;
   semanticTokens: string[];
+  semanticEmbedding: number[];
+  language: ReturnType<typeof contentLanguage>;
   createdAt: number;
   expiresAt: number;
   lastAccessedAt: number;
@@ -47,7 +52,7 @@ export interface DecisionLookupContext {
 }
 
 const DB_NAME = "xflow-decisions";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const USER_STORE = "userDecisions";
 const CACHE_STORES: CacheKind[] = ["exactCache", "normalizedCache", "templateCache", "semanticCache"];
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -86,6 +91,10 @@ class DecisionDatabase {
         for (const store of [USER_STORE, ...CACHE_STORES]) {
           if (!database.objectStoreNames.contains(store))
             database.createObjectStore(store, { keyPath: store === USER_STORE ? "id" : "key" });
+        }
+        const semanticStore = request.transaction?.objectStore("semanticCache");
+        if (semanticStore && !semanticStore.indexNames.contains("policyLanguage")) {
+          semanticStore.createIndex("policyLanguage", ["policyVersion", "language"]);
         }
       });
       request.addEventListener("success", () => resolve(request.result), { once: true });
@@ -127,6 +136,26 @@ class DecisionDatabase {
     const db = await database;
     return new Promise((resolve, reject) => {
       const request = db.transaction(store, "readonly").objectStore(store).getAll();
+      request.addEventListener("success", () => resolve(request.result as T[]), { once: true });
+      request.addEventListener("error", () => reject(request.error), { once: true });
+    });
+  }
+
+  async getAllByIndex<T extends CacheEntry>(
+    store: CacheKind,
+    index: "policyLanguage",
+    key: [string, string],
+  ): Promise<T[]> {
+    const database = this.open();
+    if (!database) {
+      return [...this.memoryStore(store).values()].filter((value) => {
+        const entry = value as CacheEntry;
+        return entry.policyVersion === key[0] && entry.language === key[1];
+      }) as T[];
+    }
+    const db = await database;
+    return new Promise((resolve, reject) => {
+      const request = db.transaction(store, "readonly").objectStore(store).index(index).getAll(IDBKeyRange.only(key));
       request.addEventListener("success", () => resolve(request.result as T[]), { once: true });
       request.addEventListener("error", () => reject(request.error), { once: true });
     });
@@ -215,7 +244,31 @@ async function fingerprints(text: string) {
     sha256(normalized),
     sha256(template),
   ]);
-  return { contentHash, normalizedHash, templateHash, normalized, template, tokens: semanticTokens(text) };
+  const tokens = semanticTokens(text);
+  return {
+    contentHash,
+    normalizedHash,
+    templateHash,
+    normalized,
+    template,
+    tokens,
+    embedding: semanticEmbeddingFromTokens(tokens),
+    language: contentLanguage(text),
+  };
+}
+
+function entryEmbedding(entry: CacheEntry): number[] {
+  return Array.isArray(entry.semanticEmbedding) && entry.semanticEmbedding.length > 0
+    ? entry.semanticEmbedding
+    : semanticEmbeddingFromTokens(entry.semanticTokens);
+}
+
+function entryConfidence(entry: CacheEntry): number {
+  return typeof entry.confidence === "number"
+    ? entry.confidence
+    : entry.decision === "allow"
+      ? 1 - entry.probability
+      : entry.probability;
 }
 
 export async function loadUserDecisions(): Promise<UserDecisionRecord[]> {
@@ -229,10 +282,21 @@ export async function loadUserDecisions(): Promise<UserDecisionRecord[]> {
   return database.getAll<UserDecisionRecord>(USER_STORE);
 }
 
-export async function loadDecisionLookupContext(now = Date.now()): Promise<DecisionLookupContext> {
+export async function loadDecisionLookupContext(
+  policy?: string,
+  languages: Array<ReturnType<typeof contentLanguage>> = [],
+  now = Date.now(),
+): Promise<DecisionLookupContext> {
+  const uniqueLanguages = [...new Set(languages)];
   const [userDecisions, semanticEntries] = await Promise.all([
     loadUserDecisions(),
-    database.getAll<CacheEntry>("semanticCache"),
+    policy && uniqueLanguages.length > 0
+      ? Promise.all(
+          uniqueLanguages.map((language) =>
+            database.getAllByIndex<CacheEntry>("semanticCache", "policyLanguage", [policy, language]),
+          ),
+        ).then((groups) => groups.flat())
+      : database.getAll<CacheEntry>("semanticCache"),
   ]);
   return {
     userDecisions,
@@ -255,20 +319,52 @@ export async function findLocalDecision(
   policy: string,
   now = Date.now(),
   context?: DecisionLookupContext,
+  authorId?: string,
 ): Promise<LocalDecisionHit | null> {
   const values = await fingerprints(text);
   const userDecisions = context?.userDecisions ?? (await loadUserDecisions());
-  const explicit = userDecisions.find(
-    (decision) =>
-      decision.scope === "content" && decision.surface === surface && decision.contentHash === values.contentHash,
-  );
+  const explicit = userDecisions
+    .filter(
+      (decision) =>
+        decision.scope === "content" &&
+        decision.surface === surface &&
+        decision.contentHash === values.contentHash &&
+        (decision.policyId === surface || decision.policyId === policy),
+    )
+    .toSorted((left, right) => right.updatedAt - left.updatedAt)[0];
   if (explicit) return userHit(explicit);
+
+  const normalizedAuthor = authorId?.toLocaleLowerCase();
+  const authorDecision = normalizedAuthor
+    ? userDecisions.find(
+        (decision) =>
+          decision.scope === "author" &&
+          decision.surface === surface &&
+          decision.authorId?.toLocaleLowerCase() === normalizedAuthor,
+      )
+    : undefined;
+  if (authorDecision) return userHit(authorDecision);
 
   const semanticUser = userDecisions
     .filter((decision) => decision.scope === "semantic" && decision.surface === surface)
-    .map((decision) => ({ decision, similarity: jaccardSimilarity(values.tokens, decision.semanticTokens) }))
-    .filter(({ decision, similarity }) => similarity >= (decision.similarityThreshold ?? 0.94))
-    .toSorted((left, right) => right.similarity - left.similarity)[0];
+    .map((decision) => ({
+      decision,
+      similarity: cosineSimilarity(
+        values.embedding,
+        decision.semanticEmbedding ?? semanticEmbeddingFromTokens(decision.semanticTokens),
+      ),
+      templateMatch: decision.templateHash === values.templateHash,
+    }))
+    .filter(
+      ({ decision, similarity, templateMatch }) =>
+        templateMatch || similarity >= (decision.similarityThreshold ?? 0.94),
+    )
+    .toSorted(
+      (left, right) =>
+        Number(right.templateMatch) - Number(left.templateMatch) ||
+        right.similarity - left.similarity ||
+        right.decision.updatedAt - left.decision.updatedAt,
+    )[0];
   if (semanticUser) return userHit(semanticUser.decision);
 
   const exact = await readCache("exactCache", cacheKey(policy, values.contentHash), now);
@@ -276,19 +372,28 @@ export async function findLocalDecision(
   const normalized = await readCache("normalizedCache", cacheKey(policy, values.normalizedHash), now);
   if (normalized) return hit(normalized, "normalized-cache");
   const template = await readCache("templateCache", cacheKey(policy, values.templateHash), now);
-  if (template && template.sampleCount >= 2) return hit(template, "template-cache");
+  if (template && template.sampleCount >= 2 && entryConfidence(template) >= 0.85)
+    return hit(template, "template-cache");
 
   const semantic = (context?.semanticEntries ?? (await database.getAll<CacheEntry>("semanticCache")))
-    .filter((entry) => entry.policyVersion === policy && entry.expiresAt > now)
-    .map((entry) => ({ entry, similarity: jaccardSimilarity(values.tokens, entry.semanticTokens) }))
-    .filter(({ similarity }) => similarity >= 0.95)
+    .filter(
+      (entry) =>
+        entry.policyVersion === policy &&
+        entry.expiresAt > now &&
+        (entry.language ?? contentLanguage(entry.semanticTokens.join(" "))) === values.language &&
+        entryConfidence(entry) >= 0.9,
+    )
+    .map((entry) => ({ entry, similarity: cosineSimilarity(values.embedding, entryEmbedding(entry)) }))
+    .filter(({ similarity }) => similarity >= 0.82)
     .toSorted((left, right) => right.similarity - left.similarity)
     .slice(0, 5);
-  if (semantic.length >= 2 && semantic.every(({ entry }) => entry.decision === semantic[0]?.entry.decision)) {
-    const entry = semantic[0]!.entry;
-    if (entry.decision === "allow" || semantic.every(({ entry: candidate }) => candidate.probability >= 0.9)) {
-      return hit(entry, "semantic-cache");
-    }
+  if (semantic.length >= 3) {
+    const votes = new Map<ContentDecision, number>();
+    for (const { entry } of semantic) votes.set(entry.decision, (votes.get(entry.decision) ?? 0) + 1);
+    const [winner, count] = [...votes.entries()].toSorted((left, right) => right[1] - left[1])[0]!;
+    const requiredVotes = semantic.length >= 5 ? 4 : semantic.length;
+    const winningEntry = semantic.find(({ entry }) => entry.decision === winner)?.entry;
+    if (count >= requiredVotes && winningEntry) return hit(winningEntry, "semantic-cache");
   }
   return null;
 }
@@ -307,8 +412,11 @@ export async function rememberJevDecision(
     contentHash: values.contentHash,
     decision,
     probability,
+    confidence: decision === "allow" ? 1 - probability : probability,
     strategyId,
     semanticTokens: values.tokens,
+    semanticEmbedding: values.embedding,
+    language: values.language,
     createdAt: now,
     expiresAt: now + CACHE_TTL_MS,
     lastAccessedAt: now,
@@ -321,6 +429,10 @@ export async function rememberJevDecision(
     ...base,
     key: templateKey,
     sampleCount: previousTemplate?.decision === decision ? previousTemplate.sampleCount + 1 : 1,
+    confidence:
+      previousTemplate?.decision === decision
+        ? Math.min(entryConfidence(previousTemplate), base.confidence)
+        : base.confidence,
   };
   const semantic: CacheEntry = { ...base, key: cacheKey(policy, values.contentHash), sampleCount: 1 };
   await Promise.all([
@@ -345,21 +457,38 @@ export async function saveUserDecision(
   surface: FilterSurface,
   action: UserDecisionAction,
   now = Date.now(),
+  policy: string = surface,
 ): Promise<LocalDecisionHit> {
   const values = await fingerprints(post.text);
-  const scope = action === "hide" || action === "allow" ? "content" : "semantic";
-  const id = `${surface}:${scope}:${values.contentHash}`;
+  const policyCorrection = action === "correct-hide" || action === "correct-allow";
+  const scope = action === "hide" || action === "allow" || policyCorrection ? "content" : "semantic";
+  const authorAction = action === "block-author" || action === "allow-author";
+  if (authorAction && !post.authorId) throw new Error("当前内容缺少可用的作者标识。");
+  const effectiveScope = authorAction ? "author" : scope;
+  const id = authorAction
+    ? `${surface}:author:${post.authorId!.toLocaleLowerCase()}`
+    : policyCorrection
+      ? `${surface}:policy:${policy}:${values.contentHash}`
+      : `${surface}:${effectiveScope}:${values.contentHash}`;
   const previous = await database.get<UserDecisionRecord>(USER_STORE, id);
   const record: UserDecisionRecord = {
     id,
-    scope,
+    scope: effectiveScope,
     surface,
-    policyId: surface,
+    policyId: policyCorrection ? policy : surface,
     contentHash: values.contentHash,
     normalizedContent: values.normalized,
     semanticTokens: values.tokens,
-    decision: action === "allow" ? "allow" : action === "block-similar" ? "block" : "blur",
-    similarityThreshold: action === "reduce-similar" ? 0.94 : action === "block-similar" ? 0.82 : undefined,
+    semanticEmbedding: values.embedding,
+    templateHash: effectiveScope === "semantic" ? values.templateHash : undefined,
+    authorId: authorAction ? post.authorId!.toLocaleLowerCase() : undefined,
+    decision:
+      action === "allow" || action === "allow-author" || action === "correct-allow"
+        ? "allow"
+        : action === "block-similar" || action === "block-author"
+          ? "block"
+          : "blur",
+    similarityThreshold: action === "reduce-similar" ? 0.82 : action === "block-similar" ? 0.75 : undefined,
     createdAt: previous?.createdAt ?? now,
     updatedAt: now,
     deviceId: await deviceId(),

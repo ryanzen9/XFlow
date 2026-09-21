@@ -2,6 +2,8 @@ import {
   MAX_BATCH_SIZE,
   PROVIDERS,
   clampProbability,
+  contentLanguage,
+  exactContent,
   policyVersion,
   sanitizePost,
   strategiesFor,
@@ -42,13 +44,16 @@ export async function requestPostReviews(
   if (posts.length === 0) return { ok: true, results: [] };
 
   const strategies = strategiesFor(settings, surface);
-  if (strategies.length === 0) return { ok: true, results: [] };
 
   const currentPolicy = await policyVersion(settings, surface);
   const now = Date.now();
-  const lookupContext = await loadDecisionLookupContext(now);
+  const lookupContext = await loadDecisionLookupContext(
+    currentPolicy,
+    posts.map(({ text }) => contentLanguage(text)),
+    now,
+  );
   const local = await Promise.all(
-    posts.map((post) => findLocalDecision(post.text, surface, currentPolicy, now, lookupContext)),
+    posts.map((post) => findLocalDecision(post.text, surface, currentPolicy, now, lookupContext, post.authorId)),
   );
   const cachedResults: ReviewResult[] = [];
   const misses: PostInput[] = [];
@@ -77,6 +82,16 @@ export async function requestPostReviews(
     });
   }
   if (misses.length === 0) return { ok: true, results: cachedResults };
+  if (strategies.length === 0) return { ok: true, results: cachedResults };
+
+  const missGroups = new Map<string, PostInput[]>();
+  for (const post of misses) {
+    const key = exactContent(post.text);
+    const group = missGroups.get(key);
+    if (group) group.push(post);
+    else missGroups.set(key, [post]);
+  }
+  const uniqueMisses = [...missGroups.values()].map((group) => group[0]!);
 
   const provider = getJevProvider(settings.activeProvider);
   const apiKey = secrets[settings.activeProvider];
@@ -95,11 +110,11 @@ export async function requestPostReviews(
         surface === "timeline"
           ? "X home timeline posts to evaluate independently."
           : "Replies in an X conversation to evaluate independently.",
-      posts: misses.map(({ id, text }) => ({ id, text })),
+      posts: uniqueMisses.map(({ id, text }) => ({ id, text })),
     },
     questions: Object.fromEntries(
       strategies.flatMap((strategy, strategyIndex) =>
-        misses.map((post, postIndex) => [
+        uniqueMisses.map((post, postIndex) => [
           `strategy_${strategyIndex}_post_${postIndex}`,
           {
             criteria: {
@@ -116,7 +131,7 @@ export async function requestPostReviews(
 
   try {
     const answers = await provider.evaluate(request, apiKey);
-    const remoteResults: ReviewResult[] = misses.map((post, postIndex) => {
+    const representativeResults: ReviewResult[] = uniqueMisses.map((post, postIndex) => {
       let maximumProbability = 0;
       for (const [strategyIndex, strategy] of strategies.entries()) {
         const probability = clampProbability(answers[`strategy_${strategyIndex}_post_${postIndex}`] ?? 0);
@@ -139,15 +154,18 @@ export async function requestPostReviews(
       return { id: post.id, probability: maximumProbability, decision: "allow", source: "jev" };
     });
     await Promise.all(
-      remoteResults.map((result, index) =>
+      representativeResults.map((result, index) =>
         rememberJevDecision(
-          misses[index]!.text,
+          uniqueMisses[index]!.text,
           currentPolicy,
           result.decision,
           result.probability,
           result.details?.strategy.id,
         ),
       ),
+    );
+    const remoteResults = representativeResults.flatMap((result, index) =>
+      (missGroups.get(exactContent(uniqueMisses[index]!.text)) ?? []).map((post) => ({ ...result, id: post.id })),
     );
     return { ok: true, results: [...cachedResults, ...remoteResults] };
   } catch (error) {

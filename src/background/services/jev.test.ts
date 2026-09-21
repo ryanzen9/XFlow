@@ -17,7 +17,7 @@ mock.module("@openrouter/sdk", () => ({
   },
 }));
 const { requestPostReviews } = await import("./jev");
-const { resetDecisionCacheForTests } = await import("./decision-cache");
+const { resetDecisionCacheForTests, saveUserDecision } = await import("./decision-cache");
 const originalChrome = globalThis.chrome;
 let storage: Record<string, unknown> = {};
 beforeEach(() => {
@@ -28,7 +28,8 @@ beforeEach(() => {
   globalThis.chrome = {
     storage: {
       local: {
-        get: async (keys: string[]) => Object.fromEntries(keys.map((key) => [key, storage[key]])),
+        get: async (keys: string[] | null) =>
+          keys === null ? { ...storage } : Object.fromEntries(keys.map((key) => [key, storage[key]])),
         set: async (patch: Record<string, unknown>) => Object.assign(storage, patch),
       },
     },
@@ -132,5 +133,38 @@ test("serves repeated content from the policy-aware cache without credentials", 
     openrouter: "",
   });
   expect(second).toMatchObject({ ok: true, results: [{ id: "second", source: "exact-cache", decision: "blur" }] });
+  expect(submitted).toBeNull();
+});
+
+test("deduplicates identical misses inside one Jev batch", async () => {
+  const settings = normalizeSettings({});
+  answers = { strategy_0_post_0: { type: "noul", noul: 0.93 } };
+  const result = await requestPostReviews(
+    [
+      { id: "first", text: "same batch content" },
+      { id: "second", text: "same batch content" },
+    ],
+    settings,
+    "timeline",
+    secrets,
+  );
+  expect(submitted.decisionsRequest.state.posts).toHaveLength(1);
+  expect(result).toMatchObject({
+    ok: true,
+    results: [
+      { id: "first", decision: "blur" },
+      { id: "second", decision: "blur" },
+    ],
+  });
+});
+
+test("honours user rules even when no automatic strategy remains", async () => {
+  await saveUserDecision({ id: "42", text: "manually hidden" }, "timeline", "hide", 100);
+  const settings = normalizeSettings({ strategies: [] });
+  const result = await requestPostReviews([{ id: "42", text: "manually hidden" }], settings, "timeline", {
+    ...secrets,
+    openrouter: "",
+  });
+  expect(result).toMatchObject({ ok: true, results: [{ decision: "blur", source: "user" }] });
   expect(submitted).toBeNull();
 });

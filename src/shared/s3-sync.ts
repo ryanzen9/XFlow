@@ -7,7 +7,7 @@ import {
   type ConfigurationDocument,
   type S3SyncSettings,
 } from "./persistence";
-import { mergeUserKnowledge } from "./content-decision";
+import { mergeUserKnowledge, syncableUserKnowledge } from "./content-decision";
 
 export type SyncDirection = "pushed" | "pulled" | "equal";
 
@@ -150,10 +150,14 @@ async function push(
   document: ConfigurationDocument,
   allowPermissionRequest: boolean,
 ): Promise<void> {
+  const syncDocument: ConfigurationDocument = {
+    ...document,
+    knowledge: syncableUserKnowledge(document.knowledge),
+  };
   const response = await signedRequest(
     settings,
     "PUT",
-    `${JSON.stringify(document, null, 2)}\n`,
+    `${JSON.stringify(syncDocument, null, 2)}\n`,
     allowPermissionRequest,
   );
   if (!response.ok) throw new Error(`S3 推送失败：HTTP ${response.status}`);
@@ -201,7 +205,7 @@ export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncO
   }
 
   const remote = remoteResult.document;
-  const knowledge = mergeUserKnowledge(local.knowledge, remote.knowledge);
+  const knowledge = syncableUserKnowledge(mergeUserKnowledge(local.knowledge, remote.knowledge));
   const localKnowledgeChanged = JSON.stringify(knowledge) !== JSON.stringify(local.knowledge);
   const remoteKnowledgeChanged = JSON.stringify(knowledge) !== JSON.stringify(remote.knowledge);
 

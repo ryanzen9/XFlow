@@ -107,3 +107,24 @@ test("accepts a content-script correction and persists synchronized user knowled
   expect((storage.userKnowledge as { userDecisions: unknown[] }).userDecisions).toHaveLength(1);
   expect(storage.configVersion).toBe(1);
 });
+
+test("persists an author rule from a trusted content script", async () => {
+  const response = await new Promise<ExtensionResponse>((resolve) => {
+    expect(
+      handleMessage(
+        {
+          type: "SAVE_USER_DECISION",
+          surface: "timeline",
+          post: { id: "43", text: "author post", authorId: "ExampleAuthor" },
+          action: "block-author",
+        },
+        { id: "xfilter-test", url: "https://x.com/home", tab: { id: 11 } as chrome.tabs.Tab },
+        resolve,
+      ),
+    ).toBeTrue();
+  });
+  expect(response).toMatchObject({ ok: true, result: { decision: "block", source: "user" } });
+  expect(storage.userKnowledge).toMatchObject({
+    userDecisions: [{ scope: "author", authorId: "exampleauthor", decision: "block" }],
+  });
+});

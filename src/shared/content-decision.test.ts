@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
-  jaccardSimilarity,
+  cosineSimilarity,
   mergeUserKnowledge,
   normalizeContent,
   policyVersion,
-  semanticTokens,
+  semanticEmbedding,
   templateContent,
   type UserDecisionRecord,
 } from "./content-decision";
@@ -37,6 +37,7 @@ describe("content decision primitives", () => {
       contentHash: "one",
       normalizedContent: "one",
       semanticTokens: ["one"],
+      semanticEmbedding: [1],
       decision: "blur",
       createdAt: 1,
       updatedAt: 2,
@@ -56,7 +57,11 @@ describe("content decision primitives", () => {
   });
 
   test("computes bounded semantic similarity", () => {
-    expect(jaccardSimilarity(semanticTokens("limited offer bonus"), semanticTokens("limited offer bonus"))).toBe(1);
-    expect(jaccardSimilarity(semanticTokens("limited offer bonus"), semanticTokens("family photo today"))).toBe(0);
+    expect(
+      cosineSimilarity(semanticEmbedding("limited offer bonus now"), semanticEmbedding("limited offer bonus today")),
+    ).toBeGreaterThan(0.5);
+    expect(
+      cosineSimilarity(semanticEmbedding("limited offer bonus"), semanticEmbedding("family photo today")),
+    ).toBeLessThan(0.5);
   });
 });

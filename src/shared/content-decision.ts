@@ -4,8 +4,16 @@ import type { AppSettings, FilterStrategy } from "./strategy";
 
 export type ContentDecision = "allow" | "blur" | "block";
 export type DecisionSource = "user" | "exact-cache" | "normalized-cache" | "template-cache" | "semantic-cache" | "jev";
-export type UserDecisionScope = "content" | "semantic";
-export type UserDecisionAction = "hide" | "allow" | "reduce-similar" | "block-similar";
+export type UserDecisionScope = "content" | "semantic" | "author";
+export type UserDecisionAction =
+  | "hide"
+  | "allow"
+  | "reduce-similar"
+  | "block-similar"
+  | "block-author"
+  | "allow-author"
+  | "correct-hide"
+  | "correct-allow";
 
 export interface UserDecisionRecord {
   id: string;
@@ -15,6 +23,9 @@ export interface UserDecisionRecord {
   contentHash: string;
   normalizedContent: string;
   semanticTokens: string[];
+  semanticEmbedding?: number[];
+  templateHash?: string;
+  authorId?: string;
   decision: ContentDecision;
   similarityThreshold?: number;
   createdAt: number;
@@ -77,13 +88,57 @@ export function semanticTokens(value: string): string[] {
   return [...new Set(tokens)].slice(0, 160);
 }
 
-export function jaccardSimilarity(left: readonly string[], right: readonly string[]): number {
-  if (left.length === 0 || right.length === 0) return 0;
-  const leftSet = new Set(left);
-  const rightSet = new Set(right);
-  let intersection = 0;
-  for (const token of leftSet) if (rightSet.has(token)) intersection += 1;
-  return intersection / (leftSet.size + rightSet.size - intersection);
+function tokenHash(value: string): number {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+export function semanticEmbeddingFromTokens(tokens: readonly string[], dimensions = 96): number[] {
+  const vector = Array<number>(dimensions).fill(0);
+  const features = [
+    ...tokens.map((token) => `u:${token}`),
+    ...tokens.slice(1).map((token, index) => `b:${tokens[index]}:${token}`),
+  ];
+  for (const feature of features) {
+    const hash = tokenHash(feature);
+    const index = hash % dimensions;
+    vector[index] = (vector[index] ?? 0) + ((hash >>> 8) % 2 === 0 ? 1 : -1);
+  }
+  const magnitude = Math.hypot(...vector);
+  return magnitude === 0 ? vector : vector.map((value) => value / magnitude);
+}
+
+export function semanticEmbedding(value: string): number[] {
+  return semanticEmbeddingFromTokens(semanticTokens(value));
+}
+
+export function cosineSimilarity(left: readonly number[], right: readonly number[]): number {
+  if (left.length === 0 || left.length !== right.length) return 0;
+  let product = 0;
+  let leftMagnitude = 0;
+  let rightMagnitude = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    const leftValue = left[index] ?? 0;
+    const rightValue = right[index] ?? 0;
+    product += leftValue * rightValue;
+    leftMagnitude += leftValue * leftValue;
+    rightMagnitude += rightValue * rightValue;
+  }
+  if (leftMagnitude === 0 || rightMagnitude === 0) return 0;
+  return product / Math.sqrt(leftMagnitude * rightMagnitude);
+}
+
+export function contentLanguage(value: string): "cjk" | "latin" | "mixed" | "other" {
+  const hasCjk = /\p{Script=Han}|\p{Script=Hiragana}|\p{Script=Katakana}|\p{Script=Hangul}/u.test(value);
+  const hasLatin = /\p{Script=Latin}/u.test(value);
+  if (hasCjk && hasLatin) return "mixed";
+  if (hasCjk) return "cjk";
+  if (hasLatin) return "latin";
+  return "other";
 }
 
 function policyStrategy(strategy: FilterStrategy) {
@@ -98,7 +153,7 @@ function policyStrategy(strategy: FilterStrategy) {
 
 export async function policyVersion(settings: AppSettings, surface: FilterSurface): Promise<string> {
   const policy = {
-    cacheSchema: 1,
+    cacheSchema: 2,
     surface,
     provider: settings.activeProvider,
     modelId: PROVIDERS[settings.activeProvider].modelId,
@@ -119,7 +174,7 @@ export function normalizeUserDecision(value: unknown): UserDecisionRecord | null
   const input = value as Partial<UserDecisionRecord>;
   if (
     typeof input.id !== "string" ||
-    (input.scope !== "content" && input.scope !== "semantic") ||
+    (input.scope !== "content" && input.scope !== "semantic" && input.scope !== "author") ||
     (input.surface !== "timeline" && input.surface !== "comments") ||
     typeof input.contentHash !== "string" ||
     typeof input.normalizedContent !== "string" ||
@@ -139,6 +194,15 @@ export function normalizeUserDecision(value: unknown): UserDecisionRecord | null
     contentHash: input.contentHash,
     normalizedContent: input.normalizedContent.slice(0, 5000),
     semanticTokens: input.semanticTokens.filter((token): token is string => typeof token === "string").slice(0, 160),
+    semanticEmbedding:
+      Array.isArray(input.semanticEmbedding) &&
+      input.semanticEmbedding.every((component) => typeof component === "number" && Number.isFinite(component))
+        ? input.semanticEmbedding.slice(0, 96)
+        : semanticEmbeddingFromTokens(
+            input.semanticTokens.filter((token): token is string => typeof token === "string"),
+          ),
+    templateHash: typeof input.templateHash === "string" ? input.templateHash : undefined,
+    authorId: typeof input.authorId === "string" ? input.authorId.slice(0, 80) : undefined,
     decision: input.decision,
     similarityThreshold:
       typeof input.similarityThreshold === "number" ? Math.max(0.5, Math.min(1, input.similarityThreshold)) : undefined,
@@ -158,6 +222,13 @@ export function normalizeUserKnowledge(value: unknown): UserKnowledge {
     if (!previous || compareDecisionVersion(decision, previous) > 0) byId.set(decision.id, decision);
   }
   return { userDecisions: [...byId.values()].toSorted((left, right) => left.id.localeCompare(right.id)) };
+}
+
+export function syncableUserKnowledge(value: unknown): UserKnowledge {
+  const knowledge = normalizeUserKnowledge(value);
+  return {
+    userDecisions: knowledge.userDecisions.map(({ semanticEmbedding: _embedding, ...decision }) => decision),
+  };
 }
 
 function compareDecisionVersion(left: UserDecisionRecord, right: UserDecisionRecord): number {

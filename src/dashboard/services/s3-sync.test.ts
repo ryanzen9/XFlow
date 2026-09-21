@@ -41,6 +41,7 @@ const decisionAt = (id: string, updatedAt: number, decision: "allow" | "blur" = 
   contentHash: id,
   normalizedContent: id,
   semanticTokens: [id],
+  semanticEmbedding: [1],
   decision,
   createdAt: 1,
   updatedAt,
@@ -185,4 +186,18 @@ test("unions user knowledge and resolves the same decision by last write", async
   expect(result.document.knowledge.userDecisions.map(({ id }) => id)).toEqual(["local-only", "remote-only", "shared"]);
   expect(result.document.knowledge.userDecisions.find(({ id }) => id === "shared")?.decision).toBe("blur");
   expect((storage.userKnowledge as { userDecisions: unknown[] }).userDecisions).toHaveLength(3);
+  expect(JSON.stringify(remote)).not.toContain("semanticEmbedding");
+});
+
+test("does not create a sync loop when rebuildable vectors differ only by serialization", async () => {
+  const decision = { ...decisionAt("semantic", 3), scope: "semantic" as const, semanticEmbedding: [0.5, 0.5] };
+  Object.assign(storage, documentAt(4, "Local").config, {
+    configVersion: 4,
+    configUpdatedAt: documentAt(4, "Local").updatedAt,
+    userKnowledge: { userDecisions: [decision] },
+  });
+  remote = { ...documentAt(4, "Local"), schemaVersion: 3, knowledge: { userDecisions: [decision] } };
+  const result = await synchronizeWithS3(settings);
+  expect(result.direction).toBe("equal");
+  expect(requests.map(({ method }) => method)).toEqual(["GET"]);
 });

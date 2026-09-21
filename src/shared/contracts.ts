@@ -5,6 +5,7 @@ import type { ContentDecision, DecisionSource, UserDecisionAction } from "./cont
 export interface PostInput {
   id: string;
   text: string;
+  authorId?: string;
 }
 
 export interface ReviewResult {

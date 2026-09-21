@@ -51,10 +51,12 @@ export class TimelineController {
   private settingsRevision = 0;
   private scanTimer: number | undefined;
   private policyTimer: number | undefined;
+  private decisionTimer: number | undefined;
   private scrollFrame: number | undefined;
   private lastScrollY = window.scrollY;
   private lastScrollAt = performance.now();
   private fastScrollUntil = 0;
+  private ignoreKnowledgeRevisionsUntil = 0;
 
   constructor() {
     this.observer = new MutationObserver(() => this.handleMutation());
@@ -94,6 +96,11 @@ export class TimelineController {
       return;
     }
     if (changes.activeProvider || changes.providerConfigured) {
+      void this.refreshStatus(true);
+      return;
+    }
+    if (changes.decisionKnowledgeRevision) {
+      if (performance.now() < this.ignoreKnowledgeRevisionsUntil) return;
       void this.refreshStatus(true);
       return;
     }
@@ -150,8 +157,13 @@ export class TimelineController {
       if (!extracted) continue;
 
       this.presentations.set(article, null);
+      const item: QueueItem = { ...extracted.post, article, generation: this.generation, surface };
+      this.feedbackPresentations.set(
+        article,
+        mountPostFeedback(article, undefined, Boolean(item.authorId), (action) => this.applyUserDecision(item, action)),
+      );
       if (!isFilterablePostOnSurface(surface, extracted.post.id, location.href)) continue;
-      this.queue.push({ ...extracted.post, article, generation: this.generation, surface });
+      this.queue.push(item);
     }
 
     this.updateReadingZones();
@@ -226,14 +238,21 @@ export class TimelineController {
       else {
         this.feedbackPresentations.set(
           item.article,
-          mountPostFeedback(item.article, result, (action) => this.applyUserDecision(item, action)),
+          mountPostFeedback(item.article, result, Boolean(item.authorId), (action) =>
+            this.applyUserDecision(item, action),
+          ),
         );
       }
     }
   }
 
   private async applyUserDecision(item: QueueItem, action: UserDecisionAction): Promise<void> {
-    const response = await saveUserDecision({ id: item.id, text: item.text }, item.surface, action);
+    this.ignoreKnowledgeRevisionsUntil = performance.now() + 1_000;
+    const response = await saveUserDecision(
+      { id: item.id, text: item.text, ...(item.authorId ? { authorId: item.authorId } : {}) },
+      item.surface,
+      action,
+    );
     if (!response.ok || !("result" in response)) throw new Error(response.ok ? "Invalid response" : response.error);
     const result = response.result;
     this.feedbackPresentations.get(item.article)?.update(result);
@@ -248,7 +267,11 @@ export class TimelineController {
       this.filteredPosts.set(item.article, filtered);
       this.obscure(item, result.probability, result.details);
     }
-    if (action === "reduce-similar" || action === "block-similar") await this.refreshStatus(true);
+    if (this.decisionTimer !== undefined) window.clearTimeout(this.decisionTimer);
+    this.decisionTimer = window.setTimeout(() => {
+      this.decisionTimer = undefined;
+      void this.refreshStatus(true);
+    }, 400);
   }
 
   private obscure(item: QueueItem, probability: number, details?: VeilDetails): void {
@@ -340,7 +363,9 @@ export class TimelineController {
     this.generation += 1;
     if (this.scanTimer !== undefined) window.clearTimeout(this.scanTimer);
     if (this.policyTimer !== undefined) window.clearTimeout(this.policyTimer);
+    if (this.decisionTimer !== undefined) window.clearTimeout(this.decisionTimer);
     this.policyTimer = undefined;
+    this.decisionTimer = undefined;
     if (this.scrollFrame !== undefined) cancelAnimationFrame(this.scrollFrame);
     this.scanTimer = undefined;
     this.scrollFrame = undefined;

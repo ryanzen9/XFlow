@@ -10,7 +10,8 @@ export interface PostFeedbackPresentation {
 
 export function mountPostFeedback(
   article: HTMLElement,
-  initialResult: ReviewResult,
+  initialResult: ReviewResult | undefined,
+  canLabelAuthor: boolean,
   onAction: (action: UserDecisionAction) => Promise<void>,
 ): PostFeedbackPresentation {
   const host = document.createElement("div");
@@ -21,9 +22,11 @@ export function mountPostFeedback(
 
   let root: Root | null = createRoot(host);
   const render = (result: ReviewResult) => {
-    flushSync(() => root?.render(<PostFeedback result={result} onAction={onAction} />));
+    flushSync(() => root?.render(<PostFeedback result={result} canLabelAuthor={canLabelAuthor} onAction={onAction} />));
   };
-  render(initialResult);
+  flushSync(() =>
+    root?.render(<PostFeedback result={initialResult} canLabelAuthor={canLabelAuthor} onAction={onAction} />),
+  );
 
   return {
     update: render,
