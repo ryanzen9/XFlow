@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="XFlow：让噪声通过策略遮罩，留下清晰信号" width="100%" />
+  <img src="docs/assets/banner.svg" alt="XFlow" width="100%" />
 </p>
 
 <p align="center">
@@ -16,8 +16,7 @@
 </p>
 
 <p align="center">
-  一个面向 X / Twitter 的策略驱动内容过滤扩展。<br />
-  XFlow 不删除内容或改变信息流布局；它只柔和遮蔽命中策略的内容，并把揭示权留给用户。
+  一个面向 X / Twitter 的策略驱动内容过滤扩展。
 </p>
 
 > 当前版本尚未发布到 Chrome Web Store，请通过开发者模式安装。

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="XFlow: noise passes through a policy veil and leaves as a clear signal" width="100%" />
+  <img src="docs/assets/banner.svg" alt="XFlow" width="100%" />
 </p>
 
 <p align="center">
