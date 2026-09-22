@@ -50,6 +50,11 @@ describe("post sanitization", () => {
       text: "hello",
       authorId: "ExampleUser",
     });
+    expect(sanitizePost({ id: "visible-1", postId: " 123 ", text: "tweet" })).toEqual({
+      id: "visible-1",
+      postId: "123",
+      text: "tweet",
+    });
     expect(sanitizePost({ id: "42", text: "   " })).toBeNull();
   });
 });

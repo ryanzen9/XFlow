@@ -95,7 +95,7 @@ test("accepts a content-script correction and persists synchronized user knowled
         {
           type: "SAVE_USER_DECISION",
           surface: "timeline",
-          post: { id: "42", text: "show this post" },
+          post: { id: "42", postId: "42", text: "show this post" },
           action: "allow",
         },
         { id: "xfilter-test", url: "https://x.com/home", tab: { id: 10 } as chrome.tabs.Tab },

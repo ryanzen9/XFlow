@@ -4,6 +4,7 @@ import type { ContentDecision, DecisionSource, UserDecisionAction } from "./cont
 
 export interface PostInput {
   id: string;
+  postId?: string;
   text: string;
   authorId?: string;
 }

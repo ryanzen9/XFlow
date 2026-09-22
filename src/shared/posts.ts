@@ -6,7 +6,9 @@ export function sanitizePost(post: unknown): PostInput | null {
   const input = post as Partial<PostInput>;
   if (typeof input.id !== "string" || typeof input.text !== "string") return null;
   const id = input.id.trim();
+  const postIdCandidate = typeof input.postId === "string" ? input.postId.trim() : "";
+  const postId = /^\d+$/.test(postIdCandidate) ? postIdCandidate.slice(0, 80) : "";
   const text = input.text.replace(/\s+/g, " ").trim().slice(0, MAX_POST_LENGTH);
   const authorId = typeof input.authorId === "string" ? input.authorId.trim().replace(/^@/, "").slice(0, 80) : "";
-  return id && text ? { id, text, ...(authorId ? { authorId } : {}) } : null;
+  return id && text ? { id, ...(postId ? { postId } : {}), text, ...(authorId ? { authorId } : {}) } : null;
 }

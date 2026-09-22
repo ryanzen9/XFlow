@@ -46,7 +46,7 @@ Jev → persist reusable local results
 
 文本先经过 Unicode、大小写、空白、重复标点与 URL tracking 参数归一化。模板层另外抽象 URL、Mention、Cashtag 和数字，但保留正负号与百分号，避免把 `+10%` 和 `-10%` 合并。语义层在 Background 中生成固定维度的本地特征哈希向量，以语言和 Policy 预筛候选，再使用余弦相似度、置信度与 Top-K 一致性决定是否复用；不调用远程 Embedding 服务。
 
-Policy 指纹包含 surface、Provider、策略 ID、启用状态、优先级、Prompt 和敏感度。运行缓存以 Policy 指纹分区，配置改变后自然 miss；单条隐藏或允许按稳定 Tweet ID 保存并直接更新 UI，不写入自动缓存或相似内容学习，也不会被新的 Jev 结果覆盖。
+Policy 指纹包含 surface、Provider、策略 ID、启用状态、优先级、Prompt 和敏感度。运行缓存以 Policy 指纹分区，配置改变后自然 miss；单条隐藏或允许在 `/status/{id}` 可用时按稳定 Tweet ID 保存并直接更新 UI，只有生成式页面 fallback ID 时仅作用于当前页面，不写入自动缓存或相似内容学习，也不会被新的 Jev 结果覆盖。
 
 ## Source boundaries
 

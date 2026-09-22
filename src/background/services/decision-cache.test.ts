@@ -136,9 +136,9 @@ describe("layered decision cache", () => {
   test("gives explicit user decisions priority over an automatic cache entry", async () => {
     const policy = "policy-user";
     await rememberJevDecision("A disputed post", policy, "blur", 0.99);
-    await saveUserDecision({ id: "1", text: "A disputed post" }, "timeline", "allow", 100);
+    await saveUserDecision({ id: "101", postId: "101", text: "A disputed post" }, "timeline", "allow", 100);
     expect(
-      await findLocalDecision("A disputed post", "timeline", policy, 101, undefined, undefined, "1"),
+      await findLocalDecision("A disputed post", "timeline", policy, 101, undefined, undefined, "101"),
     ).toMatchObject({
       decision: "allow",
       source: "user",
@@ -147,12 +147,12 @@ describe("layered decision cache", () => {
   });
 
   test("keeps single-post decisions out of identical content on other posts", async () => {
-    await saveUserDecision({ id: "first", text: "identical text" }, "timeline", "hide", 100);
+    await saveUserDecision({ id: "201", postId: "201", text: "identical text" }, "timeline", "hide", 100);
     expect(storage.userKnowledge).toMatchObject({
       userDecisions: [
         {
-          id: "timeline:post:first",
-          postId: "first",
+          id: "timeline:post:201",
+          postId: "201",
           contentHash: "",
           normalizedContent: "",
           semanticTokens: [],
@@ -160,27 +160,66 @@ describe("layered decision cache", () => {
       ],
     });
     expect(
-      await findLocalDecision("identical text", "timeline", "policy", 101, undefined, undefined, "first"),
+      await findLocalDecision("identical text", "timeline", "policy", 101, undefined, undefined, "201"),
     ).toMatchObject({ decision: "blur", source: "user" });
     expect(
-      await findLocalDecision("identical text", "timeline", "policy", 101, undefined, undefined, "second"),
+      await findLocalDecision("identical text", "timeline", "policy", 101, undefined, undefined, "202"),
+    ).toBeNull();
+  });
+
+  test("keeps fallback-only post ids transient", async () => {
+    expect(
+      await saveUserDecision({ id: "visible-1", text: "status-less item" }, "timeline", "hide", 100),
+    ).toMatchObject({
+      decision: "blur",
+      source: "user",
+    });
+    expect(storage.userKnowledge).toBeUndefined();
+    expect(storage.knowledgeRevision).toBeUndefined();
+    expect(await findLocalDecision("status-less item", "timeline", "policy", 101)).toBeNull();
+  });
+
+  test("does not leave an IndexedDB rule behind when durable persistence fails", async () => {
+    const originalSet = chrome.storage.local.set;
+    chrome.storage.local.set = async (patch: Record<string, unknown>) => {
+      if ("userKnowledge" in patch) throw new Error("storage unavailable");
+      Object.assign(storage, patch);
+    };
+    try {
+      await expect(
+        saveUserDecision({ id: "401", postId: "401", text: "must not persist" }, "timeline", "hide", 100),
+      ).rejects.toThrow("storage unavailable");
+    } finally {
+      chrome.storage.local.set = originalSet;
+    }
+    expect(
+      await findLocalDecision("must not persist", "timeline", "policy", 101, undefined, undefined, "401"),
+    ).toBeNull();
+  });
+
+  test("removes IndexedDB rules that are absent from canonical durable knowledge", async () => {
+    await saveUserDecision({ id: "402", postId: "402", text: "removed durable rule" }, "timeline", "hide", 100);
+    delete storage.userKnowledge;
+    storage.knowledgeRevision = 2;
+    expect(
+      await findLocalDecision("removed durable rule", "timeline", "policy", 101, undefined, undefined, "402"),
     ).toBeNull();
   });
 
   test("keeps timestamps strictly increasing and serializes concurrent knowledge writes", async () => {
-    await saveUserDecision({ id: "same", text: "same post" }, "timeline", "hide", 100);
-    await saveUserDecision({ id: "same", text: "same post" }, "timeline", "allow", 100);
+    await saveUserDecision({ id: "301", postId: "301", text: "same post" }, "timeline", "hide", 100);
+    await saveUserDecision({ id: "301", postId: "301", text: "same post" }, "timeline", "allow", 100);
     await Promise.all([
-      saveUserDecision({ id: "left", text: "left post" }, "timeline", "hide", 100),
-      saveUserDecision({ id: "right", text: "right post" }, "timeline", "hide", 100),
+      saveUserDecision({ id: "302", postId: "302", text: "left post" }, "timeline", "hide", 100),
+      saveUserDecision({ id: "303", postId: "303", text: "right post" }, "timeline", "hide", 100),
     ]);
     const decisions = (storage.userKnowledge as { userDecisions: Array<{ id: string; updatedAt: number }> })
       .userDecisions;
-    expect(decisions.find(({ id }) => id === "timeline:post:same")?.updatedAt).toBe(101);
+    expect(decisions.find(({ id }) => id === "timeline:post:301")?.updatedAt).toBe(101);
     expect(decisions.map(({ id }) => id)).toContainAllValues([
-      "timeline:post:same",
-      "timeline:post:left",
-      "timeline:post:right",
+      "timeline:post:301",
+      "timeline:post:302",
+      "timeline:post:303",
     ]);
     expect(storage.configVersion).toBeUndefined();
     expect(storage.knowledgeRevision).toBe(4);
@@ -214,7 +253,12 @@ describe("layered decision cache", () => {
       decision: "block",
       source: "user",
     });
-    await saveUserDecision({ id: "2", text: "another post", authorId: "spammer" }, "timeline", "allow", 102);
+    await saveUserDecision(
+      { id: "2", postId: "2", text: "another post", authorId: "spammer" },
+      "timeline",
+      "allow",
+      102,
+    );
     expect(await findLocalDecision("another post", "timeline", policy, 103, undefined, "spammer", "2")).toMatchObject({
       decision: "allow",
       source: "user",

@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, expect, test } from "bun:test";
-import { initializeStorageAccess } from "./public-settings";
+import { initializeStorageAccess, publishPublicSettings } from "./public-settings";
 
 const originalChrome = globalThis.chrome;
 let localAccess = "";
@@ -19,6 +19,7 @@ beforeEach(() => {
     commentsEnabled: false,
     modelNickname: "Jev",
     strategies: [],
+    knowledgeRevision: 9,
     userKnowledge: {
       userDecisions: [
         {
@@ -72,9 +73,13 @@ test("keeps local secrets trusted-only and exposes only a safe session mirror", 
     activeProvider: "typesafe",
     providerConfigured: true,
     strategies: [],
-    decisionKnowledgeRevision: "1:7",
+    decisionKnowledgeRevision: "9",
   });
   expect(JSON.stringify(session)).not.toContain("private-key");
   expect(session).not.toHaveProperty("providerSecrets");
   expect(JSON.stringify(session)).not.toContain("private post text");
+
+  local.knowledgeRevision = 10;
+  await publishPublicSettings();
+  expect(session.decisionKnowledgeRevision).toBe("10");
 });

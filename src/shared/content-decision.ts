@@ -187,12 +187,13 @@ export function normalizeUserDecision(value: unknown): UserDecisionRecord | null
   ) {
     return null;
   }
+  const postIdCandidate = typeof input.postId === "string" ? input.postId.slice(0, 80) : "";
   return {
     id: input.id.slice(0, 180),
     scope: input.scope,
     surface: input.surface,
     policyId: typeof input.policyId === "string" && input.policyId ? input.policyId.slice(0, 120) : input.surface,
-    postId: typeof input.postId === "string" && input.postId ? input.postId.slice(0, 180) : undefined,
+    postId: /^\d+$/.test(postIdCandidate) ? postIdCandidate : undefined,
     contentHash: input.contentHash,
     normalizedContent: input.normalizedContent.slice(0, 5000),
     semanticTokens: input.semanticTokens.filter((token): token is string => typeof token === "string").slice(0, 160),

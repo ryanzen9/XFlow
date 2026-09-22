@@ -106,10 +106,12 @@ async function run(page) {
   assert(
     await page.evaluate(() =>
       qa.requests.some(
-        (message) => message.type === "REVIEW_POSTS" && message.posts.some((post) => post.authorId === "example"),
+        (message) =>
+          message.type === "REVIEW_POSTS" &&
+          message.posts.some((post) => post.authorId === "example" && post.postId === post.id),
       ),
     ),
-    "Author id was not forwarded to the decision pipeline",
+    "Stable post and author ids were not forwarded to the decision pipeline",
   );
   assert((await page.locator(".xfilter-feedback-host").count()) === 2, "Feedback entry missing from detected posts");
   await page.locator("#post-100 .xfilter-feedback__trigger").click();

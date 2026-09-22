@@ -168,9 +168,9 @@ test("deduplicates identical misses inside one Jev batch", async () => {
 });
 
 test("honours user rules even when no automatic strategy remains", async () => {
-  await saveUserDecision({ id: "42", text: "manually hidden" }, "timeline", "hide", 100);
+  await saveUserDecision({ id: "42", postId: "42", text: "manually hidden" }, "timeline", "hide", 100);
   const settings = normalizeSettings({ strategies: [] });
-  const result = await requestPostReviews([{ id: "42", text: "manually hidden" }], settings, "timeline", {
+  const result = await requestPostReviews([{ id: "42", postId: "42", text: "manually hidden" }], settings, "timeline", {
     ...secrets,
     openrouter: "",
   });
@@ -194,11 +194,11 @@ test("falls back to Jev and returns provider results when IndexedDB fails", asyn
   storage.userKnowledge = {
     userDecisions: [
       {
-        id: "timeline:post:user-hit",
+        id: "timeline:post:501",
         scope: "content",
         surface: "timeline",
         policyId: "timeline",
-        postId: "user-hit",
+        postId: "501",
         contentHash: "",
         normalizedContent: "",
         semanticTokens: [],
@@ -215,7 +215,7 @@ test("falls back to Jev and returns provider results when IndexedDB fails", asyn
   try {
     const result = await requestPostReviews(
       [
-        { id: "user-hit", text: "durable user decision survives cache failure" },
+        { id: "501", postId: "501", text: "durable user decision survives cache failure" },
         { id: "db-failure", text: "provider result survives cache failure" },
       ],
       normalizeSettings({}),
@@ -225,7 +225,7 @@ test("falls back to Jev and returns provider results when IndexedDB fails", asyn
     expect(result).toMatchObject({
       ok: true,
       results: [
-        { id: "user-hit", decision: "blur", source: "user" },
+        { id: "501", decision: "blur", source: "user" },
         { id: "db-failure", decision: "blur", source: "jev" },
       ],
     });

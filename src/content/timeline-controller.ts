@@ -189,7 +189,12 @@ export class TimelineController {
         let response;
         try {
           response = await reviewPosts(
-            batch.map(({ id, text, authorId }) => ({ id, text, ...(authorId ? { authorId } : {}) })),
+            batch.map(({ id, postId, text, authorId }) => ({
+              id,
+              ...(postId ? { postId } : {}),
+              text,
+              ...(authorId ? { authorId } : {}),
+            })),
             surface,
           );
         } catch {
@@ -247,9 +252,15 @@ export class TimelineController {
   }
 
   private async applyUserDecision(item: QueueItem, action: UserDecisionAction): Promise<void> {
-    this.ignoreKnowledgeRevisionsUntil = performance.now() + 1_000;
+    const durableDecision = Boolean(item.postId) || (action !== "hide" && action !== "allow");
+    if (durableDecision) this.ignoreKnowledgeRevisionsUntil = performance.now() + 1_000;
     const response = await saveUserDecision(
-      { id: item.id, text: item.text, ...(item.authorId ? { authorId: item.authorId } : {}) },
+      {
+        id: item.id,
+        ...(item.postId ? { postId: item.postId } : {}),
+        text: item.text,
+        ...(item.authorId ? { authorId: item.authorId } : {}),
+      },
       item.surface,
       action,
     );
@@ -267,11 +278,13 @@ export class TimelineController {
       this.filteredPosts.set(item.article, filtered);
       this.obscure(item, result.probability, result.details);
     }
-    if (this.decisionTimer !== undefined) window.clearTimeout(this.decisionTimer);
-    this.decisionTimer = window.setTimeout(() => {
-      this.decisionTimer = undefined;
-      void this.refreshStatus(true);
-    }, 400);
+    if (durableDecision) {
+      if (this.decisionTimer !== undefined) window.clearTimeout(this.decisionTimer);
+      this.decisionTimer = window.setTimeout(() => {
+        this.decisionTimer = undefined;
+        void this.refreshStatus(true);
+      }, 400);
+    }
   }
 
   private obscure(item: QueueItem, probability: number, details?: VeilDetails): void {

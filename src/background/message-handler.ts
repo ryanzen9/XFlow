@@ -109,12 +109,13 @@ export function handleMessage(
     }
     void (async () => {
       const settings = await getSettings();
+      const correction = message.action === "correct-hide" || message.action === "correct-allow";
       const saved = await saveUserDecision(
         post,
         message.surface,
         message.action,
         Date.now(),
-        await policyVersion(settings, message.surface),
+        correction ? await policyVersion(settings, message.surface) : message.surface,
       );
       const strategy = saved.decision === "allow" ? undefined : strategiesFor(settings, message.surface)[0];
       return {

@@ -57,7 +57,15 @@ export async function requestPostReviews(
     local = await Promise.all(
       posts.map(async (post) => {
         try {
-          return await findLocalDecision(post.text, surface, currentPolicy, now, lookupContext, post.authorId, post.id);
+          return await findLocalDecision(
+            post.text,
+            surface,
+            currentPolicy,
+            now,
+            lookupContext,
+            post.authorId,
+            post.postId,
+          );
         } catch (error) {
           console.warn("[XFilter] Local decision lookup failed for one post; falling back to Jev.", error);
           return null;

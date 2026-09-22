@@ -280,7 +280,12 @@ export async function loadUserDecisions(): Promise<UserDecisionRecord[]> {
   const signature = JSON.stringify(knowledge);
   try {
     if (signature !== userKnowledgeSignature) {
-      await Promise.all(knowledge.userDecisions.map((decision) => database.put(USER_STORE, decision)));
+      const existing = await database.getAll<UserDecisionRecord>(USER_STORE);
+      const durableIds = new Set(knowledge.userDecisions.map(({ id }) => id));
+      await Promise.all([
+        ...knowledge.userDecisions.map((decision) => database.put(USER_STORE, decision)),
+        ...existing.filter(({ id }) => !durableIds.has(id)).map(({ id }) => database.delete(USER_STORE, id)),
+      ]);
       userKnowledgeSignature = signature;
     }
     return await database.getAll<UserDecisionRecord>(USER_STORE);
@@ -503,6 +508,20 @@ export async function saveUserDecision(
   const authorAction = action === "block-author" || action === "allow-author";
   if (authorAction && !post.authorId) throw new Error("当前内容缺少可用的作者标识。");
   const effectiveScope = authorAction ? "author" : scope;
+  const decision: ContentDecision =
+    action === "allow" || action === "allow-author" || action === "correct-allow"
+      ? "allow"
+      : action === "block-similar" || action === "block-author"
+        ? "block"
+        : "blur";
+  const singlePostAction = effectiveScope === "content" && !policyCorrection;
+  if (singlePostAction && !post.postId) {
+    return {
+      decision,
+      probability: decision === "allow" ? 0 : 0.9,
+      source: "user",
+    };
+  }
   const needsContentFeatures = policyCorrection || effectiveScope === "semantic";
   const values = needsContentFeatures ? await fingerprints(post.text) : undefined;
   const id = authorAction
@@ -510,43 +529,42 @@ export async function saveUserDecision(
     : policyCorrection
       ? `${surface}:policy:${policy}:${values!.contentHash}`
       : effectiveScope === "content"
-        ? `${surface}:post:${post.id}`
+        ? `${surface}:post:${post.postId!}`
         : `${surface}:${effectiveScope}:${values!.contentHash}`;
   let record: UserDecisionRecord | undefined;
   let knowledgeSignature = "";
   await updateUserKnowledge(async (knowledge) => {
-    const previous = knowledge.userDecisions.find((decision) => decision.id === id);
+    const previous = knowledge.userDecisions.find((candidate) => candidate.id === id);
     const updatedAt = Math.max(now, (previous?.updatedAt ?? Number.NEGATIVE_INFINITY) + 1);
     record = {
       id,
       scope: effectiveScope,
       surface,
       policyId: policyCorrection ? policy : surface,
-      postId: effectiveScope === "content" && !policyCorrection ? post.id : undefined,
+      postId: singlePostAction ? post.postId : undefined,
       contentHash: values?.contentHash ?? "",
       normalizedContent: values?.normalized ?? "",
       semanticTokens: values?.tokens ?? [],
       semanticEmbedding: values?.embedding,
       templateHash: effectiveScope === "semantic" ? values?.templateHash : undefined,
       authorId: authorAction ? post.authorId!.toLocaleLowerCase() : undefined,
-      decision:
-        action === "allow" || action === "allow-author" || action === "correct-allow"
-          ? "allow"
-          : action === "block-similar" || action === "block-author"
-            ? "block"
-            : "blur",
+      decision,
       similarityThreshold: action === "reduce-similar" ? 0.82 : action === "block-similar" ? 0.75 : undefined,
       createdAt: previous?.createdAt ?? now,
       updatedAt,
       deviceId: await deviceId(),
     };
-    await database.put(USER_STORE, record);
     const nextKnowledge = mergeUserKnowledge(knowledge, { userDecisions: [record] });
     knowledgeSignature = JSON.stringify(nextKnowledge);
     return nextKnowledge;
   });
   if (!record) throw new Error("用户标注保存失败。");
-  userKnowledgeSignature = knowledgeSignature;
+  try {
+    await database.put(USER_STORE, record);
+    userKnowledgeSignature = knowledgeSignature;
+  } catch {
+    userKnowledgeSignature = "";
+  }
   return userHit(record);
 }
 
