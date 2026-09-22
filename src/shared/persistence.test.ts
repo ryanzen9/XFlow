@@ -8,6 +8,7 @@ import {
   writeVersionedSettings,
 } from "./persistence";
 import { EMPTY_USER_KNOWLEDGE } from "./content-decision";
+import { EMPTY_ACTIVITY_DATA } from "./activity";
 import { normalizeSettings } from "./strategy";
 
 const originalChrome = globalThis.chrome;
@@ -87,6 +88,7 @@ describe("versioned configuration persistence", () => {
       updatedAt: "2026-09-21T00:00:00.000Z",
       config: { ...normalizeSettings({}), modelNickname: "Remote", strategies: [] },
       knowledge: EMPTY_USER_KNOWLEDGE,
+      activity: EMPTY_ACTIVITY_DATA,
     };
     const applied = await applyRemoteConfiguration(remote);
     expect(applied.configVersion).toBe(12);

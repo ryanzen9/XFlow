@@ -18,6 +18,14 @@ import {
 } from "./services/provider-secrets";
 import { getSettings } from "./services/settings";
 import { saveUserDecision } from "./services/decision-cache";
+import {
+  clearActivity,
+  getActivitySnapshot,
+  markActivityStatus,
+  recordFilterEvent,
+  resetPageActivity,
+} from "./services/activity";
+import { requestAutomaticSync } from "./services/config-sync";
 
 let reviewChain: Promise<unknown> = Promise.resolve();
 
@@ -56,7 +64,7 @@ function isExtensionPage(sender: chrome.runtime.MessageSender): boolean {
 }
 
 function isContentScript(sender: chrome.runtime.MessageSender): boolean {
-  if (sender.id !== chrome.runtime.id || !sender.tab || !sender.url) return false;
+  if (sender.id !== chrome.runtime.id || typeof sender.tab?.id !== "number" || !sender.url) return false;
   try {
     const url = new URL(sender.url);
     return url.protocol === "https:" && (url.hostname === "x.com" || url.hostname === "twitter.com");
@@ -138,6 +146,83 @@ export function handleMessage(
     })()
       .then(sendResponse)
       .catch(() => sendResponse({ ok: false, code: "API_ERROR", error: "保存用户标注失败，请重试。" }));
+    return true;
+  }
+
+  if (message.type === "RESET_PAGE_ACTIVITY") {
+    if (!isContentScript(sender) || typeof message.pageToken !== "string" || !message.pageToken) {
+      sendResponse({ ok: false, code: "INVALID_REQUEST", error: "无效的页面统计重置请求。" });
+      return false;
+    }
+    void resetPageActivity(sender.tab!.id!, message.pageToken)
+      .then(() => sendResponse({ ok: true, updated: true }))
+      .catch(() => sendResponse({ ok: false, code: "API_ERROR", error: "无法重置页面统计。" }));
+    return true;
+  }
+
+  if (message.type === "RECORD_FILTER_EVENT") {
+    if (
+      !isContentScript(sender) ||
+      typeof message.pageToken !== "string" ||
+      !message.pageToken ||
+      (message.surface !== "timeline" && message.surface !== "comments")
+    ) {
+      sendResponse({ ok: false, code: "INVALID_REQUEST", error: "无效的过滤统计请求。" });
+      return false;
+    }
+    void recordFilterEvent({
+      post: message.post,
+      surface: message.surface,
+      pageToken: message.pageToken,
+      tabId: sender.tab!.id!,
+      policyId: message.policyId,
+      policyName: message.policyName,
+    })
+      .then((result) => sendResponse({ ok: true, ...result }))
+      .catch(() => sendResponse({ ok: false, code: "API_ERROR", error: "无法保存过滤统计。" }));
+    return true;
+  }
+
+  if (message.type === "MARK_ACTIVITY_STATUS") {
+    const allowed =
+      (message.status === "revealed" && isContentScript(sender)) ||
+      (message.status === "incorrect" && isExtensionPage(sender));
+    if (!allowed || typeof message.eventId !== "string" || !message.eventId) {
+      sendResponse({ ok: false, code: "INVALID_REQUEST", error: "无效的历史状态更新。" });
+      return false;
+    }
+    void markActivityStatus(message.eventId, message.status)
+      .then((updated) => {
+        if (!updated) {
+          sendResponse({ ok: false, code: "INVALID_REQUEST", error: "未找到对应的过滤记录。" });
+          return false;
+        }
+        sendResponse({ ok: true, updated: true });
+        if (message.status === "incorrect") void requestAutomaticSync();
+        return true;
+      })
+      .catch(() => sendResponse({ ok: false, code: "API_ERROR", error: "无法更新过滤记录。" }));
+    return true;
+  }
+
+  if (message.type === "GET_ACTIVITY_DATA" || message.type === "CLEAR_ACTIVITY_DATA") {
+    if (!isExtensionPage(sender)) {
+      sendResponse({ ok: false, code: "FORBIDDEN", error: "只有扩展页面可以读取或清除统计数据。" });
+      return false;
+    }
+    if (message.type === "GET_ACTIVITY_DATA") {
+      void getActivitySnapshot()
+        .then((snapshot) => sendResponse({ ok: true, ...snapshot }))
+        .catch(() => sendResponse({ ok: false, code: "API_ERROR", error: "无法读取统计数据。" }));
+    } else {
+      void clearActivity()
+        .then(() => {
+          sendResponse({ ok: true, cleared: true });
+          void requestAutomaticSync();
+          return undefined;
+        })
+        .catch(() => sendResponse({ ok: false, code: "API_ERROR", error: "无法清除统计数据。" }));
+    }
     return true;
   }
 

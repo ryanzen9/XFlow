@@ -1,6 +1,7 @@
 import { normalizeSettings, type AppSettings } from "./strategy";
 import { PROVIDER_SECRETS_KEY, normalizeProviderSecrets } from "./providers";
 import { normalizeUserKnowledge, syncableUserKnowledge, type UserKnowledge } from "./content-decision";
+import { ACTIVITY_DATA_KEY, normalizeActivityData, type ActivityData } from "./activity";
 
 export const CONFIG_SCHEMA_VERSION = 4;
 export const CONFIG_VERSION_KEY = "configVersion";
@@ -16,6 +17,7 @@ export interface ConfigurationDocument {
   updatedAt: string;
   config: AppSettings;
   knowledge: UserKnowledge;
+  activity: ActivityData;
 }
 
 export interface S3SyncSettings {
@@ -95,6 +97,7 @@ export async function readConfigurationDocument(): Promise<ConfigurationDocument
     updatedAt: timestamp(stored[CONFIG_UPDATED_AT_KEY]),
     config: normalizeSettings(stored),
     knowledge: syncableUserKnowledge(stored[USER_KNOWLEDGE_KEY]),
+    activity: normalizeActivityData(stored[ACTIVITY_DATA_KEY]),
   };
 }
 
@@ -120,6 +123,7 @@ export function normalizeConfigurationDocument(value: unknown): ConfigurationDoc
     updatedAt: timestamp(input.updatedAt),
     config: normalizeSettings(input.config as unknown as Record<string, unknown>),
     knowledge: syncableUserKnowledge(input.knowledge),
+    activity: normalizeActivityData(input.activity),
   };
 }
 
@@ -185,6 +189,7 @@ export async function applyRemoteConfiguration(document: ConfigurationDocument):
   await chrome.storage.local.set({
     ...normalized.config,
     [USER_KNOWLEDGE_KEY]: normalizeUserKnowledge(normalized.knowledge),
+    [ACTIVITY_DATA_KEY]: normalized.activity,
     [CONFIG_VERSION_KEY]: normalized.configVersion,
     [KNOWLEDGE_REVISION_KEY]: normalized.knowledgeRevision,
     [CONFIG_UPDATED_AT_KEY]: normalized.updatedAt,

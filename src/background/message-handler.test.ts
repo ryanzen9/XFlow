@@ -2,9 +2,11 @@ import { afterAll, beforeEach, expect, test } from "bun:test";
 import type { ExtensionResponse } from "../shared";
 import { handleMessage } from "./message-handler";
 import { resetDecisionCacheForTests } from "./services/decision-cache";
+import { resetActivityServiceForTests } from "./services/activity";
 
 const originalChrome = globalThis.chrome;
 let storage: Record<string, unknown>;
+let session: Record<string, unknown>;
 
 beforeEach(() => {
   resetDecisionCacheForTests();
@@ -13,6 +15,8 @@ beforeEach(() => {
     providerSecrets: { openrouter: "sk-or-private-4321", "vercel-ai-gateway": "", typesafe: "" },
     strategies: [],
   };
+  session = {};
+  resetActivityServiceForTests();
   globalThis.chrome = {
     runtime: { id: "xfilter-test", getURL: (path: string) => `chrome-extension://xfilter-test/${path}` },
     storage: {
@@ -24,7 +28,12 @@ beforeEach(() => {
         set: async (patch: Record<string, unknown>) => Object.assign(storage, patch),
         remove: async (key: string) => delete storage[key],
       },
+      session: {
+        get: async (keys: string[]) => Object.fromEntries(keys.map((key) => [key, session[key]])),
+        set: async (patch: Record<string, unknown>) => Object.assign(session, patch),
+      },
     },
+    action: { setBadgeText: async () => undefined, setBadgeBackgroundColor: async () => undefined },
   } as unknown as typeof chrome;
 });
 
@@ -141,4 +150,33 @@ test("persists an author rule from a trusted content script", async () => {
   expect(storage.userKnowledge).toMatchObject({
     userDecisions: [{ scope: "author", authorId: "exampleauthor", decision: "block" }],
   });
+});
+
+test("records filter activity only from an X content script", async () => {
+  const sender = { id: "xfilter-test", url: "https://x.com/home", tab: { id: 10 } as chrome.tabs.Tab };
+  const response = await new Promise<ExtensionResponse>((resolve) => {
+    expect(
+      handleMessage(
+        {
+          type: "RECORD_FILTER_EVENT",
+          pageToken: "page-one",
+          surface: "timeline",
+          post: { id: "42", text: "filtered", author: "@person" },
+          policyName: "Spam",
+        },
+        sender,
+        resolve,
+      ),
+    ).toBeTrue();
+  });
+  expect(response).toMatchObject({ ok: true, eventId: "x:42", added: true, pageCount: 1 });
+  expect((storage.activityData as { events: unknown[] }).events).toHaveLength(1);
+
+  let rejected: ExtensionResponse | undefined;
+  expect(
+    handleMessage({ type: "CLEAR_ACTIVITY_DATA" }, sender, (value) => {
+      rejected = value;
+    }),
+  ).toBeFalse();
+  expect(rejected).toMatchObject({ ok: false, code: "FORBIDDEN" });
 });

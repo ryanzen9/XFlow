@@ -51,6 +51,16 @@ const storageMock = `(() => {
             modelId: providers[active].modelId
           };
         }
+        if (message.type === 'CLEAR_ACTIVITY_DATA') {
+          await globalThis.chrome.storage.local.set({ activityData: { schemaVersion: 1, clearedAt: Date.now(), events: [] } });
+          return { ok: true, cleared: true };
+        }
+        if (message.type === 'MARK_ACTIVITY_STATUS') {
+          const activity = data.activityData || { schemaVersion: 1, clearedAt: 0, events: [] };
+          activity.events = activity.events.map(event => event.id === message.eventId ? { ...event, status: 'incorrect', updatedAt: Date.now() } : event);
+          await globalThis.chrome.storage.local.set({ activityData: activity });
+          return { ok: true, updated: true };
+        }
         if (message.type === 'SAVE_PROVIDER_KEY') secrets[message.providerId] = message.apiKey;
         if (message.type === 'CLEAR_PROVIDER_KEY') secrets[message.providerId] = '';
         if (message.type === 'SAVE_PROVIDER_KEY' || message.type === 'CLEAR_PROVIDER_KEY') {

@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import { PROVIDERS, type AppSettings } from "../../shared";
 import { Toggle } from "./Toggle";
+import { ActivityPanel } from "./ActivityPanel";
 import {
   card,
   control,
@@ -31,6 +32,7 @@ export function GeneralPanel({ settings, busy, onChange, onToggle, onSave }: Pro
   return (
     <div className="grid gap-6 min-[961px]:grid-cols-[minmax(0,730px)_minmax(180px,1fr)] min-[1151px]:gap-10">
       <div className="grid content-start gap-[22px]">
+        <ActivityPanel />
         <section className={card}>
           <div className={sectionTitle}>
             <span className={sectionIcon} aria-hidden="true">

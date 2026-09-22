@@ -9,6 +9,7 @@ import {
   type S3SyncSettings,
 } from "./persistence";
 import { mergeUserKnowledge, syncableUserKnowledge } from "./content-decision";
+import { mergeActivityData } from "./activity";
 
 export type SyncDirection = "pushed" | "pulled" | "equal";
 
@@ -188,6 +189,14 @@ async function readRemote(
   }
 }
 
+async function applyWithLatestActivity(document: ConfigurationDocument): Promise<ConfigurationDocument> {
+  const latest = await readConfigurationDocument();
+  return applyRemoteConfiguration({
+    ...document,
+    activity: mergeActivityData(latest.activity, document.activity),
+  });
+}
+
 export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncOptions = {}): Promise<SyncResult> {
   const validationError = validateS3Settings(settings);
   if (validationError) throw new Error(validationError);
@@ -208,15 +217,18 @@ export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncO
 
     const remote = remoteResult.document;
     const knowledge = syncableUserKnowledge(mergeUserKnowledge(local.knowledge, remote.knowledge));
+    const activity = mergeActivityData(local.activity, remote.activity);
     const localKnowledgeChanged = JSON.stringify(knowledge) !== JSON.stringify(local.knowledge);
     const remoteKnowledgeChanged = JSON.stringify(knowledge) !== JSON.stringify(remote.knowledge);
+    const localActivityChanged = JSON.stringify(activity) !== JSON.stringify(local.activity);
+    const remoteActivityChanged = JSON.stringify(activity) !== JSON.stringify(remote.activity);
     const knowledgeChanged = localKnowledgeChanged || remoteKnowledgeChanged;
     const knowledgeRevision = Math.max(local.knowledgeRevision, remote.knowledgeRevision) + (knowledgeChanged ? 1 : 0);
 
     if (local.configVersion > remote.configVersion) {
-      const document = { ...local, knowledge, knowledgeRevision };
-      if (localKnowledgeChanged || local.knowledgeRevision !== knowledgeRevision)
-        await applyRemoteConfiguration(document);
+      let document = { ...local, knowledge, knowledgeRevision, activity };
+      if (localKnowledgeChanged || local.knowledgeRevision !== knowledgeRevision || localActivityChanged)
+        document = await applyWithLatestActivity(document);
       await push(settings, document, allowPermissionRequest);
       return {
         direction: "pushed",
@@ -227,9 +239,14 @@ export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncO
     }
 
     if (remote.configVersion > local.configVersion) {
-      const incoming = { ...remote, knowledge, knowledgeRevision };
-      const applied = await applyRemoteConfiguration(incoming);
-      if (remoteResult.legacy || remoteKnowledgeChanged || remote.knowledgeRevision !== knowledgeRevision)
+      const incoming = { ...remote, knowledge, knowledgeRevision, activity };
+      const applied = await applyWithLatestActivity(incoming);
+      if (
+        remoteResult.legacy ||
+        remoteKnowledgeChanged ||
+        remote.knowledgeRevision !== knowledgeRevision ||
+        remoteActivityChanged
+      )
         await push(settings, applied, allowPermissionRequest);
       return {
         direction: "pulled",
@@ -239,11 +256,13 @@ export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncO
       };
     }
 
-    const localMetadataChanged = localKnowledgeChanged || local.knowledgeRevision !== knowledgeRevision;
-    const remoteMetadataChanged = remoteKnowledgeChanged || remote.knowledgeRevision !== knowledgeRevision;
+    const localMetadataChanged =
+      localKnowledgeChanged || local.knowledgeRevision !== knowledgeRevision || localActivityChanged;
+    const remoteMetadataChanged =
+      remoteKnowledgeChanged || remote.knowledgeRevision !== knowledgeRevision || remoteActivityChanged;
     if (localMetadataChanged || remoteMetadataChanged) {
-      const merged = { ...local, knowledge, knowledgeRevision };
-      const applied = localMetadataChanged ? await applyRemoteConfiguration(merged) : merged;
+      const merged = { ...local, knowledge, knowledgeRevision, activity };
+      const applied = localMetadataChanged ? await applyWithLatestActivity(merged) : merged;
       if (remoteMetadataChanged || remoteResult.legacy) await push(settings, applied, allowPermissionRequest);
       return {
         direction: remoteMetadataChanged ? "pushed" : "pulled",

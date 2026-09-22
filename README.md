@@ -2,7 +2,7 @@
 
 XFlow 是一个基于 Jev 的 Manifest V3 浏览器扩展。支持配置自定义策略，屏蔽过滤 x 上的相关内容与评论。
 
-- 数据安全可控：数据全程本地存储无留痕。使用 S3 对象存储协议，支持自定义的多设备同步。
+- 数据安全可控：配置与 Activity 默认保存在本地；只有用户主动启用时，才通过自有 S3 对象存储进行多设备同步。
 - 多渠道支持：支持多渠道（OpenRouter、Vercel AI Gateway 和 TypeSafe 官方渠道）Api 相关配置。
 - 多策略支持：支持灵活，高定制的策略管理和实时内容过滤和样式处理。
 - 缓存优化：支持 命中缓存 以及 策略标记，减少 token 消耗提升响应速度。
@@ -33,7 +33,7 @@ XFlow 是一个基于 Jev 的 Manifest V3 浏览器扩展。支持配置自定�
 [] 支持多设备同步, 支持 s3 协议。
 [x] 支持 Policy 隔离的分层本地缓存，减少重复 Jev 调用和 token 消耗。
 [x] 支持单条内容与相似内容的用户标注，用户决定优先于自动判定。
-[] 策略命中日志以及命中数据看板的支持。
+[x] Popup 今日/累计过滤统计、页面 Badge、Activity 概览、30 天历史与每周回顾。
 
 ## Requirements
 
@@ -63,7 +63,11 @@ bun run check
 
 ### General
 
-「通用」提供时间线、评论区总开关与模型昵称。开关立即生效；昵称只用于 Hover 展示，不改变实际模型。
+「通用」提供时间线、评论区总开关、模型昵称与克制的 Activity 视图。开关立即生效；昵称只用于 Hover 展示，不改变实际模型。
+
+Activity 包括过去 12 周 Heatmap、最近 7 天单序列趋势、30 天筛选历史和当前自然周回顾。历史项可以展开查看时间、策略和原始链接；只有明确选择「Not supposed to be filtered」才会标记为错误，时间线中的 Reveal 只记录为临时查看。页面同时提供二次确认的「Clear Activity Data」。
+
+Popup 将今日过滤数作为第一视觉焦点，并显示历史累计过滤数。Toolbar Badge 只统计当前 Tab 当前页面生命周期内的唯一内容；刷新、打开新 Tab 或进入新的 X 页面会独立重新计数，0 时隐藏。
 
 ### API Keys
 
@@ -100,7 +104,8 @@ S3 同步使用 path-style URL：`{endpoint}/{bucket}/{objectKey}`。首次启�
 
 - 本地版本较新或远程对象不存在：推送本地配置。
 - 远程版本较新：拉取并应用远程配置。
-- 版本相同：不覆盖。
+- Activity 事件始终按稳定内容 ID 合并；同一事件跨设备和重复同步只计一次。
+- 清除操作携带时间墓碑，避免旧设备或旧远程对象恢复已清除数据。
 
 用户标注、用户创建的模板/语义规则和作者规则属于长期知识，会随配置文档同步；多设备合并按标注 ID 取并集，同一标注按 `updatedAt` 与设备 ID 决定最后写入。配置版本与知识修订号独立推进，知识更新不会让旧配置覆盖其他设备上的新策略。普通 Jev 缓存、语义向量和临时运行状态只保存在本机 IndexedDB，不上传 S3，也不参与实时过滤请求。
 
@@ -128,6 +133,8 @@ Background Worker 按“单条标注 → 作者规则 → 用户模板/语义规
 - Provider API Key 与 S3 凭据保存在 `chrome.storage.local`，没有额外加密。
 - Content Script 只能访问不含密钥的 session 设置镜像。
 - 配置 JSON 和 S3 远程对象不包含 Provider API Key 或 S3 凭据。
+- Activity 只保存内容 ID、短文本预览、作者、过滤时间、命中策略和必要状态；不保存 HTML、DOM、Cookie、Session、媒体内容或访问路径。
+- 筛选历史详情保留 30 天；事件身份最多保留 12 周以支持 Heatmap 与近期去重，之后折叠为紧凑的设备计数，用户可随时清除全部 Activity 数据。
 - 固定主机权限仅包含 X/Twitter 与三个 Provider；任意 S3 HTTPS Endpoint 通过可选权限在用户操作下授予。
 
 加载扩展前，请自行审阅 `manifest.json` 与所选 Provider 的数据政策。不要在测试、Issue、日志或截图中提交真实凭据。
@@ -160,11 +167,11 @@ Dashboard 预览使用独立的 localStorage Mock，不读取已安装扩展的�
 │   ├── preview-dashboard.ts  # 无真实凭据的本地预览
 │   └── qa/                   # 浏览器验收流程
 ├── src/
-│   ├── background/           # Service Worker、Review Service、Provider Adapter
-│   ├── content/              # DOM 提取、控制器、Blur Veil 与动画
-│   ├── dashboard/            # 完整配置界面
-│   ├── popup/                # 扩展弹窗
-│   ├── shared/               # 协议、配置、持久化与纯函数
+│   ├── background/           # Service Worker、Review、Activity、Badge 与 Provider Adapter
+│   ├── content/              # DOM 提取、控制器、Blur Veil、事件采集与动画
+│   ├── dashboard/            # 配置、Activity、历史与周报界面
+│   ├── popup/                # 今日/累计统计与实时开关
+│   ├── shared/               # 协议、配置、Activity 派生、持久化与纯函数
 │   ├── styles/               # 共享主题 token
 │   └── ui/                   # 共享 UI utility 与主题组件
 ├── dashboard.html

@@ -57,4 +57,33 @@ describe("post sanitization", () => {
     });
     expect(sanitizePost({ id: "42", text: "   " })).toBeNull();
   });
+
+  test("keeps only minimal safe history metadata", () => {
+    expect(
+      sanitizePost({
+        id: "42",
+        text: "history preview",
+        author: "  @person  ",
+        url: "https://x.com/person/status/42",
+        mediaType: "image",
+      }),
+    ).toEqual({
+      id: "42",
+      text: "history preview",
+      author: "@person",
+      url: "https://x.com/person/status/42",
+      mediaType: "image",
+    });
+    expect(sanitizePost({ id: "42", text: "preview", url: "https://tracker.example/post/42" })?.url).toBeUndefined();
+    expect(
+      sanitizePost({
+        id: "42",
+        text: "preview",
+        url: "https://x.com/person/status/42/?utm_source=tracker#analytics",
+      })?.url,
+    ).toBe("https://x.com/person/status/42");
+    expect(
+      sanitizePost({ id: "42", text: "preview", url: "https://x.com/home?utm_source=tracker" })?.url,
+    ).toBeUndefined();
+  });
 });
