@@ -6,6 +6,12 @@
   "permissions": ["storage", "alarms"],
   "optional_host_permissions": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*"],
   "options_ui": { "page": "dashboard.html", "open_in_tab": true },
+  "icons": {
+    "16": "logo-dark.png",
+    "32": "logo-dark.png",
+    "48": "logo-dark.png",
+    "128": "logo-dark.png"
+  },
   "host_permissions": ["https://openrouter.ai/*", "https://ai-gateway.vercel.sh/*", "https://api.typesafe.ai/*"],
   "background": {
     "service_worker": "background.js",
@@ -13,7 +19,13 @@
   },
   "action": {
     "default_title": "XFlow Settings",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "logo-dark.png",
+      "32": "logo-dark.png",
+      "48": "logo-dark.png",
+      "128": "logo-dark.png"
+    }
   },
   "content_scripts": [
     {

@@ -6,8 +6,7 @@
 html,
 body,
 #root {
-  width: 388px;
-  min-height: 580px;
+  width: var(--layout-popup-width);
 }
 
 @keyframes activity-number-enter {

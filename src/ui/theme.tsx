@@ -20,18 +20,23 @@ interface ThemeToggleProps {
   value: Theme;
   disabled?: boolean;
   compact?: boolean;
+  /** Icon-only at the 32px utility-row height. Used by the popup. */
+  dense?: boolean;
   onChange: (theme: Theme) => void;
 }
 
-export function ThemeToggle({ value, disabled, compact = false, onChange }: ThemeToggleProps) {
+export function ThemeToggle({ value, disabled, compact = false, dense = false, onChange }: ThemeToggleProps) {
   const next = value === "light" ? "dark" : "light";
+  const iconOnly = compact || dense;
   return (
     <button
       type="button"
       className={cn(
-        "group inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-2.5 text-[11px] font-semibold text-muted shadow-sm transition hover:border-line-strong hover:bg-panel hover:text-ink disabled:cursor-not-allowed disabled:opacity-55",
+        "group inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-2.5 text-xs font-semibold text-muted transition hover:border-line-strong hover:bg-hover hover:text-ink disabled:cursor-not-allowed disabled:opacity-55",
         focusRing,
-        compact && "size-11 justify-center px-0",
+        iconOnly && "justify-center px-0",
+        compact && "size-11",
+        dense && "size-8 min-h-8",
       )}
       aria-label={`切换为${next === "dark" ? "深色" : "浅色"}主题`}
       title={`切换为${next === "dark" ? "深色" : "浅色"}主题`}
@@ -40,7 +45,10 @@ export function ThemeToggle({ value, disabled, compact = false, onChange }: Them
       onClick={() => onChange(next)}
     >
       <span
-        className="relative grid size-6 place-items-center overflow-hidden rounded-full bg-soft text-sm text-signal"
+        className={cn(
+          "relative grid size-6 place-items-center overflow-hidden rounded-full bg-selected text-sm text-ink",
+          dense && "size-5 text-xs",
+        )}
         aria-hidden="true"
       >
         <span
@@ -60,7 +68,7 @@ export function ThemeToggle({ value, disabled, compact = false, onChange }: Them
           ◐
         </span>
       </span>
-      {!compact && <span>{value === "light" ? "浅色" : "深色"}</span>}
+      {!iconOnly && <span>{value === "light" ? "浅色" : "深色"}</span>}
     </button>
   );
 }

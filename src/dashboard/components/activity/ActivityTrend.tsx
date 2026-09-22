@@ -16,12 +16,12 @@ export function ActivityTrend({ days }: { days: ActivityDay[] }) {
   return (
     <div>
       <div className="mb-3">
-        <h3 className="text-[13px] font-semibold">Activity Trend</h3>
-        <p className="mt-0.5 text-[10px] text-muted">Last 7 days · Filtered</p>
+        <h3 className="text-ui font-semibold">Activity Trend</h3>
+        <p className="mt-0.5 text-meta text-muted">Last 7 days · Filtered</p>
       </div>
       <svg className="h-auto w-full overflow-visible" viewBox="0 0 516 150" role="img" aria-label="最近七天过滤趋势">
-        <path d="M 24 114 H 492" fill="none" stroke="var(--color-line)" />
-        <path d={path} fill="none" stroke="var(--color-signal)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        <path d="M 24 114 H 492" fill="none" stroke="var(--bd-subtle)" />
+        <path d={path} fill="none" stroke="var(--fg-1)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         {points.map((point) => {
           const label = `${dayFormatter.format(point.date)}，${number.format(point.count)} filtered`;
           return (
@@ -30,8 +30,8 @@ export function ActivityTrend({ days }: { days: ActivityDay[] }) {
                 cx={point.x}
                 cy={point.y}
                 r="4"
-                fill="var(--color-panel)"
-                stroke="var(--color-signal)"
+                fill="var(--bg-raised)"
+                stroke="var(--fg-1)"
                 strokeWidth="2"
                 tabIndex={0}
                 role="img"
@@ -39,7 +39,7 @@ export function ActivityTrend({ days }: { days: ActivityDay[] }) {
               >
                 <title>{label}</title>
               </circle>
-              <text x={point.x} y="137" textAnchor="middle" fontSize="9" fill="var(--color-muted)">
+              <text x={point.x} y="137" textAnchor="middle" fontSize="9" fill="var(--fg-3)">
                 {weekdayFormatter.format(point.date)}
               </text>
             </g>

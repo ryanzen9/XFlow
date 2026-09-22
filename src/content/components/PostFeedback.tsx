@@ -41,17 +41,17 @@ export function PostFeedback({ result, canLabelAuthor = false, onAction }: PostF
   };
 
   return (
-    <details className="xfilter-feedback" ref={details}>
+    <details className="xflow-feedback" ref={details}>
       <summary
-        className="xfilter-feedback__trigger"
+        className="xflow-feedback__trigger"
         aria-label="查看 XFlow 判定并标注"
         onClick={stopEvent}
         onPointerDown={stopEvent}
       >
         <span aria-hidden="true">J</span>
       </summary>
-      <div className="xfilter-feedback__menu" role="menu" aria-label="XFlow 内容标注">
-        <div className="xfilter-feedback__meta">
+      <div className="xflow-feedback__menu" role="menu" aria-label="XFlow 内容标注">
+        <div className="xflow-feedback__meta">
           <strong>{result ? formatProbability(result.probability) : "—"}</strong>
           <span>{result ? SOURCE_LABELS[result.source] : "等待判定"}</span>
           {result?.details && <span>{result.details.strategy.name}</span>}

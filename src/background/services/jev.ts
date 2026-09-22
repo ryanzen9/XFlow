@@ -35,7 +35,7 @@ export async function requestPostReviews(
   secrets: ProviderSecrets,
 ): Promise<ExtensionResponse> {
   const enabled = surface === "timeline" ? settings.enabled : settings.commentsEnabled;
-  if (!enabled) return { ok: false, code: "DISABLED", error: "XFilter 已暂停。" };
+  if (!enabled) return { ok: false, code: "DISABLED", error: "XFlow 已暂停。" };
 
   const posts = rawPosts
     .slice(0, MAX_BATCH_SIZE)
@@ -67,13 +67,13 @@ export async function requestPostReviews(
             post.postId,
           );
         } catch (error) {
-          console.warn("[XFilter] Local decision lookup failed for one post; falling back to Jev.", error);
+          console.warn("[XFlow] Local decision lookup failed for one post; falling back to Jev.", error);
           return null;
         }
       }),
     );
   } catch (error) {
-    console.warn("[XFilter] Local decision lookup failed; falling back to Jev.", error);
+    console.warn("[XFlow] Local decision lookup failed; falling back to Jev.", error);
   }
   const cachedResults: ReviewResult[] = [];
   const misses: PostInput[] = [];
@@ -189,11 +189,11 @@ export async function requestPostReviews(
         ),
       );
     } catch (error) {
-      console.warn("[XFilter] Jev result cache persistence failed; returning the provider result.", error);
+      console.warn("[XFlow] Jev result cache persistence failed; returning the provider result.", error);
     }
     return { ok: true, results: [...cachedResults, ...remoteResults] };
   } catch (error) {
-    console.error(`[XFilter] ${PROVIDERS[settings.activeProvider].label} Jev request failed`, error);
+    console.error(`[XFlow] ${PROVIDERS[settings.activeProvider].label} Jev request failed`, error);
     if (cachedResults.length > 0) return { ok: true, results: cachedResults };
     return { ok: false, code: "API_ERROR", error: readableProviderError(settings.activeProvider, error) };
   }

@@ -102,7 +102,7 @@ async function run(page) {
     });
   });
   await page.goto("https://x.com/home");
-  await page.waitForFunction(() => document.querySelectorAll('article[data-xfilter-state="obscured"]').length === 2);
+  await page.waitForFunction(() => document.querySelectorAll('article[data-xflow-state="obscured"]').length === 2);
   assert(
     await page.evaluate(() =>
       qa.requests.some(
@@ -113,8 +113,8 @@ async function run(page) {
     ),
     "Stable post and author ids were not forwarded to the decision pipeline",
   );
-  assert((await page.locator(".xfilter-feedback-host").count()) === 2, "Feedback entry missing from detected posts");
-  await page.locator("#post-100 .xfilter-feedback__trigger").click();
+  assert((await page.locator(".xflow-feedback-host").count()) === 2, "Feedback entry missing from detected posts");
+  await page.locator("#post-100 .xflow-feedback__trigger").click();
   assert(await page.getByRole("menu", { name: "XFlow 内容标注" }).isVisible(), "Feedback menu did not open");
   assert(
     await page.locator("#post-100").getByRole("menuitem", { name: "屏蔽此作者" }).isVisible(),
@@ -122,15 +122,15 @@ async function run(page) {
   );
   await page.locator("#post-100").getByRole("menuitem", { name: "屏蔽此作者" }).click();
   await page.waitForFunction(() => qa.feedback.some((message) => message.action === "block-author"));
-  await page.waitForFunction(() => document.querySelectorAll('article[data-xfilter-state="obscured"]').length === 2);
-  await page.locator("#post-100 .xfilter-veil").hover();
+  await page.waitForFunction(() => document.querySelectorAll('article[data-xflow-state="obscured"]').length === 2);
+  await page.locator("#post-100 .xflow-veil").hover();
   await page.waitForTimeout(180);
   assert(
-    (await page.locator("#post-100 .xfilter-veil__label-rate").textContent()).includes("Fallback Home · 65%"),
+    (await page.locator("#post-100 .xflow-veil__label-rate").textContent()).includes("Fallback Home · 65%"),
     "Content did not fall through to lower priority",
   );
   assert(
-    (await page.locator("#post-100 .xfilter-veil__label-rate").evaluate((el) => getComputedStyle(el).color)) ===
+    (await page.locator("#post-100 .xflow-veil__label-rate").evaluate((el) => getComputedStyle(el).color)) ===
       "rgb(10, 119, 118)",
     "Content custom CSS failed",
   );
@@ -142,24 +142,24 @@ async function run(page) {
     }),
   );
   assert(
-    (await page.locator("#post-100").getAttribute("data-xfilter-state")) === "revealing",
+    (await page.locator("#post-100").getAttribute("data-xflow-state")) === "revealing",
     "Policy update skipped revealing transition",
   );
   await page.waitForFunction(() =>
-    document.querySelector("#post-100 .xfilter-veil__label-rate")?.textContent.includes("Strict Home"),
+    document.querySelector("#post-100 .xflow-veil__label-rate")?.textContent.includes("Strict Home"),
   );
   await page.evaluate(() => qa.patch({ enabled: false }));
   assert(
-    (await page.locator("#post-100").getAttribute("data-xfilter-state")) === "revealing",
+    (await page.locator("#post-100").getAttribute("data-xflow-state")) === "revealing",
     "Disable skipped revealing transition",
   );
-  await page.waitForFunction(() => !document.querySelector(".xfilter-veil"));
+  await page.waitForFunction(() => !document.querySelector(".xflow-veil"));
   await page.evaluate(() => qa.patch({ enabled: true }));
-  await page.waitForFunction(() => document.querySelectorAll('article[data-xfilter-state="obscured"]').length === 2);
+  await page.waitForFunction(() => document.querySelectorAll('article[data-xflow-state="obscured"]').length === 2);
   await page.goto("https://x.com/example/status/100");
-  await page.waitForFunction(() => document.querySelector("#post-200")?.dataset.xfilterState === "obscured");
-  assert((await page.locator("#post-100 .xfilter-veil").count()) === 0, "Root post incorrectly filtered as comment");
-  assert((await page.locator("#post-100 .xfilter-feedback-host").count()) === 1, "Root post feedback entry missing");
+  await page.waitForFunction(() => document.querySelector("#post-200")?.dataset.xflowState === "obscured");
+  assert((await page.locator("#post-100 .xflow-veil").count()) === 0, "Root post incorrectly filtered as comment");
+  assert((await page.locator("#post-100 .xflow-feedback-host").count()) === 1, "Root post feedback entry missing");
   assert(
     await page.evaluate(() =>
       qa.requests.every(
@@ -170,21 +170,21 @@ async function run(page) {
   );
   await page.evaluate(() => qa.patch({ enabled: false }));
   assert(
-    (await page.locator("#post-200").getAttribute("data-xfilter-state")) === "obscured",
+    (await page.locator("#post-200").getAttribute("data-xflow-state")) === "obscured",
     "Timeline switch affected comments",
   );
-  await page.locator("#post-200 .xfilter-veil").hover();
+  await page.locator("#post-200 .xflow-veil").hover();
   await page.waitForTimeout(180);
   assert(
-    (await page.locator("#post-200 .xfilter-veil__label-rate").textContent()).includes("Comment rule"),
+    (await page.locator("#post-200 .xflow-veil__label-rate").textContent()).includes("Comment rule"),
     "Wrong strategy in comments",
   );
   await page.evaluate(() => qa.patch({ commentsEnabled: false }));
   assert(
-    (await page.locator("#post-200").getAttribute("data-xfilter-state")) === "revealing",
+    (await page.locator("#post-200").getAttribute("data-xflow-state")) === "revealing",
     "Comments disable skipped animation",
   );
-  await page.waitForFunction(() => !document.querySelector(".xfilter-veil"));
+  await page.waitForFunction(() => !document.querySelector(".xflow-veil"));
   assert(errors.length === 0, `Browser errors: ${errors.join("; ")}`);
   return {
     result: "PASS",

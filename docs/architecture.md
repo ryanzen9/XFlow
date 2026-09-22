@@ -1,4 +1,4 @@
-# XFilter architecture
+# XFlow architecture
 
 本文描述 MVP 当前实现。
 
@@ -22,7 +22,7 @@ Content Script ── batched post text ──► Background Service Worker
 Blur Veil state machine
       │ filtered / revealed
       ▼
-Activity Service ──► local event store ──► Popup / General
+Activity Service ──► local event store ──► Popup / General / Log
       │
       └─ per-tab page identity ──► Toolbar Badge
 ```
@@ -59,8 +59,8 @@ Policy 指纹包含 surface、Provider、策略 ID、启用状态、优先级、
 | ----------------------- | ------------------------------------------------------------------------------ |
 | `src/background`        | Service Worker、消息权限、策略编排、Activity/Badge、Provider Adapter、自动同步 |
 | `src/content`           | URL/DOM 监听、最小元数据提取、Blur Veil、Activity 事件与状态机                 |
-| `src/dashboard`         | 通用设置、Activity、历史、周报、API Keys、策略和 S3 配置                       |
-| `src/popup`             | 今日/累计过滤数、实时开关、当前渠道状态和 Dashboard 入口                       |
+| `src/dashboard`         | 通用设置、Activity 概览、日志历史、周报、API Keys、策略和 S3 配置              |
+| `src/popup`             | 过滤计数为主，实时开关与当前渠道以次级列表呈现，附 Dashboard 入口              |
 | `src/shared`            | 消息协议、配置 schema、Activity 派生/合并、迁移和 S3 核心逻辑                  |
 | `src/ui` / `src/styles` | 跨入口 UI utility、主题逻辑和 Tailwind token                                   |
 

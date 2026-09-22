@@ -1,4 +1,3 @@
-import { FILTER_THRESHOLD } from "./constants";
 import type { FilterSurface } from "./contracts";
 import { formatProbability } from "./probability";
 import { normalizeProviderId, type ProviderId } from "./providers";
@@ -39,6 +38,12 @@ export const DEFAULT_HOVER_TEMPLATE =
   "{{strategy.name}} · {{strategy.hitrate}}\n{{model.nickname}} · 阈值 {{strategy.threshold}}";
 export const DEFAULT_HOVER_CSS = ".label { color: #0a7776; font-weight: 600; }\n.action { color: #0a7776; }";
 
+/**
+ * Sensitivity seeded into a newly created strategy. Independent from
+ * `FALLBACK_THRESHOLD`, which only covers results without strategy details.
+ */
+export const DEFAULT_SENSITIVITY = 20;
+
 export function defaultStrategy(
   surface: FilterSurface | "all" = "all",
   priority = 1,
@@ -51,7 +56,7 @@ export function defaultStrategy(
     priority,
     name: surface === "timeline" ? "Home 内容净化" : surface === "comments" ? "评论区内容净化" : "新过滤策略",
     prompt: DEFAULT_PROMPT,
-    sensitivity: Math.round((1 - FILTER_THRESHOLD) * 100),
+    sensitivity: DEFAULT_SENSITIVITY,
     hoverTemplate: DEFAULT_HOVER_TEMPLATE,
     hoverCss: "",
   };

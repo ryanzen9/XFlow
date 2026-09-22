@@ -19,7 +19,7 @@ const s3: S3SyncSettings = {
   endpoint: "https://s3.example.com",
   region: "us-east-1",
   bucket: "private",
-  objectKey: "xfilter/config.json",
+  objectKey: "xflow/config.json",
   accessKeyId: "access",
   secretAccessKey: "secret",
   sessionToken: "",

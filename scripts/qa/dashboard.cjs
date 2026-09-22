@@ -13,7 +13,7 @@ async function run(page) {
   const timelineTab = () => page.getByRole("tab", { name: /时间线博文/ });
   const commentsTab = () => page.getByRole("tab", { name: /评论区/ });
 
-  await page.evaluate(() => localStorage.removeItem("xfilter-dashboard-preview"));
+  await page.evaluate(() => localStorage.removeItem("xflow-dashboard-preview"));
   await page.reload();
   await page.locator("#model-nickname").fill("Quiet reader");
   await page.getByRole("switch", { name: "评论区", exact: true }).check();
@@ -50,9 +50,9 @@ async function run(page) {
   await page.locator("#hover-css").fill(".label { color: rgb(10, 119, 118); font-weight: 600; }");
   await page.getByRole("button", { name: "保存策略" }).click();
   await settle();
-  await page.locator(".xfilter-veil").hover();
+  await page.locator(".xflow-veil").hover();
   await settle();
-  const hover = await page.locator(".xfilter-veil__label-rate").evaluate((el) => ({
+  const hover = await page.locator(".xflow-veil__label-rate").evaluate((el) => ({
     text: el.textContent,
     color: getComputedStyle(el).color,
     opacity: getComputedStyle(el).opacity,

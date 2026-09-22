@@ -15,9 +15,9 @@ export function mountPostFeedback(
   onAction: (action: UserDecisionAction) => Promise<void>,
 ): PostFeedbackPresentation {
   const host = document.createElement("div");
-  host.className = "xfilter-feedback-host";
-  host.dataset.slot = "xfilter-feedback";
-  article.dataset.xfilterFeedback = "true";
+  host.className = "xflow-feedback-host";
+  host.dataset.slot = "xflow-feedback";
+  article.dataset.xflowFeedback = "true";
   article.append(host);
 
   let root: Root | null = createRoot(host);
@@ -34,7 +34,7 @@ export function mountPostFeedback(
       root?.unmount();
       root = null;
       host.remove();
-      delete article.dataset.xfilterFeedback;
+      delete article.dataset.xflowFeedback;
     },
   };
 }

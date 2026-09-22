@@ -10,7 +10,7 @@ async function run(page) {
 
   const previewOrigin = await page.evaluate(() => location.origin);
   await page.goto(`${previewOrigin}/`);
-  await page.evaluate(() => localStorage.removeItem("xfilter-dashboard-preview"));
+  await page.evaluate(() => localStorage.removeItem("xflow-dashboard-preview"));
   await page.reload();
   await page.getByRole("button", { name: "API Keys" }).click();
 
@@ -31,7 +31,7 @@ async function run(page) {
   await settle();
   assert(await page.getByRole("radio", { name: /TypeSafe/ }).isChecked(), "Active provider selection did not persist");
 
-  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("xfilter-dashboard-preview") || "{}"));
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("xflow-dashboard-preview") || "{}"));
   assert(stored.activeProvider === "typesafe", "Active provider was not written to application settings");
   assert(stored.providerSecrets.openrouter === "sk-or-browser-1234", "OpenRouter secret was not stored separately");
   assert(stored.providerSecrets.typesafe === "ts-browser-9876", "TypeSafe secret was not stored separately");

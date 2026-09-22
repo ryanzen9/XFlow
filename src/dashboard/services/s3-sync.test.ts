@@ -25,7 +25,7 @@ const settings: S3SyncSettings = {
   endpoint: "https://s3.example.com",
   region: "us-east-1",
   bucket: "private-config",
-  objectKey: "xfilter/config.json",
+  objectKey: "xflow/config.json",
   accessKeyId: "access",
   secretAccessKey: "secret",
   sessionToken: "",
@@ -124,7 +124,7 @@ test("pushes the local document when it has the newer version", async () => {
   expect(result.direction).toBe("pushed");
   expect(remote?.configVersion).toBe(4);
   expect(requests.map((request) => request.method)).toEqual(["GET", "PUT"]);
-  expect(requests[1]?.url).toBe("https://s3.example.com/private-config/xfilter/config.json");
+  expect(requests[1]?.url).toBe("https://s3.example.com/private-config/xflow/config.json");
   expect(requests[1]?.headers.get("authorization")).toStartWith("AWS4-HMAC-SHA256 Credential=access/");
 });
 

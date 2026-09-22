@@ -18,3 +18,12 @@
 - Do not commit `dist/`, `node_modules/`, browser traces, screenshots, local skills, `.env` files or real credentials.
 - Add or update Bun tests for behavior changes.
 - Update `README.md` or `docs/architecture.md` when commands, permissions, persistence or architectural boundaries change.
+
+## Design
+
+- Please refer to [design guidelines](./design.md) for the visual and interaction principles.
+- Design tokens live in `src/styles/token.css`; `src/styles/theme.css` is the Tailwind bridge over them. Components must not hardcode colours, radii, durations or type sizes — see [design tokens](./docs/design-tokens.md). Preview both themes with `bun run preview:tokens`.
+
+## Skills
+
+please read `./.agents/skills` for the list of available skills.

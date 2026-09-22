@@ -166,7 +166,7 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
             </span>
             <textarea
               id="config-json"
-              className={`${textarea} min-h-[430px] overflow-auto border-[#28474e] bg-[#102c33] font-mono text-[10px] leading-[1.75] whitespace-pre text-[#d7efeb] caret-[#76d4cc] sm:min-h-[520px] sm:text-[11px]`}
+              className={`${textarea} min-h-[430px] overflow-auto bg-inset font-mono text-meta leading-[1.75] whitespace-pre text-ink caret-live sm:min-h-[520px] sm:text-xs`}
               spellCheck={false}
               value={source}
               onChange={(event) => {
@@ -178,7 +178,7 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
           </label>
           <p
             id="config-help"
-            className="mt-3.5 border-l-[3px] border-amber-600 bg-amber-600/10 px-[13px] py-[11px] text-[10px] leading-[1.7] text-amber-800 dark:text-amber-300"
+            className="mt-3.5 border-l-[3px] border-warn bg-warn-soft px-[13px] py-[11px] text-meta leading-[1.7] text-warn"
           >
             <strong>说明：</strong>API Key 与此配置分开保存在本机，不会出现在 JSON 或上传到 S3。
           </p>
@@ -210,22 +210,19 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
             </div>
           </div>
           <div
-            className="my-[18px] mb-1 flex items-center gap-2.5 rounded-[9px] border border-line bg-canvas/45 px-3 py-[11px]"
+            className="my-[18px] mb-1 flex items-center gap-2.5 rounded-md border border-line bg-canvas/45 px-3 py-[11px]"
             role="status"
           >
             <span
               className={cn(
-                "size-2 shrink-0 rounded-full bg-faint shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-faint)_14%,transparent)]",
-                s3.autoSyncEnabled &&
-                  "bg-signal shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-signal)_13%,transparent)]",
+                "size-2 shrink-0 rounded-full bg-faint shadow-[0_0_0_4px_color-mix(in_srgb,var(--fg-4)_14%,transparent)]",
+                s3.autoSyncEnabled && "bg-live shadow-[0_0_0_4px_var(--live-glow)]",
               )}
               aria-hidden="true"
             />
             <div className="grid gap-0.5">
-              <strong className="text-[11px] text-ink">
-                {s3.autoSyncEnabled ? "自动同步已启用" : "自动同步尚未启用"}
-              </strong>
-              <small className="text-[9px] leading-normal text-muted">
+              <strong className="text-xs text-ink">{s3.autoSyncEnabled ? "自动同步已启用" : "自动同步尚未启用"}</strong>
+              <small className="text-caption leading-normal text-muted">
                 {s3.autoSyncEnabled
                   ? "配置变更、浏览器启动与定时检查时自动运行"
                   : "保存连接配置并授权 Endpoint 后即可启用"}
@@ -333,8 +330,8 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
       {status.message && (
         <div
           className={cn(
-            "col-[1/-1] min-h-[38px] rounded-lg bg-soft px-3 py-[9px] text-[11px] text-signal",
-            status.error && "bg-alert/10 text-alert",
+            "col-[1/-1] min-h-[38px] rounded-lg bg-selected px-3 py-[9px] text-xs text-ink",
+            status.error && "bg-danger-soft text-danger",
           )}
           role={status.error ? "alert" : "status"}
         >

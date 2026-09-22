@@ -75,7 +75,7 @@ export function StrategyPanel({
         <button type="button" className={`${secondaryButton} min-h-[38px] px-3 py-[7px]`} onClick={onBack}>
           ← 返回{surfaceName}表格
         </button>
-        <span className="font-mono text-[10px] text-signal">
+        <span className="font-mono text-meta text-ink">
           P{strategy.priority} · {strategy.enabled ? "已启用" : "已停用"}
         </span>
       </div>
@@ -122,20 +122,20 @@ export function StrategyPanel({
                 </label>
               </div>
               <div className="mt-[18px] grid gap-3.5 min-[601px]:grid-cols-[minmax(0,1fr)_minmax(190px,.7fr)]">
-                <div className="strategy-surface min-w-0 rounded-[9px] border border-line bg-canvas/45 p-3.5">
-                  <span className="block text-[9px] text-muted">所属策略表</span>
+                <div className="strategy-surface min-w-0 rounded-md border border-line bg-canvas/45 p-3.5">
+                  <span className="block text-caption text-muted">所属策略表</span>
                   <strong className="mt-[3px] block text-xs">{surfaceName}</strong>
-                  <small className="mt-0.5 block font-mono text-[8px] text-muted">
+                  <small className="mt-0.5 block font-mono text-caption text-muted">
                     {surface === "timeline" ? "/home" : "/status"} · 优先级仅在此表内生效
                   </small>
                 </div>
                 <label
-                  className="flex min-w-0 cursor-pointer items-center justify-between gap-3.5 rounded-[9px] border border-line bg-canvas/45 p-3.5"
+                  className="flex min-w-0 cursor-pointer items-center justify-between gap-3.5 rounded-md border border-line bg-canvas/45 p-3.5"
                   htmlFor="strategy-enabled"
                 >
                   <span>
                     <strong className="block text-xs">启用策略</strong>
-                    <small className="block text-[9px] text-muted">停用后仍保留配置</small>
+                    <small className="block text-caption text-muted">停用后仍保留配置</small>
                   </span>
                   <span className={switchShell}>
                     <input
@@ -172,13 +172,13 @@ export function StrategyPanel({
               <label className={`${field} border-t border-line pt-[18px]`} htmlFor="strategy-sensitivity">
                 <span className={fieldLabel}>
                   敏感度{" "}
-                  <output className="font-mono text-xl text-signal">
+                  <output className="font-mono text-xl text-ink">
                     {strategy.sensitivity}
                     <small className={fieldHelp}> / 100</small>
                   </output>
                 </span>
                 <input
-                  className="my-[3px] h-6 w-full cursor-pointer accent-signal"
+                  className="my-[3px] h-6 w-full cursor-pointer accent-ink"
                   id="strategy-sensitivity"
                   type="range"
                   min="0"
@@ -186,9 +186,9 @@ export function StrategyPanel({
                   value={strategy.sensitivity}
                   onChange={(event) => update({ sensitivity: Number(event.target.value) })}
                 />
-                <span className="flex justify-between gap-2 text-[10px]">
+                <span className="flex justify-between gap-2 text-meta">
                   <small className={fieldHelp}>更宽松</small>
-                  <strong className="text-center text-[11px] font-medium text-signal">
+                  <strong className="text-center text-xs font-medium text-ink">
                     命中概率 ≥ {formatProbability(strategyThreshold(strategy))} 时通过此策略
                   </strong>
                   <small className={fieldHelp}>更敏感</small>
@@ -209,7 +209,7 @@ export function StrategyPanel({
                 <span className={fieldLabel}>Hover 文案</span>
                 <textarea
                   id="hover-template"
-                  className={`${textarea} bg-canvas/45 font-mono text-[11px] leading-[1.9]`}
+                  className={`${textarea} bg-canvas/45 font-mono text-xs leading-[1.9]`}
                   rows={3}
                   required
                   maxLength={500}
@@ -219,13 +219,13 @@ export function StrategyPanel({
                   onChange={(event) => update({ hoverTemplate: event.target.value })}
                 />
               </label>
-              <p id="template-help" className={cn(`${fieldHelp} mt-2`, templateError && "text-alert")}>
+              <p id="template-help" className={cn(`${fieldHelp} mt-2`, templateError && "text-danger")}>
                 {templateError || "点击变量插入文案。hitrate 是当前内容对最终命中策略的概率。"}
               </p>
               <div className="mt-3 mb-[22px] flex flex-wrap gap-1.5">
                 {HOVER_VARIABLES.map((variable) => (
                   <button
-                    className="rounded-[5px] border border-signal/25 bg-soft px-[7px] py-[5px] text-[9px] text-signal hover:bg-signal/15"
+                    className="rounded-sm border border-line-strong bg-selected px-[7px] py-[5px] text-caption text-ink hover:bg-hover"
                     type="button"
                     key={variable}
                     aria-label={`插入 ${variable}`}
@@ -248,7 +248,7 @@ export function StrategyPanel({
                 </span>
                 <textarea
                   id="hover-css"
-                  className={`${textarea} bg-canvas/45 font-mono text-[11px] leading-[1.9] text-signal`}
+                  className={`${textarea} bg-canvas/45 font-mono text-xs leading-[1.9] text-ink`}
                   spellCheck={false}
                   rows={5}
                   maxLength={6000}
@@ -259,10 +259,10 @@ export function StrategyPanel({
                   onChange={(event) => update({ hoverCss: event.target.value })}
                 />
               </label>
-              <p id="css-help" className={cn(`${fieldHelp} mt-2`, cssError && "text-alert")}>
+              <p id="css-help" className={cn(`${fieldHelp} mt-2`, cssError && "text-danger")}>
                 {cssError || "留空使用默认样式。样式仅在 Hover / 键盘聚焦时生效。"}
               </p>
-              <details className="mt-4 text-[11px] text-muted">
+              <details className="mt-4 text-xs text-muted">
                 <summary className="cursor-pointer">支持的选择器、属性与变量</summary>
                 <p className="mt-2.5 break-words">
                   <code>.veil</code> 遮罩背景，<code>.label</code> 变量文案，<code>.action</code> 揭示按钮。
@@ -281,7 +281,7 @@ export function StrategyPanel({
               <button type="button" className={secondaryButton} onClick={reset}>
                 恢复默认草稿
               </button>
-              <span className="hidden flex-1 text-[10px] text-muted min-[1151px]:block">
+              <span className="hidden flex-1 text-meta text-muted min-[1151px]:block">
                 预览即刻更新，保存后应用并重新判断
               </span>
               <button type="submit" className={primaryButton} disabled={!!cssError || !!templateError}>

@@ -1,0 +1,643 @@
+/* ============================================================================
+   XFlow — Design Tokens
+   Industrial Minimalism × Terminal Native × Editorial Typography
+   × High-contrast Monochrome
+
+   This file is the single source of truth for colour, typography, space,
+   layout and motion. It is plain CSS custom properties: no Tailwind syntax,
+   no element styles, no classes. src/styles/theme.css maps these tokens into
+   Tailwind utilities; nothing here should be consumed directly by a component
+   unless the utility does not exist.
+
+   ---------------------------------------------------------------------------
+   Layer model
+   ---------------------------------------------------------------------------
+   1. Primitives  — raw scales (--gray-*, --size-*, --space-*, --motion-*).
+                    Documented, not consumed by components.
+   2. Semantic    — theme-aware roles (--bg-*, --fg-*, --bd-*, --action-*,
+                    --state-*, --live). Components consume these.
+   3. Bridge      — theme.css → Tailwind utilities (bg-canvas, text-label, …).
+
+   ---------------------------------------------------------------------------
+   Rules
+   ---------------------------------------------------------------------------
+   · Neutral first. Greyscale carries hierarchy; luminance differences — not
+     decorative colour — create emphasis. Budget: neutral 92–96 %, semantic
+     3–6 %, technical accent 0–2 %.
+   · Colour must answer a question: importance, interactivity, selection,
+     state, attention. If it does not, it is neutral.
+   · Ink is the action colour. There is no brand hue: the primary action is
+     #0a0a0a on light surfaces and #ffffff on dark surfaces.
+   · The only chromatic accent is --live (phosphor), reserved for the
+     monitoring state and the veil's reveal affordance.
+   · Structure comes from hairline rules and 1px borders, never from shadow.
+   · Every uppercase role is tracked into the 0.96–1.6 px band from design.md.
+   · Motion moves only cheap properties, stays in the 100–300 ms band, and
+     uses the snappy / smooth / swift curves by name.
+
+   ---------------------------------------------------------------------------
+   Naming
+   ---------------------------------------------------------------------------
+   Motion tokens keep the normative names from design.md (--duration-snappy,
+   --ease-snappy) because the document treats the names as the spec.
+   Everything else avoids Tailwind's theme namespaces (--color-*, --font-*,
+   --text-*, --leading-*, --tracking-*, --radius-*, --shadow-*, --ease-*,
+   --breakpoint-*) so the bridge in theme.css can map one to the other
+   without a declaration referring to itself.
+   ========================================================================== */
+
+/* ============================================================================
+   §0  Typefaces
+   ----------------------------------------------------------------------------
+   D-DIN — the industrial grotesk of DIN 1451 (German engineering signage).
+   It is resolved from the operating system first; the fallback chain keeps the
+   compact width and uppercase rhythm when it is unavailable.
+
+   To self-host, drop the woff2 files into src/assets/fonts/ and prepend a
+   url("../assets/fonts/D-DIN.woff2") format("woff2"), source to each face.
+   ========================================================================== */
+
+@font-face {
+  font-family: "D-DIN";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local("D-DIN"), local("D-DIN Regular"), local("D-DIN-Regular");
+}
+
+@font-face {
+  font-family: "D-DIN";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local("D-DIN-Bold"), local("D-DIN Bold"), local("D-DIN-Bold Regular");
+}
+
+@font-face {
+  font-family: "D-DIN Condensed";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local("D-DIN Condensed"), local("D-DIN-Condensed"), local("D-DINCondensed");
+}
+
+@font-face {
+  font-family: "D-DIN Condensed";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local("D-DIN Condensed Bold"), local("D-DIN-CondensedBold"), local("D-DINCondensed-Bold");
+}
+
+/* ============================================================================
+   §1  Typography
+   ========================================================================== */
+
+:root {
+  /* ── Families ─────────────────────────────────────────────────────────────
+     D-DIN → Arial Narrow → Arial → Verdana keeps the narrow industrial width.
+     CJK faces are appended so Chinese UI text does not fall back to a serif. */
+  --family-display:
+    "D-DIN", "Arial Narrow", Arial, Verdana, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --family-body: var(--family-display);
+  --family-condensed:
+    "D-DIN Condensed", "Arial Narrow", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* ── Weight ───────────────────────────────────────────────────────────────
+     Display/hero: 700. Body and UI: 400, with 500 as the hover weight — the
+     "text thickens slightly" interaction from design.md §4.2. */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Size ladder ──────────────────────────────────────────────────────────
+     Dense by design: the dashboard lives at 9–13 px, editorial titles at 26 px
+     and above. Never invent a size between steps. */
+  --size-caption: 9px;
+  --size-meta: 10px;
+  --size-label: 11px;
+  --size-ui: 13px;
+  --size-body: 16px;
+  --size-heading: 19px;
+  --size-title: 26px;
+  --size-display: 34px;
+  --size-readout: 46px;
+  --size-hero: clamp(48px, 5.4vw, 80px);
+
+  /* ── Line height ──────────────────────────────────────────────────────────
+     Titles are extremely tight (0.95–1.25); running text is loose (1.5–1.7). */
+  --line-hero: 0.95;
+  --line-display: 1.02;
+  --line-title: 1.1;
+  --line-heading: 1.25;
+  --line-ui: 1.45;
+  --line-body: 1.6;
+  --line-prose: 1.7;
+  --line-mono: 1.75;
+
+  /* ── Tracking ─────────────────────────────────────────────────────────────
+     design.md asks for positive tracking of 0.96–1.6 px on uppercase text.
+     Expressed in em, every uppercase role below lands inside that band:
+       hero     0.02em @ 48–80px = 0.96–1.60px
+       readout  0.025em @ 46px   = 1.15px
+       display  0.035em @ 34px   = 1.19px
+       title    0.04em  @ 26px   = 1.04px
+       heading  0.055em @ 19px   = 1.05px
+       ui       0.08em  @ 13px   = 1.04px
+       label    0.1em   @ 11px   = 1.10px
+       meta     0.11em  @ 10px   = 1.10px
+       caption  0.12em  @ 9px    = 1.08px
+     Sentence-case running text is deliberately untracked (--track-body). */
+  --track-hero: 0.02em;
+  --track-display: 0.035em;
+  --track-title: 0.04em;
+  --track-heading: 0.055em;
+  --track-ui: 0.08em;
+  --track-label: 0.1em;
+  --track-meta: 0.11em;
+  --track-caption: 0.12em;
+  --track-body: 0.005em;
+  --track-mono: 0.02em;
+  --track-none: 0;
+  /* Absolute tracking for text whose size is not known at author time — the
+     base layer applies it to controls and headings. 1.1px sits mid-band. */
+  --track-caps: 1.1px;
+
+  --case-caps: uppercase;
+  --case-none: none;
+
+  /* Numerals: readouts are monospaced-width with a slashed zero so columns of
+     figures align and 0 never reads as O. */
+  --variant-readout: tabular-nums slashed-zero;
+
+  /* ── Roles ────────────────────────────────────────────────────────────────
+     Semantic type roles. One role per purpose; compose them, never re-mix. */
+  --type-hero-size: var(--size-hero);
+  --type-hero-line: var(--line-hero);
+  --type-hero-track: var(--track-hero);
+  --type-hero-weight: var(--weight-bold);
+  --type-hero-case: var(--case-caps);
+
+  --type-display-size: var(--size-display);
+  --type-display-line: var(--line-display);
+  --type-display-track: var(--track-display);
+  --type-display-weight: var(--weight-bold);
+  --type-display-case: var(--case-caps);
+
+  --type-title-size: var(--size-title);
+  --type-title-line: var(--line-title);
+  --type-title-track: var(--track-title);
+  --type-title-weight: var(--weight-bold);
+  --type-title-case: var(--case-caps);
+
+  --type-heading-size: var(--size-heading);
+  --type-heading-line: var(--line-heading);
+  --type-heading-track: var(--track-heading);
+  --type-heading-weight: var(--weight-semibold);
+  --type-heading-case: var(--case-caps);
+
+  --type-body-size: var(--size-body);
+  --type-body-line: var(--line-body);
+  --type-body-track: var(--track-body);
+  --type-body-weight: var(--weight-regular);
+  --type-body-case: var(--case-none);
+
+  --type-ui-size: var(--size-ui);
+  --type-ui-line: var(--line-ui);
+  --type-ui-track: var(--track-ui);
+  --type-ui-weight: var(--weight-medium);
+  --type-ui-case: var(--case-caps);
+
+  --type-label-size: var(--size-label);
+  --type-label-line: 1.4;
+  --type-label-track: var(--track-label);
+  --type-label-weight: var(--weight-semibold);
+  --type-label-case: var(--case-caps);
+
+  --type-meta-size: var(--size-meta);
+  --type-meta-line: 1.35;
+  --type-meta-track: var(--track-meta);
+  --type-meta-weight: var(--weight-medium);
+  --type-meta-case: var(--case-caps);
+
+  --type-caption-size: var(--size-caption);
+  --type-caption-line: 1.3;
+  --type-caption-track: var(--track-caption);
+  --type-caption-weight: var(--weight-medium);
+  --type-caption-case: var(--case-caps);
+
+  /* Engineering readout: an oversized figure with a small tracked caption.
+     This is the signature typographic unit of the interface. Its size sits
+     between display and hero because it is a figure, not a headline:
+     0.025em @ 46px = 1.15px, inside the tracked band. */
+  --size-readout: 46px;
+  --track-readout: 0.025em;
+  --type-readout-size: var(--size-readout);
+  --type-readout-line: var(--line-hero);
+  --type-readout-track: var(--track-readout);
+  --type-readout-weight: var(--weight-bold);
+  --type-readout-case: var(--case-none);
+
+  --type-code-size: var(--size-label);
+  --type-code-line: var(--line-mono);
+  --type-code-track: var(--track-mono);
+  --type-code-weight: var(--weight-regular);
+  --type-code-case: var(--case-none);
+}
+
+/* ============================================================================
+   §2  Space — 4 px grid
+   ----------------------------------------------------------------------------
+   Matches Tailwind's --spacing base, so p-3 (12px) and var(--space-3) agree.
+   ========================================================================== */
+
+:root {
+  --space-0: 0;
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-2-5: 10px;
+  --space-3: 12px;
+  --space-3-5: 14px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  --grid-base: 4px;
+}
+
+/* ============================================================================
+   §3  Radius, rules, elevation
+   ----------------------------------------------------------------------------
+   Small radii only. One-pixel rules and borders do the structural work;
+   elevation is reserved for surfaces that genuinely float above the page.
+   ========================================================================== */
+
+:root {
+  --corner-none: 0;
+  --corner-xs: 2px;
+  --corner-sm: 3px;
+  --corner-md: 4px;
+  --corner-lg: 6px;
+  --corner-xl: 8px;
+  --corner-pill: 999px;
+
+  --rule-hairline: 1px;
+  --rule-mark: 2px;
+  --rule-width: var(--rule-hairline);
+  --rule-style: solid;
+}
+
+/* ============================================================================
+   §4  Layout, layering, focus, opacity
+   ========================================================================== */
+
+:root {
+  --layout-page-max: 1540px;
+  --layout-content-max: 1180px;
+  --layout-measure: 68ch;
+  --layout-measure-narrow: 52ch;
+  --layout-gutter: clamp(16px, 3.8vw, 64px);
+  --layout-rail: 190px;
+  --layout-rail-wide: 224px;
+  --layout-sidebar: 264px;
+  --layout-header: 56px;
+  /* The popup is a readout first: narrow enough for a single column of
+     controls, tall enough that the count panel and its two lists never
+     reflow between states. */
+  --layout-popup-width: 320px;
+  --layout-popup-height: 420px;
+
+  /* Interaction geometry. 44px is the minimum comfortable target. */
+  --control-height: 40px;
+  --control-height-tall: 44px;
+  --hit-target: 44px;
+
+  /* Mirrors Tailwind's default breakpoint ladder (see theme.css): media
+     queries cannot read custom properties, so these are for JS, container
+     queries and documentation — the framework owns the @media values. */
+  --bp-sm: 40rem;
+  --bp-md: 48rem;
+  --bp-lg: 64rem;
+  --bp-xl: 80rem;
+  --bp-2xl: 96rem;
+
+  --layer-veil: 4;
+  --layer-base: 0;
+  --layer-sticky: 10;
+  --layer-dropdown: 30;
+  --layer-scrim: 40;
+  --layer-dialog: 50;
+  --layer-toast: 60;
+
+  --opacity-disabled: 0.55;
+  --opacity-muted: 0.72;
+  --opacity-veil: 0.78;
+  --opacity-scrim: 0.5;
+
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 3px;
+  --focus-ring-style: solid;
+
+  /* The margin rule: a single vertical hairline where the text margin sits —
+     the way an engineering pad or a printed page rules its margin. It is the
+     one structural flourish in the language, and it is never a colour. */
+  --pattern-margin-rule: linear-gradient(90deg, transparent 23px, var(--bd-subtle) 24px, transparent 25px);
+}
+
+/* ============================================================================
+   §5  Motion
+   ----------------------------------------------------------------------------
+   Three named curves, named for temperament rather than numbers. Any new
+   transition must use one of them — durations stay in the 100–300 ms band
+   except for large displacements, which use swift.
+   ========================================================================== */
+
+:root {
+  --motion-duration-instant: 100ms;
+  --motion-duration-quick: 150ms;
+  --motion-duration-snappy: 220ms;
+  --motion-duration-smooth: 300ms;
+  --motion-duration-swift: 800ms;
+
+  --motion-ease-linear: linear;
+  --motion-ease-snappy: cubic-bezier(0.175, 0.885, 0.32, 1.1);
+  --motion-ease-smooth: cubic-bezier(0.19, 1, 0.22, 1);
+  --motion-ease-swift: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* Normative names from design.md §4.1. */
+  --duration-instant: var(--motion-duration-instant);
+  --duration-quick: var(--motion-duration-quick);
+  --duration-snappy: var(--motion-duration-snappy);
+  --duration-smooth: var(--motion-duration-smooth);
+  --duration-swift: var(--motion-duration-swift);
+
+  --ease-snappy: var(--motion-ease-snappy);
+  --ease-smooth: var(--motion-ease-smooth);
+  --ease-swift: var(--motion-ease-swift);
+
+  /* Duration + curve pairs, for `transition: color var(--motion-snappy)`. */
+  --motion-instant: var(--duration-instant) var(--ease-snappy);
+  --motion-snappy: var(--duration-snappy) var(--ease-snappy);
+  --motion-smooth: var(--duration-smooth) var(--ease-smooth);
+  --motion-swift: var(--duration-swift) var(--ease-swift);
+
+  /* Property-level transitions, straight from the design.md §4.1 table. */
+  --transition-color: color var(--duration-quick) var(--motion-ease-linear);
+  --transition-surface:
+    background-color var(--duration-quick) var(--motion-ease-linear),
+    border-color var(--duration-quick) var(--motion-ease-linear);
+  --transition-shift: transform var(--duration-instant) var(--motion-ease-linear);
+  --transition-underline: text-decoration-color var(--duration-quick) var(--motion-ease-linear);
+  --transition-weight:
+    color var(--duration-instant) var(--motion-ease-linear),
+    font-weight var(--duration-instant) var(--motion-ease-linear);
+  --transition-elevation: box-shadow var(--duration-quick) var(--motion-ease-linear);
+
+  /* Animation shorthands. theme.css re-exposes these through Tailwind's
+     --animate-* namespace (animate-enter-pop, animate-live-pulse, …). */
+  --motion-pop-in: enter-pop var(--duration-instant) both;
+  --motion-pop-out: exit-pop var(--duration-instant) both;
+  --motion-live: live-pulse 800ms var(--motion-ease-smooth) infinite alternate;
+}
+
+/* Menus and popovers resolve into place via blur instead of a scale-only pop. */
+@keyframes enter-pop {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+@keyframes exit-pop {
+  from {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.96);
+  }
+}
+
+/* The monitoring state. The only animation allowed to carry colour. */
+@keyframes live-pulse {
+  from {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================================================
+   §6  Palette primitives
+   ----------------------------------------------------------------------------
+   A pure achromatic ramp: no hue, so nothing can drift toward a brand colour.
+   Steps are chosen around the contrast thresholds the interface depends on.
+   ========================================================================== */
+
+:root {
+  --gray-0: #ffffff;
+  --gray-25: #fafafa;
+  --gray-50: #f5f5f5;
+  --gray-100: #ededed;
+  --gray-150: #e4e4e4;
+  --gray-200: #d9d9d9;
+  --gray-250: #cccccc;
+  --gray-300: #bcbcbc;
+  --gray-400: #a3a3a3;
+  --gray-500: #8a8a8a;
+  --gray-600: #6b6b6b;
+  --gray-700: #4d4d4d;
+  --gray-800: #333333;
+  --gray-850: #262626;
+  --gray-900: #1a1a1a;
+  --gray-950: #121212;
+  --gray-975: #0a0a0a;
+  --gray-1000: #000000;
+
+  /* Text steps that are not on the surface ramp. */
+  --ink-2-light: #454545;
+  --ink-3-light: #5f5f5f;
+  --ink-4-light: #6f6f6f;
+  --ink-2-dark: #d4d4d4;
+  --ink-3-dark: #a3a3a3;
+  --ink-4-dark: #8a8a8a;
+
+  /* Semantic 3–6 %: state only. */
+  --red-light: #b42318;
+  --red-dark: #ff8a80;
+  --red-solid-light: #b42318;
+  --red-solid-dark: #c0392b;
+  --amber-light: #8a5300;
+  --amber-dark: #e3b341;
+  --live-light: #0f7a3d;
+  --live-dark: #4ade80;
+
+  /* Technical accent 0–2 %: the phosphor of a live terminal. */
+  --phosphor-light: #0f7a3d;
+  --phosphor-dark: #4ade80;
+}
+
+/* ============================================================================
+   §7  Semantic tokens
+   ----------------------------------------------------------------------------
+   Resolved with light-dark(), keyed off color-scheme, so the palette is
+   declared exactly once. Theming is then a single switch:
+     :root[data-theme="light"] → color-scheme: light
+     :root[data-theme="dark"]  → color-scheme: dark
+     no attribute             → follow the operating system
+   ========================================================================== */
+
+:root {
+  /* ── Surfaces ─────────────────────────────────────────────────────────────
+     canvas  — the page itself
+     surface — panels and cards sitting on the canvas
+     raised  — fields and popovers lifted off a surface
+     inset   — wells: switches, tracks, code and readout blocks
+     selected— chosen rows, chips and active tabs
+     inverse — the primary action surface (ink on light, white on dark) */
+  --bg-canvas: light-dark(var(--gray-50), var(--gray-975));
+  --bg-surface: light-dark(var(--gray-0), var(--gray-950));
+  --bg-raised: light-dark(var(--gray-0), var(--gray-900));
+  --bg-inset: light-dark(var(--gray-100), var(--gray-1000));
+  --bg-selected: light-dark(var(--gray-150), var(--gray-850));
+  --bg-inverse: light-dark(var(--gray-975), var(--gray-0));
+  --bg-hover: light-dark(var(--gray-100), var(--gray-900));
+  --bg-scrim: light-dark(rgb(10 10 10 / 45%), rgb(0 0 0 / 72%));
+
+  /* ── Text ─────────────────────────────────────────────────────────────────
+     A five-step ramp ordered by importance. fg-5 is for disabled and
+     decorative text only — it does not meet 4.5:1 and must never carry
+     meaning on its own.
+       fg-1 ≈ 19:1 both themes      fg-4 ≈ 4.7:1 light / 5.7:1 dark
+       fg-2 ≈ 8.8:1 / 13:1          fg-5 ≈ 3.2:1 / 2.9:1 (disabled)
+       fg-3 ≈ 5.9:1 / 7.8:1 */
+  --fg-1: light-dark(var(--gray-975), var(--gray-50));
+  --fg-2: light-dark(var(--ink-2-light), var(--ink-2-dark));
+  --fg-3: light-dark(var(--ink-3-light), var(--ink-3-dark));
+  --fg-4: light-dark(var(--ink-4-light), var(--ink-4-dark));
+  --fg-5: light-dark(var(--gray-400), var(--gray-600));
+  --fg-inverse: light-dark(var(--gray-0), var(--gray-975));
+
+  /* ── Borders ──────────────────────────────────────────────────────────────
+     subtle  — hairline separators between regions (decorative)
+     default — component boundaries that are not interactive
+     strong  — interactive boundaries; ≥ 3:1 against its own surface
+     focus   — maximum contrast, never a hue */
+  --bd-subtle: light-dark(var(--gray-150), var(--gray-850));
+  --bd-default: light-dark(var(--gray-250), var(--gray-800));
+  --bd-strong: light-dark(var(--gray-500), var(--gray-600));
+  --bd-inverse: light-dark(var(--gray-0), var(--gray-975));
+  --bd-focus: light-dark(var(--gray-975), var(--gray-0));
+
+  /* ── Action ───────────────────────────────────────────────────────────────
+     White is the primary action colour, which means ink on light surfaces and
+     white on dark ones: the same token, resolved per theme. */
+  --action-bg: light-dark(var(--gray-975), var(--gray-0));
+  --action-bg-hover: light-dark(var(--gray-800), var(--gray-200));
+  --action-bg-active: light-dark(var(--gray-1000), var(--gray-100));
+  --action-fg: light-dark(var(--gray-0), var(--gray-975));
+  --action-quiet-fg: var(--fg-1);
+  --action-quiet-bg-hover: var(--bg-selected);
+
+  /* ── Selection ────────────────────────────────────────────────────────────
+     Selection is luminance, not hue. */
+  --selected-bg: var(--bg-selected);
+  --selected-fg: var(--fg-1);
+  --selected-bd: light-dark(var(--gray-975), var(--gray-50));
+
+  /* ── State ────────────────────────────────────────────────────────────────
+     Attention states are the only place hue appears. Information deliberately
+     stays neutral: not every message deserves colour. */
+  --danger-text: light-dark(var(--red-light), var(--red-dark));
+  --danger-soft: light-dark(rgb(180 35 24 / 8%), rgb(255 138 128 / 12%));
+  --danger-solid: light-dark(var(--red-solid-light), var(--red-solid-dark));
+  --danger-solid-fg: var(--gray-0);
+
+  --warn-text: light-dark(var(--amber-light), var(--amber-dark));
+  --warn-soft: light-dark(rgb(138 83 0 / 8%), rgb(227 179 65 / 12%));
+
+  --live: light-dark(var(--live-light), var(--live-dark));
+  --live-soft: light-dark(rgb(15 122 61 / 10%), rgb(74 222 128 / 14%));
+  --live-glow: light-dark(rgb(15 122 61 / 12%), rgb(74 222 128 / 13%));
+
+  --ok-text: var(--live);
+  --ok-soft: var(--live-soft);
+  --info-text: var(--fg-2);
+  --info-soft: var(--bg-selected);
+
+  /* ── Focus ────────────────────────────────────────────────────────────────
+     A monochrome ring at maximum contrast; it reads on every surface. */
+  --focus-ring-color: var(--bd-focus);
+  --focus-ring: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+
+  /* ── Elevation ────────────────────────────────────────────────────────────
+     Almost no shadow. Only surfaces that genuinely float get one. */
+  --shadow-color: light-dark(rgb(10 10 10 / 14%), rgb(0 0 0 / 60%));
+  --elevation-none: none;
+  --elevation-pop: 0 6px 18px -6px var(--shadow-color);
+  --elevation-overlay: 0 12px 32px -8px var(--shadow-color);
+}
+
+/* ── Theme scope ─────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* ============================================================================
+   §8  Reduced motion
+   ----------------------------------------------------------------------------
+   Zeroing the duration tokens disables every token-driven transition at once;
+   the blanket rule catches animations that came from elsewhere.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 1ms;
+    --duration-quick: 1ms;
+    --duration-snappy: 1ms;
+    --duration-smooth: 1ms;
+    --duration-swift: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

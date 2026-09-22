@@ -56,7 +56,7 @@ describe("strategy configuration", () => {
   test("keeps sensitivity monotonic and empty strategy collections intentional", () => {
     expect(strategyThreshold(normalizeStrategy({ sensitivity: 90 }, "all"))).toBe(0.1);
     expect(strategyThreshold(normalizeStrategy({ sensitivity: 20 }, "all"))).toBe(0.8);
-    expect(normalizeStrategy({ sensitivity: NaN }, "all").sensitivity).toBe(70);
+    expect(normalizeStrategy({ sensitivity: NaN }, "all").sensitivity).toBe(20);
     expect(normalizeStrategy({ sensitivity: 999 }, "all").sensitivity).toBe(100);
     expect(normalizeSettings({ strategies: [] }).strategies).toEqual([]);
     expect(normalizeSettings({ theme: "dark", strategies: [] }).theme).toBe("dark");
@@ -72,7 +72,7 @@ describe("strategy configuration", () => {
     };
     expect(
       renderHoverText({ strategy, surface: "comments", modelNickname: "My model", modelId: "jev-latest" }, 0.864),
-    ).toBe("广告评论 / 86% / 30% / My model / 评论区");
+    ).toBe("广告评论 / 86% / 80% / My model / 评论区");
     expect(validateTemplate("{{model.key}}")).not.toBeNull();
     expect(validateTemplate("{{strategy.name}")).not.toBeNull();
     expect(validateTemplate(strategy.hoverTemplate)).toBeNull();
@@ -86,8 +86,8 @@ describe("scoped hover CSS", () => {
       "#test-veil",
     );
     expect(result.error).toBeNull();
-    expect(result.css).toContain("#test-veil .xfilter-veil:is(:hover,:focus-visible) .xfilter-veil__label-rate");
-    expect(result.css).toContain("#test-veil .xfilter-veil:is(:hover,:focus-visible)::before");
+    expect(result.css).toContain("#test-veil .xflow-veil:is(:hover,:focus-visible) .xflow-veil__label-rate");
+    expect(result.css).toContain("#test-veil .xflow-veil:is(:hover,:focus-visible)::before");
   });
 
   test("rejects escape routes, layout mutation and external resources", () => {

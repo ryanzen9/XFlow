@@ -18,7 +18,7 @@ beforeEach(() => {
   session = {};
   resetActivityServiceForTests();
   globalThis.chrome = {
-    runtime: { id: "xfilter-test", getURL: (path: string) => `chrome-extension://xfilter-test/${path}` },
+    runtime: { id: "xflow-test", getURL: (path: string) => `chrome-extension://xflow-test/${path}` },
     storage: {
       local: {
         get: async (keys: null | string[]) => {
@@ -45,7 +45,7 @@ test("rejects provider credential messages sent from a content-script tab", () =
   let response: ExtensionResponse | undefined;
   const keepChannelOpen = handleMessage(
     { type: "GET_PROVIDER_SUMMARIES" },
-    { id: "xfilter-test", url: "https://x.com/home", tab: { id: 7 } as chrome.tabs.Tab },
+    { id: "xflow-test", url: "https://x.com/home", tab: { id: 7 } as chrome.tabs.Tab },
     (value) => {
       response = value;
     },
@@ -60,8 +60,8 @@ test("returns only masked provider metadata to a trusted extension page", async 
       handleMessage(
         { type: "GET_PROVIDER_SUMMARIES" },
         {
-          id: "xfilter-test",
-          url: "chrome-extension://xfilter-test/dashboard.html",
+          id: "xflow-test",
+          url: "chrome-extension://xflow-test/dashboard.html",
           tab: { id: 8 } as chrome.tabs.Tab,
         },
         resolve,
@@ -85,8 +85,8 @@ test("allows an options page opened in a tab to save the TypeSafe official key",
       handleMessage(
         { type: "SAVE_PROVIDER_KEY", providerId: "typesafe", apiKey: "typesafe-official-key" },
         {
-          id: "xfilter-test",
-          url: "chrome-extension://xfilter-test/dashboard.html",
+          id: "xflow-test",
+          url: "chrome-extension://xflow-test/dashboard.html",
           tab: { id: 9 } as chrome.tabs.Tab,
         },
         resolve,
@@ -107,7 +107,7 @@ test("accepts a content-script correction and persists synchronized user knowled
           post: { id: "42", postId: "42", text: "show this post" },
           action: "allow",
         },
-        { id: "xfilter-test", url: "https://x.com/home", tab: { id: 10 } as chrome.tabs.Tab },
+        { id: "xflow-test", url: "https://x.com/home", tab: { id: 10 } as chrome.tabs.Tab },
         resolve,
       ),
     ).toBeTrue();
@@ -122,7 +122,7 @@ test("rejects a malformed user-decision post without throwing", () => {
   let response: ExtensionResponse | undefined;
   const keepChannelOpen = handleMessage(
     { type: "SAVE_USER_DECISION", surface: "timeline", post: null, action: "hide" } as never,
-    { id: "xfilter-test", url: "https://x.com/home", tab: { id: 12 } as chrome.tabs.Tab },
+    { id: "xflow-test", url: "https://x.com/home", tab: { id: 12 } as chrome.tabs.Tab },
     (value) => {
       response = value;
     },
@@ -141,7 +141,7 @@ test("persists an author rule from a trusted content script", async () => {
           post: { id: "43", text: "author post", authorId: "ExampleAuthor" },
           action: "block-author",
         },
-        { id: "xfilter-test", url: "https://x.com/home", tab: { id: 11 } as chrome.tabs.Tab },
+        { id: "xflow-test", url: "https://x.com/home", tab: { id: 11 } as chrome.tabs.Tab },
         resolve,
       ),
     ).toBeTrue();
@@ -153,7 +153,7 @@ test("persists an author rule from a trusted content script", async () => {
 });
 
 test("records filter activity only from an X content script", async () => {
-  const sender = { id: "xfilter-test", url: "https://x.com/home", tab: { id: 10 } as chrome.tabs.Tab };
+  const sender = { id: "xflow-test", url: "https://x.com/home", tab: { id: 10 } as chrome.tabs.Tab };
   const response = await new Promise<ExtensionResponse>((resolve) => {
     expect(
       handleMessage(
