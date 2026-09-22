@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="XFlow" width="100%" />
+  <img src="logo-dark.png" alt="XFlow" width="50%" />
 </p>
 
 <p align="center">
