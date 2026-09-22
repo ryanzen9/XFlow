@@ -14,11 +14,27 @@ const zodCspPlugin: Bun.BunPlugin = {
   },
 };
 
-const builds: Array<{ entrypoint: string; format: "esm" | "iife"; outputName: string }> = [
-  { entrypoint: "src/background/index.ts", format: "esm", outputName: "background" },
-  { entrypoint: "src/content/index.tsx", format: "iife", outputName: "content" },
+const builds: Array<{
+  entrypoint: string;
+  format: "esm" | "iife";
+  outputName: string;
+}> = [
+  {
+    entrypoint: "src/background/index.ts",
+    format: "esm",
+    outputName: "background",
+  },
+  {
+    entrypoint: "src/content/index.tsx",
+    format: "iife",
+    outputName: "content",
+  },
   { entrypoint: "src/popup/index.tsx", format: "esm", outputName: "popup" },
-  { entrypoint: "src/dashboard/index.tsx", format: "esm", outputName: "dashboard" },
+  {
+    entrypoint: "src/dashboard/index.tsx",
+    format: "esm",
+    outputName: "dashboard",
+  },
 ];
 
 for (const build of builds) {
@@ -58,10 +74,12 @@ const staticFiles = [
   ["manifest.json", "dist/manifest.json"],
   ["popup.html", "dist/popup.html"],
   ["dashboard.html", "dist/dashboard.html"],
+  ["logo.png", "dist/logo.png"],
+  ["logo-dark.png", "dist/logo-dark.png"],
 ] as const;
 
 for (const [source, destination] of staticFiles) {
   await Bun.write(destination, Bun.file(source));
 }
 
-console.log("Built XFilter extension in dist/");
+console.log("Built XFlow extension in dist/");

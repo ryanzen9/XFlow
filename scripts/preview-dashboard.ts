@@ -1,7 +1,7 @@
 // Local UI preview only. The extension build never includes the mock storage script.
 const storageMock = `(() => {
   const listeners = new Set();
-  const read = () => JSON.parse(localStorage.getItem('xfilter-dashboard-preview') || '{}');
+  const read = () => JSON.parse(localStorage.getItem('xflow-dashboard-preview') || '{}');
   globalThis.chrome = {
     storage: {
       local: {
@@ -13,7 +13,7 @@ const storageMock = `(() => {
         },
         set: async (patch) => {
           const previous = read();
-          localStorage.setItem('xfilter-dashboard-preview', JSON.stringify({ ...previous, ...patch }));
+          localStorage.setItem('xflow-dashboard-preview', JSON.stringify({ ...previous, ...patch }));
           const changes = Object.fromEntries(Object.entries(patch).map(([key, newValue]) => [key, { oldValue: previous[key], newValue }]));
           listeners.forEach(listener => listener(changes, 'local'));
         },
@@ -21,7 +21,7 @@ const storageMock = `(() => {
           const previous = read();
           const oldValue = previous[key];
           delete previous[key];
-          localStorage.setItem('xfilter-dashboard-preview', JSON.stringify(previous));
+          localStorage.setItem('xflow-dashboard-preview', JSON.stringify(previous));
           listeners.forEach(listener => listener({ [key]: { oldValue, newValue: undefined } }, 'local'));
         }
       },

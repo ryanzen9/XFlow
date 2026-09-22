@@ -45,14 +45,14 @@ export function StrategyTabs({ value, counts, onChange }: Props) {
           onClick={() => onChange(surface.id)}
           onKeyDown={(event) => selectFromKeyboard(event, index)}
           className={cn(
-            "relative flex min-h-[58px] items-center justify-between bg-transparent px-3 py-2.5 text-left text-muted transition after:absolute after:right-0 after:bottom-[-2px] after:left-0 after:h-[3px] after:bg-transparent after:content-[''] hover:bg-panel/60 aria-selected:bg-surface aria-selected:text-ink aria-selected:after:bg-signal sm:min-h-16 sm:px-[18px] [&+button]:border-l [&+button]:border-line",
+            "relative flex min-h-[58px] items-center justify-between bg-transparent px-3 py-2.5 text-left text-muted transition after:absolute after:right-0 after:bottom-[-2px] after:left-0 after:h-[3px] after:bg-transparent after:content-[''] hover:bg-hover/60 aria-selected:bg-surface aria-selected:text-ink aria-selected:after:bg-ink sm:min-h-16 sm:px-[18px] [&+button]:border-l [&+button]:border-line",
           )}
         >
           <span>
             <strong className="block text-xs sm:text-sm">{surface.label}</strong>
-            <small className="mt-[3px] block font-mono text-[9px] text-muted">{surface.route}</small>
+            <small className="mt-[3px] block font-mono text-caption text-muted">{surface.route}</small>
           </span>
-          <em className="grid h-[26px] min-w-[26px] place-items-center rounded-full bg-soft px-[7px] font-mono text-[10px] font-semibold text-signal not-italic">
+          <em className="grid h-[26px] min-w-[26px] place-items-center rounded-full bg-selected px-[7px] font-mono text-meta font-semibold text-ink not-italic">
             {counts[surface.id]}
           </em>
         </button>

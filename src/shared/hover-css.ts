@@ -1,8 +1,8 @@
 // A deliberately small CSS dialect: visual declarations, scoped to this veil only.
 const selectors: Record<string, string> = {
   ".veil": "::before",
-  ".label": " .xfilter-veil__label-rate",
-  ".action": " .xfilter-veil__action",
+  ".label": " .xflow-veil__label-rate",
+  ".action": " .xflow-veil__action",
 };
 const properties = new Set([
   "color",
@@ -52,7 +52,7 @@ export function compileHoverCss(source: string, scope: string): { css: string; e
         return fail("CSS 变量仅支持 --hitrate 和 --threshold。");
       declarations.push(`${property}:${value}`);
     }
-    result.push(`${scope} .xfilter-veil:is(:hover,:focus-visible)${selectors[selector]}{${declarations.join(";")}}`);
+    result.push(`${scope} .xflow-veil:is(:hover,:focus-visible)${selectors[selector]}{${declarations.join(";")}}`);
   }
   return { css: result.join("\n"), error: null };
 }

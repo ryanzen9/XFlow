@@ -24,7 +24,7 @@ async function run(page) {
     return route.fulfill({ status: 200, body: "" });
   });
 
-  await page.evaluate(() => localStorage.removeItem("xfilter-dashboard-preview"));
+  await page.evaluate(() => localStorage.removeItem("xflow-dashboard-preview"));
   await page.reload();
   await page.getByRole("button", { name: "数据 Data" }).click();
   const editor = page.locator("#config-json");
@@ -47,13 +47,13 @@ async function run(page) {
   await page.getByRole("button", { name: "应用到浏览器存储" }).click();
   await page.getByText(/配置已写入浏览器/).waitFor();
   config = JSON.parse(await editor.inputValue());
-  let stored = await page.evaluate(() => JSON.parse(localStorage.getItem("xfilter-dashboard-preview")));
+  let stored = await page.evaluate(() => JSON.parse(localStorage.getItem("xflow-dashboard-preview")));
   assert(config.modelNickname === "JSON edited model", "JSON edit did not persist");
   assert(!("configVersion" in config), "User-supplied version was not stripped from editable config");
   assert(stored.configVersion === 1, "Hidden version did not start at one");
   await page.getByRole("button", { name: "应用到浏览器存储" }).click();
   await page.getByText(/配置已写入浏览器/).waitFor();
-  stored = await page.evaluate(() => JSON.parse(localStorage.getItem("xfilter-dashboard-preview")));
+  stored = await page.evaluate(() => JSON.parse(localStorage.getItem("xflow-dashboard-preview")));
   assert(stored.configVersion === 2, "Hidden version did not increment after the second write");
 
   await editor.fill("{ invalid json");
@@ -66,7 +66,7 @@ async function run(page) {
   await page.locator("#s3-endpoint").fill("https://s3.example.com");
   await page.locator("#s3-region").fill("us-east-1");
   await page.locator("#s3-bucket").fill("private-config");
-  await page.locator("#s3-object-key").fill("xfilter/config.json");
+  await page.locator("#s3-object-key").fill("xflow/config.json");
   await page.locator("#s3-access-key").fill("access-id");
   await page.locator("#s3-secret-key").fill("top-secret");
   remote = { schemaVersion: 1, configVersion: 1, updatedAt: "2026-09-21T01:00:00.000Z", config };
@@ -81,7 +81,7 @@ async function run(page) {
   assert(requests[1].headers.authorization.startsWith("AWS4-HMAC-SHA256"), "S3 request was not signed");
   assert(!requests[1].body.includes("top-secret"), "S3 credentials leaked into remote document");
   assert(remote.config.modelNickname === "JSON edited model", "Pushed configuration is stale");
-  stored = await page.evaluate(() => JSON.parse(localStorage.getItem("xfilter-dashboard-preview")));
+  stored = await page.evaluate(() => JSON.parse(localStorage.getItem("xflow-dashboard-preview")));
   assert(stored.s3Sync.autoSyncEnabled === true, "Automatic sync preference was not persisted");
 
   remote = {
@@ -100,7 +100,7 @@ async function run(page) {
     pulled.modelNickname === "Remote model" && !("configVersion" in pulled),
     "Automatic remote pull leaked its envelope into the editor",
   );
-  stored = await page.evaluate(() => JSON.parse(localStorage.getItem("xfilter-dashboard-preview")));
+  stored = await page.evaluate(() => JSON.parse(localStorage.getItem("xflow-dashboard-preview")));
   assert(
     stored.configVersion === 9 && stored.modelNickname === "Remote model",
     "Automatic remote pull was not persisted locally",

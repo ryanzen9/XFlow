@@ -16,7 +16,7 @@ beforeEach(() => {
   session = {};
   resetActivityServiceForTests();
   globalThis.chrome = {
-    runtime: { id: "xfilter-test", getURL: (path: string) => `chrome-extension://xfilter-test/${path}` },
+    runtime: { id: "xflow-test", getURL: (path: string) => `chrome-extension://xflow-test/${path}` },
     storage: {
       local: {
         get: async (keys: null | string[]) => {
@@ -43,7 +43,7 @@ test("rejects provider credential messages sent from a content-script tab", () =
   let response: ExtensionResponse | undefined;
   const keepChannelOpen = handleMessage(
     { type: "GET_PROVIDER_SUMMARIES" },
-    { id: "xfilter-test", url: "https://x.com/home", tab: { id: 7 } as chrome.tabs.Tab },
+    { id: "xflow-test", url: "https://x.com/home", tab: { id: 7 } as chrome.tabs.Tab },
     (value) => {
       response = value;
     },
@@ -58,8 +58,8 @@ test("returns only masked provider metadata to a trusted extension page", async 
       handleMessage(
         { type: "GET_PROVIDER_SUMMARIES" },
         {
-          id: "xfilter-test",
-          url: "chrome-extension://xfilter-test/dashboard.html",
+          id: "xflow-test",
+          url: "chrome-extension://xflow-test/dashboard.html",
           tab: { id: 8 } as chrome.tabs.Tab,
         },
         resolve,
@@ -83,8 +83,8 @@ test("allows an options page opened in a tab to save the TypeSafe official key",
       handleMessage(
         { type: "SAVE_PROVIDER_KEY", providerId: "typesafe", apiKey: "typesafe-official-key" },
         {
-          id: "xfilter-test",
-          url: "chrome-extension://xfilter-test/dashboard.html",
+          id: "xflow-test",
+          url: "chrome-extension://xflow-test/dashboard.html",
           tab: { id: 9 } as chrome.tabs.Tab,
         },
         resolve,
@@ -96,7 +96,7 @@ test("allows an options page opened in a tab to save the TypeSafe official key",
 });
 
 test("records filter activity only from an X content script", async () => {
-  const sender = { id: "xfilter-test", url: "https://x.com/home", tab: { id: 10 } as chrome.tabs.Tab };
+  const sender = { id: "xflow-test", url: "https://x.com/home", tab: { id: 10 } as chrome.tabs.Tab };
   const response = await new Promise<ExtensionResponse>((resolve) => {
     expect(
       handleMessage(

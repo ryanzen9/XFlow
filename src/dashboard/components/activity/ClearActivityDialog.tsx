@@ -15,13 +15,13 @@ export function ClearActivityDialog({ busy, onClear }: { busy: boolean; onClear:
   }, [busy, open]);
   return (
     <>
-      <button className={`${secondaryButton} text-alert`} type="button" disabled={busy} onClick={() => setOpen(true)}>
+      <button className={`${secondaryButton} text-danger`} type="button" disabled={busy} onClick={() => setOpen(true)}>
         Clear Activity Data
       </button>
       {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4" role="presentation">
+        <div className="fixed inset-0 z-(--layer-dialog) grid place-items-center bg-scrim p-4" role="presentation">
           <section
-            className="w-full max-w-md rounded-xl border border-line bg-panel p-5 shadow-2xl"
+            className="w-full max-w-md rounded-lg border border-line bg-raised p-5 shadow-overlay"
             role="dialog"
             aria-modal="true"
             aria-labelledby="clear-activity-title"
@@ -46,7 +46,7 @@ export function ClearActivityDialog({ busy, onClear }: { busy: boolean; onClear:
                 Cancel
               </button>
               <button
-                className="min-h-9 rounded-lg border border-alert bg-alert px-4 text-xs font-semibold text-white disabled:opacity-50"
+                className="min-h-9 rounded-md border border-danger-solid bg-danger-solid px-4 text-xs font-semibold text-danger-fg disabled:opacity-50"
                 type="button"
                 disabled={busy}
                 onClick={() =>

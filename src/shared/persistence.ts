@@ -31,7 +31,7 @@ export const DEFAULT_S3_SYNC_SETTINGS: S3SyncSettings = {
   endpoint: "",
   region: "us-east-1",
   bucket: "",
-  objectKey: "xfilter/config.json",
+  objectKey: "xflow/config.json",
   accessKeyId: "",
   secretAccessKey: "",
   sessionToken: "",

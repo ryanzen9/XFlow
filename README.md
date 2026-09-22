@@ -65,7 +65,11 @@ bun run check
 
 「通用」提供时间线、评论区总开关、模型昵称与克制的 Activity 视图。开关立即生效；昵称只用于 Hover 展示，不改变实际模型。
 
-Activity 包括过去 12 周 Heatmap、最近 7 天单序列趋势、30 天筛选历史和当前自然周回顾。历史项可以展开查看时间、策略和原始链接；只有明确选择「Not supposed to be filtered」才会标记为错误，时间线中的 Reveal 只记录为临时查看。页面同时提供二次确认的「Clear Activity Data」。
+Activity 包括过去 12 周 Heatmap、最近 7 天单序列趋势与当前自然周回顾。页面同时提供二次确认的「Clear Activity Data」。
+
+### Log
+
+「日志」按天倒序展示最近 30 天的筛选历史。历史项可以展开查看时间、策略和原始链接；只有明确选择「Not supposed to be filtered」才会标记为错误，时间线中的 Reveal 只记录为临时查看。
 
 Popup 将今日过滤数作为第一视觉焦点，并显示历史累计过滤数。Toolbar Badge 只统计当前 Tab 当前页面生命周期内的唯一内容；刷新、打开新 Tab 或进入新的 X 页面会独立重新计数，0 时隐藏。
 
@@ -83,7 +87,7 @@ Popup 将今日过滤数作为第一视觉焦点，并显示历史累计过滤�
 
 「策略」包含「时间线博文」和「评论区」两个 Tab，每个 Tab 都有独立策略表。后台按照 P1、P2… 顺序判断，采用第一条达到自身阈值的策略；高优先级未命中时才继续采用后续结果。
 
-敏感度越高，触发遮罩所需概率越低。例如敏感度 70 对应 30% 阈值。保存策略会让所属场景先平滑揭示旧遮罩，再按新配置重新分析，因此可能产生新的 API 请求。
+敏感度越高，触发遮罩所需概率越低。例如敏感度 20 对应 80% 阈值。保存策略会让所属场景先平滑揭示旧遮罩，再按新配置重新分析，因此可能产生新的 API 请求。
 
 Hover 文案支持：
 
@@ -133,9 +137,10 @@ bun test                # Bun 单元测试
 bun run build           # 构建 dist/
 bun run check           # 完整质量门禁
 bun run preview:dashboard
+bun run preview:tokens
 ```
 
-Dashboard 预览使用独立的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。`scripts/qa/` 中保留关键浏览器验收流程，供 Playwright CLI 在预览环境中执行；这些脚本只断言行为，不生成或提交截图。
+Dashboard 预览使用独立的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。`bun run preview:tokens` 提供设计 token 索引页（`http://127.0.0.1:43993/`），可在浅色/深色之间切换并显示每个 token 的解析值。`scripts/qa/` 中保留关键浏览器验收流程，供 Playwright CLI 在预览环境中执行；这些脚本只断言行为，不生成或提交截图。
 
 ## Project structure
 
@@ -143,18 +148,20 @@ Dashboard 预览使用独立的 localStorage Mock，不读取已安装扩展的�
 .
 ├── docs/
 │   ├── architecture.md       # 数据流、信任边界与持久化
-│   └── blur-veil-design.md   # 遮罩交互和动画规范
+│   ├── blur-veil-design.md   # 遮罩交互和动画规范
+│   └── design-tokens.md      # token 分层、命名与 light/dark 取值
 ├── scripts/
 │   ├── build.ts              # Bun 生产构建
 │   ├── preview-dashboard.ts  # 无真实凭据的本地预览
+│   ├── preview-tokens.ts     # 设计 token 索引页
 │   └── qa/                   # 浏览器验收流程
 ├── src/
 │   ├── background/           # Service Worker、Review、Activity、Badge 与 Provider Adapter
 │   ├── content/              # DOM 提取、控制器、Blur Veil、事件采集与动画
 │   ├── dashboard/            # 配置、Activity、历史与周报界面
-│   ├── popup/                # 今日/累计统计与实时开关
+│   ├── popup/                # 计数优先的弹窗：过滤计数、实时开关与渠道状态
 │   ├── shared/               # 协议、配置、Activity 派生、持久化与纯函数
-│   ├── styles/               # 共享主题 token
+│   ├── styles/               # token.css（设计 token 唯一来源）与 theme.css（Tailwind 桥接）
 │   └── ui/                   # 共享 UI utility 与主题组件
 ├── dashboard.html
 ├── popup.html

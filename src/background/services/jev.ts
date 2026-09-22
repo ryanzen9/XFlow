@@ -30,7 +30,7 @@ export async function requestPostReviews(
   secrets: ProviderSecrets,
 ): Promise<ExtensionResponse> {
   const enabled = surface === "timeline" ? settings.enabled : settings.commentsEnabled;
-  if (!enabled) return { ok: false, code: "DISABLED", error: "XFilter 已暂停。" };
+  if (!enabled) return { ok: false, code: "DISABLED", error: "XFlow 已暂停。" };
 
   const provider = getJevProvider(settings.activeProvider);
   const apiKey = secrets[settings.activeProvider];
@@ -102,7 +102,7 @@ export async function requestPostReviews(
       }),
     };
   } catch (error) {
-    console.error(`[XFilter] ${PROVIDERS[settings.activeProvider].label} Jev request failed`, error);
+    console.error(`[XFlow] ${PROVIDERS[settings.activeProvider].label} Jev request failed`, error);
     return { ok: false, code: "API_ERROR", error: readableProviderError(settings.activeProvider, error) };
   }
 }

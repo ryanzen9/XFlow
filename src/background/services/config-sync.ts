@@ -7,7 +7,7 @@ import {
   type SyncResult,
 } from "../../shared";
 
-const SYNC_ALARM = "xfilter-config-sync";
+const SYNC_ALARM = "xflow-config-sync";
 const SYNC_INTERVAL_MINUTES = 15;
 
 let initialized = false;
@@ -32,7 +32,7 @@ export function requestAutomaticSync(): Promise<void> {
       try {
         await runAutomaticSync();
       } catch (error) {
-        console.warn("XFilter automatic configuration sync failed.", error);
+        console.warn("XFlow automatic configuration sync failed.", error);
       }
     } while (queued);
   })().finally(() => {

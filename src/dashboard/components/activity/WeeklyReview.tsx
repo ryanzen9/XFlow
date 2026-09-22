@@ -7,19 +7,17 @@ const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: "long" })
 export function WeeklyReview({ weekly }: { weekly: WeeklyActivity }) {
   const range = `${dayFormatter.format(weekly.start)} – ${dayFormatter.format(weekly.end)}`;
   return (
-    <section className="rounded-xl border border-line bg-panel p-[18px] shadow-sm" aria-labelledby="weekly-title">
+    <section className="rounded-xl border border-line bg-surface p-[18px]" aria-labelledby="weekly-title">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 id="weekly-title" className="text-sm font-semibold">
             Weekly Review
           </h2>
-          <p className="mt-1 text-[10px] text-muted">{range}</p>
-          <strong className="mt-4 block text-[38px] leading-none tracking-[-0.05em]">
-            {number.format(weekly.total)}
-          </strong>
-          <span className="mt-1 block text-[10px] text-muted">Filtered this week</span>
+          <p className="mt-1 text-meta text-muted">{range}</p>
+          <strong className="mt-4 block text-display leading-none">{number.format(weekly.total)}</strong>
+          <span className="mt-1 block text-meta text-muted">Filtered this week</span>
         </div>
-        <dl className="grid min-w-44 gap-4 text-[10px]">
+        <dl className="grid min-w-44 gap-4 text-meta">
           <div>
             <dt className="text-muted">Most active day</dt>
             <dd className="mt-1 font-semibold text-ink">

@@ -75,9 +75,9 @@ export function mountPostVeil(
   { animate, probability, details, onReveal }: MountPostVeilOptions,
 ): PostVeilPresentation {
   const host = document.createElement("div");
-  host.className = "xfilter-veil-host";
+  host.className = "xflow-veil-host";
   host.dataset.slot = "filtered-post-veil";
-  host.id = `xfilter-${crypto.randomUUID()}`;
+  host.id = `xflow-${crypto.randomUUID()}`;
   host.style.setProperty("--hitrate", String(probability));
   host.style.setProperty("--threshold", String(details ? strategyThreshold(details.strategy) : 0));
 
@@ -92,9 +92,9 @@ export function mountPostVeil(
 
   const surface = findSurfaceColor(article);
   const colors = veilColors(surface);
-  setTemporaryStyle("--xfilter-veil-color", colors.resting);
-  setTemporaryStyle("--xfilter-veil-hover-color", colors.hover);
-  setTemporaryStyle("--xfilter-post-color", getComputedStyle(article).color);
+  setTemporaryStyle("--xflow-veil-color", colors.resting);
+  setTemporaryStyle("--xflow-veil-hover-color", colors.hover);
+  setTemporaryStyle("--xflow-post-color", getComputedStyle(article).color);
 
   const inertChildren = new Map<HTMLElement, boolean>();
   for (const child of article.children) {
@@ -105,7 +105,7 @@ export function mountPostVeil(
 
   article.append(host);
   host.inert = true;
-  article.dataset.xfilterMotion = animate ? "full" : "fast";
+  article.dataset.xflowMotion = animate ? "full" : "fast";
 
   let root: Root | null = createRoot(host);
   let state: PostVeilState = "obscuring";
@@ -118,12 +118,12 @@ export function mountPostVeil(
 
   const setState = (nextState: PostVeilState) => {
     state = nextState;
-    article.dataset.xfilterState = nextState;
+    article.dataset.xflowState = nextState;
   };
 
   const restoreArticle = () => {
-    delete article.dataset.xfilterState;
-    delete article.dataset.xfilterMotion;
+    delete article.dataset.xflowState;
+    delete article.dataset.xflowMotion;
 
     for (const [property, saved] of savedStyles) {
       if (saved.value) article.style.setProperty(property, saved.value, saved.priority);

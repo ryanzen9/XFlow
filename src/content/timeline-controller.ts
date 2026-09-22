@@ -1,5 +1,5 @@
 import {
-  FILTER_THRESHOLD,
+  FALLBACK_THRESHOLD,
   MAX_BATCH_SIZE,
   clampProbability,
   getFilterSurface,
@@ -221,7 +221,7 @@ export class TimelineController {
       if (!result || this.revealedPostIds.has(item.id)) continue;
       const probability = clampProbability(result.probability);
       const details = result.details;
-      if (probability < (details ? strategyThreshold(details.strategy) : FILTER_THRESHOLD)) continue;
+      if (probability < (details ? strategyThreshold(details.strategy) : FALLBACK_THRESHOLD)) continue;
       this.filteredPosts.set(item.article, { item, probability, details });
       if (!this.active) continue;
 

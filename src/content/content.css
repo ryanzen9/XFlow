@@ -1,38 +1,38 @@
-article[data-xfilter-state] {
+article[data-xflow-state] {
   overflow: clip;
   position: relative !important;
 }
 
-article[data-xfilter-state] > :not(.xfilter-veil-host) {
+article[data-xflow-state] > :not(.xflow-veil-host) {
   transform-origin: center;
 }
 
-article[data-xfilter-state="obscuring"] > :not(.xfilter-veil-host) {
-  animation: xfilter-obscure-content 360ms cubic-bezier(0.2, 0, 0, 1) both;
+article[data-xflow-state="obscuring"] > :not(.xflow-veil-host) {
+  animation: xflow-obscure-content 360ms cubic-bezier(0.2, 0, 0, 1) both;
   pointer-events: none !important;
   will-change: filter, opacity;
 }
 
-article[data-xfilter-state="obscured"] > :not(.xfilter-veil-host) {
+article[data-xflow-state="obscured"] > :not(.xflow-veil-host) {
   filter: blur(12px) contrast(0.7) saturate(0.8);
   opacity: 0.78;
   pointer-events: none !important;
 }
 
-article[data-xfilter-state="revealing"] > :not(.xfilter-veil-host) {
-  animation: xfilter-reveal-content 300ms cubic-bezier(0.2, 0, 0, 1) 40ms both;
+article[data-xflow-state="revealing"] > :not(.xflow-veil-host) {
+  animation: xflow-reveal-content 300ms cubic-bezier(0.2, 0, 0, 1) 40ms both;
   pointer-events: none !important;
   will-change: filter, opacity;
 }
 
-.xfilter-veil-host {
+.xflow-veil-host {
   all: initial;
   position: absolute;
   z-index: 4;
   inset: 0;
   display: block;
   overflow: hidden;
-  color: var(--xfilter-post-color, rgb(15, 20, 25));
+  color: var(--xflow-post-color, rgb(15, 20, 25));
   font-family:
     TwitterChirp,
     -apple-system,
@@ -45,12 +45,12 @@ article[data-xfilter-state="revealing"] > :not(.xfilter-veil-host) {
   pointer-events: none;
 }
 
-article[data-xfilter-state="obscured"] > .xfilter-veil-host,
-article[data-xfilter-state="revealing"] > .xfilter-veil-host {
+article[data-xflow-state="obscured"] > .xflow-veil-host,
+article[data-xflow-state="revealing"] > .xflow-veil-host {
   pointer-events: auto;
 }
 
-.xfilter-veil {
+.xflow-veil {
   all: unset;
   box-sizing: border-box;
   position: absolute;
@@ -67,15 +67,15 @@ article[data-xfilter-state="revealing"] > .xfilter-veil-host {
   -webkit-tap-highlight-color: transparent;
 }
 
-.xfilter-veil::before {
+.xflow-veil::before {
   position: absolute;
   inset: 0;
-  background: var(--xfilter-veil-color, rgba(255, 255, 255, 0.72));
+  background: var(--xflow-veil-color, rgba(255, 255, 255, 0.72));
   content: "";
   opacity: 0;
 }
 
-.xfilter-veil__prompt {
+.xflow-veil__prompt {
   position: absolute;
   top: clamp(44px, 40%, calc(100% - 44px));
   left: 50%;
@@ -89,107 +89,107 @@ article[data-xfilter-state="revealing"] > .xfilter-veil-host {
   white-space: nowrap;
 }
 
-.xfilter-veil__label,
-.xfilter-veil__action {
+.xflow-veil__label,
+.xflow-veil__action {
   display: block;
   font-size: 14px;
   line-height: 18px;
 }
 
-.xfilter-veil__label {
+.xflow-veil__label {
   display: grid;
-  color: var(--xfilter-post-color, rgb(83, 100, 113));
+  color: var(--xflow-post-color, rgb(83, 100, 113));
   font-weight: 400;
   opacity: 0.7;
 }
 
-.xfilter-veil__label-default,
-.xfilter-veil__label-rate {
+.xflow-veil__label-default,
+.xflow-veil__label-rate {
   grid-area: 1 / 1;
   transition:
     opacity 140ms ease-out,
     transform 140ms ease-out;
 }
 
-.xfilter-veil__label-default {
+.xflow-veil__label-default {
   opacity: 1;
   transform: translateY(0);
 }
 
-.xfilter-veil__label-rate {
+.xflow-veil__label-rate {
   opacity: 0;
   transform: translateY(2px);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.xfilter-veil__action {
+.xflow-veil__action {
   color: rgb(29, 155, 240);
   font-weight: 600;
 }
 
-article[data-xfilter-state="obscuring"] .xfilter-veil::before {
-  animation: xfilter-veil-in 300ms cubic-bezier(0.2, 0, 0, 1) 60ms both;
+article[data-xflow-state="obscuring"] .xflow-veil::before {
+  animation: xflow-veil-in 300ms cubic-bezier(0.2, 0, 0, 1) 60ms both;
 }
 
-article[data-xfilter-state="obscuring"] .xfilter-veil__prompt {
-  animation: xfilter-prompt-in 180ms ease-out 180ms both;
+article[data-xflow-state="obscuring"] .xflow-veil__prompt {
+  animation: xflow-prompt-in 180ms ease-out 180ms both;
 }
 
-article[data-xfilter-state="obscured"] .xfilter-veil::before {
+article[data-xflow-state="obscured"] .xflow-veil::before {
   opacity: 1;
   transition: background-color 140ms ease-out;
 }
 
-article[data-xfilter-state="obscured"] .xfilter-veil__prompt {
+article[data-xflow-state="obscured"] .xflow-veil__prompt {
   opacity: 0.78;
   transition: opacity 140ms ease-out;
 }
 
-article[data-xfilter-state="obscured"] .xfilter-veil:is(:hover, :focus-visible)::before {
-  background: var(--xfilter-veil-hover-color, rgba(255, 255, 255, 0.64));
+article[data-xflow-state="obscured"] .xflow-veil:is(:hover, :focus-visible)::before {
+  background: var(--xflow-veil-hover-color, rgba(255, 255, 255, 0.64));
 }
 
-article[data-xfilter-state="obscured"] .xfilter-veil:is(:hover, :focus-visible) .xfilter-veil__prompt {
+article[data-xflow-state="obscured"] .xflow-veil:is(:hover, :focus-visible) .xflow-veil__prompt {
   opacity: 1;
 }
 
-article[data-xfilter-state="obscured"] .xfilter-veil:is(:hover, :focus-visible) .xfilter-veil__label-default {
+article[data-xflow-state="obscured"] .xflow-veil:is(:hover, :focus-visible) .xflow-veil__label-default {
   opacity: 0;
   transform: translateY(-2px);
 }
 
-article[data-xfilter-state="obscured"] .xfilter-veil:is(:hover, :focus-visible) .xfilter-veil__label-rate {
+article[data-xflow-state="obscured"] .xflow-veil:is(:hover, :focus-visible) .xflow-veil__label-rate {
   opacity: 1;
   transform: translateY(0);
 }
 
-article[data-xfilter-state="revealing"] .xfilter-veil::before {
-  animation: xfilter-veil-out 240ms cubic-bezier(0.2, 0, 0, 1) 40ms both;
+article[data-xflow-state="revealing"] .xflow-veil::before {
+  animation: xflow-veil-out 240ms cubic-bezier(0.2, 0, 0, 1) 40ms both;
 }
 
-article[data-xfilter-state="revealing"] .xfilter-veil__prompt {
-  animation: xfilter-prompt-out 100ms ease-out both;
+article[data-xflow-state="revealing"] .xflow-veil__prompt {
+  animation: xflow-prompt-out 100ms ease-out both;
 }
 
-.xfilter-veil:focus-visible {
+.xflow-veil:focus-visible {
   outline: none;
 }
 
-.xfilter-veil:focus-visible .xfilter-veil__action {
+.xflow-veil:focus-visible .xflow-veil__action {
   outline: 2px solid rgb(29, 155, 240);
   outline-offset: 3px;
   border-radius: 2px;
 }
 
-article[data-xfilter-motion="fast"] > :not(.xfilter-veil-host),
-article[data-xfilter-motion="fast"] .xfilter-veil::before,
-article[data-xfilter-motion="fast"] .xfilter-veil__prompt {
+article[data-xflow-motion="fast"] > :not(.xflow-veil-host),
+article[data-xflow-motion="fast"] .xflow-veil::before,
+article[data-xflow-motion="fast"] .xflow-veil__prompt {
   animation-duration: 120ms !important;
   animation-delay: 0ms !important;
 }
 
-@keyframes xfilter-obscure-content {
+@keyframes xflow-obscure-content {
   0% {
     filter: blur(0) contrast(1) saturate(1);
     opacity: 1;
@@ -205,7 +205,7 @@ article[data-xfilter-motion="fast"] .xfilter-veil__prompt {
   }
 }
 
-@keyframes xfilter-reveal-content {
+@keyframes xflow-reveal-content {
   0% {
     filter: blur(12px) contrast(0.7) saturate(0.8);
     opacity: 0.78;
@@ -224,7 +224,7 @@ article[data-xfilter-motion="fast"] .xfilter-veil__prompt {
   }
 }
 
-@keyframes xfilter-veil-in {
+@keyframes xflow-veil-in {
   from {
     opacity: 0;
   }
@@ -233,7 +233,7 @@ article[data-xfilter-motion="fast"] .xfilter-veil__prompt {
   }
 }
 
-@keyframes xfilter-veil-out {
+@keyframes xflow-veil-out {
   from {
     opacity: 1;
   }
@@ -242,7 +242,7 @@ article[data-xfilter-motion="fast"] .xfilter-veil__prompt {
   }
 }
 
-@keyframes xfilter-prompt-in {
+@keyframes xflow-prompt-in {
   from {
     opacity: 0;
   }
@@ -251,7 +251,7 @@ article[data-xfilter-motion="fast"] .xfilter-veil__prompt {
   }
 }
 
-@keyframes xfilter-prompt-out {
+@keyframes xflow-prompt-out {
   from {
     opacity: 0.78;
   }
@@ -261,15 +261,15 @@ article[data-xfilter-motion="fast"] .xfilter-veil__prompt {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  article[data-xfilter-state] > :not(.xfilter-veil-host),
-  article[data-xfilter-state] .xfilter-veil::before,
-  article[data-xfilter-state] .xfilter-veil__prompt {
+  article[data-xflow-state] > :not(.xflow-veil-host),
+  article[data-xflow-state] .xflow-veil::before,
+  article[data-xflow-state] .xflow-veil__prompt {
     animation-duration: 120ms !important;
     animation-delay: 0ms !important;
   }
 
-  .xfilter-veil__label-default,
-  .xfilter-veil__label-rate {
+  .xflow-veil__label-default,
+  .xflow-veil__label-rate {
     transition-duration: 120ms;
   }
 }
