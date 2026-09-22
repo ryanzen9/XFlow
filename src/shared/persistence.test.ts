@@ -83,6 +83,7 @@ describe("versioned configuration persistence", () => {
     const remote = {
       schemaVersion: 1,
       configVersion: 12,
+      knowledgeRevision: 0,
       updatedAt: "2026-09-21T00:00:00.000Z",
       config: { ...normalizeSettings({}), modelNickname: "Remote", strategies: [] },
       knowledge: EMPTY_USER_KNOWLEDGE,
@@ -117,5 +118,7 @@ describe("versioned configuration persistence", () => {
       (storage.userKnowledge as { userDecisions: Array<{ semanticEmbedding?: number[] }> }).userDecisions[0],
     ).toHaveProperty("semanticEmbedding");
     expect((await readConfigurationDocument()).knowledge.userDecisions[0]).not.toHaveProperty("semanticEmbedding");
+    expect(storage.configVersion).toBeUndefined();
+    expect(storage.knowledgeRevision).toBe(1);
   });
 });

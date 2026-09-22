@@ -47,14 +47,26 @@ export async function requestPostReviews(
 
   const currentPolicy = await policyVersion(settings, surface);
   const now = Date.now();
-  const lookupContext = await loadDecisionLookupContext(
-    currentPolicy,
-    posts.map(({ text }) => contentLanguage(text)),
-    now,
-  );
-  const local = await Promise.all(
-    posts.map((post) => findLocalDecision(post.text, surface, currentPolicy, now, lookupContext, post.authorId)),
-  );
+  let local: Array<Awaited<ReturnType<typeof findLocalDecision>>> = posts.map(() => null);
+  try {
+    const lookupContext = await loadDecisionLookupContext(
+      currentPolicy,
+      posts.map(({ text }) => contentLanguage(text)),
+      now,
+    );
+    local = await Promise.all(
+      posts.map(async (post) => {
+        try {
+          return await findLocalDecision(post.text, surface, currentPolicy, now, lookupContext, post.authorId, post.id);
+        } catch (error) {
+          console.warn("[XFilter] Local decision lookup failed for one post; falling back to Jev.", error);
+          return null;
+        }
+      }),
+    );
+  } catch (error) {
+    console.warn("[XFilter] Local decision lookup failed; falling back to Jev.", error);
+  }
   const cachedResults: ReviewResult[] = [];
   const misses: PostInput[] = [];
   for (const [index, post] of posts.entries()) {
@@ -153,20 +165,24 @@ export async function requestPostReviews(
       }
       return { id: post.id, probability: maximumProbability, decision: "allow", source: "jev" };
     });
-    await Promise.all(
-      representativeResults.map((result, index) =>
-        rememberJevDecision(
-          uniqueMisses[index]!.text,
-          currentPolicy,
-          result.decision,
-          result.probability,
-          result.details?.strategy.id,
-        ),
-      ),
-    );
     const remoteResults = representativeResults.flatMap((result, index) =>
       (missGroups.get(exactContent(uniqueMisses[index]!.text)) ?? []).map((post) => ({ ...result, id: post.id })),
     );
+    try {
+      await Promise.all(
+        representativeResults.map((result, index) =>
+          rememberJevDecision(
+            uniqueMisses[index]!.text,
+            currentPolicy,
+            result.decision,
+            result.probability,
+            result.details?.strategy.id,
+          ),
+        ),
+      );
+    } catch (error) {
+      console.warn("[XFilter] Jev result cache persistence failed; returning the provider result.", error);
+    }
     return { ok: true, results: [...cachedResults, ...remoteResults] };
   } catch (error) {
     console.error(`[XFilter] ${PROVIDERS[settings.activeProvider].label} Jev request failed`, error);

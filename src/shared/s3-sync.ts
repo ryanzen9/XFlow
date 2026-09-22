@@ -4,6 +4,7 @@ import {
   migrateLegacyOpenRouterKey,
   normalizeConfigurationDocument,
   readConfigurationDocument,
+  withPersistenceLock,
   type ConfigurationDocument,
   type S3SyncSettings,
 } from "./persistence";
@@ -191,90 +192,80 @@ export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncO
   const validationError = validateS3Settings(settings);
   if (validationError) throw new Error(validationError);
   const allowPermissionRequest = options.allowPermissionRequest !== false;
-  const local = await readConfigurationDocument();
   const remoteResult = await readRemote(settings, allowPermissionRequest);
   if (remoteResult?.legacyApiKey) await migrateLegacyOpenRouterKey(remoteResult.legacyApiKey);
-  if (!remoteResult) {
-    await push(settings, local, allowPermissionRequest);
+  return withPersistenceLock(async () => {
+    const local = await readConfigurationDocument();
+    if (!remoteResult) {
+      await push(settings, local, allowPermissionRequest);
+      return {
+        direction: "pushed",
+        localVersion: local.configVersion,
+        remoteVersion: local.configVersion,
+        document: local,
+      };
+    }
+
+    const remote = remoteResult.document;
+    const knowledge = syncableUserKnowledge(mergeUserKnowledge(local.knowledge, remote.knowledge));
+    const localKnowledgeChanged = JSON.stringify(knowledge) !== JSON.stringify(local.knowledge);
+    const remoteKnowledgeChanged = JSON.stringify(knowledge) !== JSON.stringify(remote.knowledge);
+    const knowledgeChanged = localKnowledgeChanged || remoteKnowledgeChanged;
+    const knowledgeRevision = Math.max(local.knowledgeRevision, remote.knowledgeRevision) + (knowledgeChanged ? 1 : 0);
+
+    if (local.configVersion > remote.configVersion) {
+      const document = { ...local, knowledge, knowledgeRevision };
+      if (localKnowledgeChanged || local.knowledgeRevision !== knowledgeRevision)
+        await applyRemoteConfiguration(document);
+      await push(settings, document, allowPermissionRequest);
+      return {
+        direction: "pushed",
+        localVersion: document.configVersion,
+        remoteVersion: document.configVersion,
+        document,
+      };
+    }
+
+    if (remote.configVersion > local.configVersion) {
+      const incoming = { ...remote, knowledge, knowledgeRevision };
+      const applied = await applyRemoteConfiguration(incoming);
+      if (remoteResult.legacy || remoteKnowledgeChanged || remote.knowledgeRevision !== knowledgeRevision)
+        await push(settings, applied, allowPermissionRequest);
+      return {
+        direction: "pulled",
+        localVersion: applied.configVersion,
+        remoteVersion: remote.configVersion,
+        document: applied,
+      };
+    }
+
+    const localMetadataChanged = localKnowledgeChanged || local.knowledgeRevision !== knowledgeRevision;
+    const remoteMetadataChanged = remoteKnowledgeChanged || remote.knowledgeRevision !== knowledgeRevision;
+    if (localMetadataChanged || remoteMetadataChanged) {
+      const merged = { ...local, knowledge, knowledgeRevision };
+      const applied = localMetadataChanged ? await applyRemoteConfiguration(merged) : merged;
+      if (remoteMetadataChanged || remoteResult.legacy) await push(settings, applied, allowPermissionRequest);
+      return {
+        direction: remoteMetadataChanged ? "pushed" : "pulled",
+        localVersion: applied.configVersion,
+        remoteVersion: remote.configVersion,
+        document: applied,
+      };
+    }
+    if (remoteResult.legacy) {
+      await push(settings, local, allowPermissionRequest);
+      return {
+        direction: "pushed",
+        localVersion: local.configVersion,
+        remoteVersion: local.configVersion,
+        document: local,
+      };
+    }
     return {
-      direction: "pushed",
+      direction: "equal",
       localVersion: local.configVersion,
-      remoteVersion: local.configVersion,
-      document: local,
-    };
-  }
-
-  const remote = remoteResult.document;
-  const knowledge = syncableUserKnowledge(mergeUserKnowledge(local.knowledge, remote.knowledge));
-  const localKnowledgeChanged = JSON.stringify(knowledge) !== JSON.stringify(local.knowledge);
-  const remoteKnowledgeChanged = JSON.stringify(knowledge) !== JSON.stringify(remote.knowledge);
-
-  if (local.configVersion > remote.configVersion) {
-    const document = localKnowledgeChanged
-      ? {
-          ...local,
-          configVersion: local.configVersion + 1,
-          updatedAt: new Date().toISOString(),
-          knowledge,
-        }
-      : { ...local, knowledge };
-    if (localKnowledgeChanged) await applyRemoteConfiguration(document);
-    await push(settings, document, allowPermissionRequest);
-    return {
-      direction: "pushed",
-      localVersion: document.configVersion,
-      remoteVersion: document.configVersion,
-      document,
-    };
-  }
-
-  if (remote.configVersion > local.configVersion) {
-    const incoming = remoteKnowledgeChanged
-      ? {
-          ...remote,
-          configVersion: remote.configVersion + 1,
-          updatedAt: new Date().toISOString(),
-          knowledge,
-        }
-      : { ...remote, knowledge };
-    const applied = await applyRemoteConfiguration(incoming);
-    if (remoteResult.legacy || remoteKnowledgeChanged) await push(settings, applied, allowPermissionRequest);
-    return {
-      direction: "pulled",
-      localVersion: applied.configVersion,
       remoteVersion: remote.configVersion,
-      document: applied,
-    };
-  }
-
-  if (localKnowledgeChanged || remoteKnowledgeChanged) {
-    const merged = await applyRemoteConfiguration({
-      ...local,
-      configVersion: local.configVersion + 1,
-      updatedAt: new Date().toISOString(),
-      knowledge,
-    });
-    await push(settings, merged, allowPermissionRequest);
-    return {
-      direction: "pushed",
-      localVersion: merged.configVersion,
-      remoteVersion: merged.configVersion,
-      document: merged,
-    };
-  }
-  if (remoteResult.legacy) {
-    await push(settings, local, allowPermissionRequest);
-    return {
-      direction: "pushed",
-      localVersion: local.configVersion,
-      remoteVersion: local.configVersion,
       document: local,
     };
-  }
-  return {
-    direction: "equal",
-    localVersion: local.configVersion,
-    remoteVersion: remote.configVersion,
-    document: local,
-  };
+  });
 }

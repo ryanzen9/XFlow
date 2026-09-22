@@ -3,6 +3,7 @@ import {
   EMPTY_USER_KNOWLEDGE,
   normalizeSettings,
   synchronizeWithS3,
+  updateUserKnowledge,
   type ConfigurationDocument,
   type S3SyncSettings,
   type UserDecisionRecord,
@@ -28,6 +29,7 @@ const settings: S3SyncSettings = {
 const documentAt = (version: number, nickname: string): ConfigurationDocument => ({
   schemaVersion: 1,
   configVersion: version,
+  knowledgeRevision: 0,
   updatedAt: `2026-09-${String(Math.min(version, 28)).padStart(2, "0")}T00:00:00.000Z`,
   config: { ...normalizeSettings({}), modelNickname: nickname, strategies: [] },
   knowledge: EMPTY_USER_KNOWLEDGE,
@@ -117,7 +119,7 @@ test("pulls and applies the remote document when it has the newer version", asyn
   expect(storage.configVersion).toBe(8);
   expect(storage.modelNickname).toBe("Remote");
   expect(requests.map((request) => request.method)).toEqual(["GET", "PUT"]);
-  expect(remote?.schemaVersion).toBe(3);
+  expect(remote?.schemaVersion).toBe(4);
   expect(JSON.stringify(remote)).not.toContain("sk-or-legacy-remote");
   expect((storage.providerSecrets as { openrouter: string }).openrouter).toBe("sk-or-legacy-remote");
 });
@@ -182,11 +184,63 @@ test("unions user knowledge and resolves the same decision by last write", async
   };
   const result = await synchronizeWithS3(settings);
   expect(result.direction).toBe("pushed");
-  expect(result.document.configVersion).toBe(5);
+  expect(result.document.configVersion).toBe(4);
+  expect(result.document.knowledgeRevision).toBe(1);
   expect(result.document.knowledge.userDecisions.map(({ id }) => id)).toEqual(["local-only", "remote-only", "shared"]);
   expect(result.document.knowledge.userDecisions.find(({ id }) => id === "shared")?.decision).toBe("blur");
   expect((storage.userKnowledge as { userDecisions: unknown[] }).userDecisions).toHaveLength(3);
   expect(JSON.stringify(remote)).not.toContain("semanticEmbedding");
+});
+
+test("keeps knowledge revisions from making stale settings beat newer remote configuration", async () => {
+  Object.assign(storage, documentAt(5, "Stale local").config, {
+    configVersion: 5,
+    configUpdatedAt: documentAt(5, "Stale local").updatedAt,
+    knowledgeRevision: 20,
+    userKnowledge: { userDecisions: [decisionAt("local", 3)] },
+  });
+  remote = {
+    ...documentAt(6, "New remote"),
+    knowledgeRevision: 2,
+    knowledge: { userDecisions: [decisionAt("remote", 4)] },
+  };
+  const result = await synchronizeWithS3(settings);
+  expect(result.direction).toBe("pulled");
+  expect(result.document.configVersion).toBe(6);
+  expect(result.document.config.modelNickname).toBe("New remote");
+  expect(result.document.knowledgeRevision).toBe(21);
+  expect(result.document.knowledge.userDecisions.map(({ id }) => id)).toEqual(["local", "remote"]);
+});
+
+test("serializes a user-knowledge write with a newer remote configuration pull", async () => {
+  Object.assign(storage, documentAt(1, "Local").config, {
+    configVersion: 1,
+    configUpdatedAt: documentAt(1, "Local").updatedAt,
+  });
+  remote = documentAt(2, "Remote");
+  let releaseUpdate: (() => void) | undefined;
+  let markUpdateStarted: (() => void) | undefined;
+  const updateStarted = new Promise<void>((resolve) => {
+    markUpdateStarted = resolve;
+  });
+  const updateGate = new Promise<void>((resolve) => {
+    releaseUpdate = resolve;
+  });
+  const knowledgeWrite = updateUserKnowledge(async () => {
+    markUpdateStarted?.();
+    await updateGate;
+    return { userDecisions: [decisionAt("during-sync", 3)] };
+  });
+  await updateStarted;
+  const sync = synchronizeWithS3(settings);
+  await Promise.resolve();
+  releaseUpdate?.();
+  await Promise.all([knowledgeWrite, sync]);
+  expect(storage.modelNickname).toBe("Remote");
+  expect((storage.userKnowledge as { userDecisions: Array<{ id: string }> }).userDecisions).toMatchObject([
+    { id: "during-sync" },
+  ]);
+  expect(remote?.knowledge.userDecisions).toMatchObject([{ id: "during-sync" }]);
 });
 
 test("does not create a sync loop when rebuildable vectors differ only by serialization", async () => {
@@ -196,7 +250,7 @@ test("does not create a sync loop when rebuildable vectors differ only by serial
     configUpdatedAt: documentAt(4, "Local").updatedAt,
     userKnowledge: { userDecisions: [decision] },
   });
-  remote = { ...documentAt(4, "Local"), schemaVersion: 3, knowledge: { userDecisions: [decision] } };
+  remote = { ...documentAt(4, "Local"), schemaVersion: 4, knowledge: { userDecisions: [decision] } };
   const result = await synchronizeWithS3(settings);
   expect(result.direction).toBe("equal");
   expect(requests.map(({ method }) => method)).toEqual(["GET"]);

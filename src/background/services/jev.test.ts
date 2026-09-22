@@ -19,8 +19,16 @@ mock.module("@openrouter/sdk", () => ({
 const { requestPostReviews } = await import("./jev");
 const { resetDecisionCacheForTests, saveUserDecision } = await import("./decision-cache");
 const originalChrome = globalThis.chrome;
+const originalIndexedDBDescriptor = Object.getOwnPropertyDescriptor(globalThis, "indexedDB");
 let storage: Record<string, unknown> = {};
+
+function restoreIndexedDB(): void {
+  if (originalIndexedDBDescriptor) Object.defineProperty(globalThis, "indexedDB", originalIndexedDBDescriptor);
+  else Reflect.deleteProperty(globalThis, "indexedDB");
+}
+
 beforeEach(() => {
+  restoreIndexedDB();
   submitted = null;
   answers = {};
   storage = {};
@@ -38,6 +46,7 @@ beforeEach(() => {
 
 afterAll(() => {
   globalThis.chrome = originalChrome;
+  restoreIndexedDB();
 });
 
 test("evaluates applicable strategies and selects the first priority that crosses its threshold", async () => {
@@ -167,4 +176,63 @@ test("honours user rules even when no automatic strategy remains", async () => {
   });
   expect(result).toMatchObject({ ok: true, results: [{ decision: "blur", source: "user" }] });
   expect(submitted).toBeNull();
+});
+
+test("falls back to Jev and returns provider results when IndexedDB fails", async () => {
+  Object.defineProperty(globalThis, "indexedDB", {
+    configurable: true,
+    value: {
+      open: () => {
+        const request = new EventTarget() as IDBOpenDBRequest;
+        Object.defineProperty(request, "error", { value: new Error("IndexedDB unavailable") });
+        queueMicrotask(() => request.dispatchEvent(new Event("error")));
+        return request;
+      },
+    },
+  });
+  resetDecisionCacheForTests();
+  storage.userKnowledge = {
+    userDecisions: [
+      {
+        id: "timeline:post:user-hit",
+        scope: "content",
+        surface: "timeline",
+        policyId: "timeline",
+        postId: "user-hit",
+        contentHash: "",
+        normalizedContent: "",
+        semanticTokens: [],
+        decision: "blur",
+        createdAt: 1,
+        updatedAt: 1,
+        deviceId: "device",
+      },
+    ],
+  };
+  answers = { strategy_0_post_0: { type: "noul", noul: 0.93 } };
+  const originalWarn = console.warn;
+  console.warn = () => undefined;
+  try {
+    const result = await requestPostReviews(
+      [
+        { id: "user-hit", text: "durable user decision survives cache failure" },
+        { id: "db-failure", text: "provider result survives cache failure" },
+      ],
+      normalizeSettings({}),
+      "timeline",
+      secrets,
+    );
+    expect(result).toMatchObject({
+      ok: true,
+      results: [
+        { id: "user-hit", decision: "blur", source: "user" },
+        { id: "db-failure", decision: "blur", source: "jev" },
+      ],
+    });
+    expect(submitted).not.toBeNull();
+  } finally {
+    console.warn = originalWarn;
+    restoreIndexedDB();
+    resetDecisionCacheForTests();
+  }
 });

@@ -20,6 +20,7 @@ export interface UserDecisionRecord {
   scope: UserDecisionScope;
   surface: FilterSurface;
   policyId: string;
+  postId?: string;
   contentHash: string;
   normalizedContent: string;
   semanticTokens: string[];
@@ -191,6 +192,7 @@ export function normalizeUserDecision(value: unknown): UserDecisionRecord | null
     scope: input.scope,
     surface: input.surface,
     policyId: typeof input.policyId === "string" && input.policyId ? input.policyId.slice(0, 120) : input.surface,
+    postId: typeof input.postId === "string" && input.postId ? input.postId.slice(0, 180) : undefined,
     contentHash: input.contentHash,
     normalizedContent: input.normalizedContent.slice(0, 5000),
     semanticTokens: input.semanticTokens.filter((token): token is string => typeof token === "string").slice(0, 160),

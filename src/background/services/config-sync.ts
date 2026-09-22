@@ -1,5 +1,6 @@
 import {
   CONFIG_VERSION_KEY,
+  KNOWLEDGE_REVISION_KEY,
   S3_SYNC_KEY,
   isS3Configured,
   readS3SyncSettings,
@@ -55,6 +56,7 @@ export function initializeAutomaticSync(): void {
   });
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local") return;
-    if (CONFIG_VERSION_KEY in changes || S3_SYNC_KEY in changes) void requestAutomaticSync();
+    if (CONFIG_VERSION_KEY in changes || KNOWLEDGE_REVISION_KEY in changes || S3_SYNC_KEY in changes)
+      void requestAutomaticSync();
   });
 }

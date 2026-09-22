@@ -105,7 +105,21 @@ test("accepts a content-script correction and persists synchronized user knowled
   });
   expect(response).toMatchObject({ ok: true, result: { id: "42", decision: "allow", source: "user" } });
   expect((storage.userKnowledge as { userDecisions: unknown[] }).userDecisions).toHaveLength(1);
-  expect(storage.configVersion).toBe(1);
+  expect(storage.configVersion).toBeUndefined();
+  expect(storage.knowledgeRevision).toBe(1);
+});
+
+test("rejects a malformed user-decision post without throwing", () => {
+  let response: ExtensionResponse | undefined;
+  const keepChannelOpen = handleMessage(
+    { type: "SAVE_USER_DECISION", surface: "timeline", post: null, action: "hide" } as never,
+    { id: "xfilter-test", url: "https://x.com/home", tab: { id: 12 } as chrome.tabs.Tab },
+    (value) => {
+      response = value;
+    },
+  );
+  expect(keepChannelOpen).toBeFalse();
+  expect(response).toEqual({ ok: false, code: "INVALID_REQUEST", error: "无效的用户标注请求。" });
 });
 
 test("persists an author rule from a trusted content script", async () => {

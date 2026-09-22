@@ -22,6 +22,7 @@ const s3: S3SyncSettings = {
 const remote: ConfigurationDocument = {
   schemaVersion: 1,
   configVersion: 5,
+  knowledgeRevision: 0,
   updatedAt: "2026-09-21T05:00:00.000Z",
   config: { ...normalizeSettings({}), modelNickname: "Remote", strategies: [] },
   knowledge: EMPTY_USER_KNOWLEDGE,

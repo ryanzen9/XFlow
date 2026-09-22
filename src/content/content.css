@@ -226,7 +226,10 @@ article[data-xfilter-motion="fast"] .xfilter-veil__prompt {
   height: 28px;
   border-radius: 999px;
   color: rgb(10, 119, 118);
-  font: 700 13px/1 inherit;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
   cursor: pointer;
   list-style: none;
   transition: background-color 120ms ease-out;

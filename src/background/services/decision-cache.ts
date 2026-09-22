@@ -10,7 +10,7 @@ import {
   semanticTokens,
   sha256,
   templateContent,
-  writeUserKnowledge,
+  updateUserKnowledge,
   type ContentDecision,
   type DecisionSource,
   type FilterSurface,
@@ -201,6 +201,8 @@ class DecisionDatabase {
   }
 
   resetMemory(): void {
+    void this.databasePromise?.then((database) => database.close()).catch(() => undefined);
+    this.databasePromise = null;
     this.memory.clear();
     this.hot.clear();
   }
@@ -209,6 +211,7 @@ class DecisionDatabase {
 const database = new DecisionDatabase();
 let cleanupAt = 0;
 let userKnowledgeSignature = "";
+const templateWriteQueues = new Map<string, Promise<void>>();
 
 function cacheKey(policy: string, hash: string): string {
   return `${policy}:${hash}`;
@@ -275,11 +278,15 @@ export async function loadUserDecisions(): Promise<UserDecisionRecord[]> {
   const stored = await chrome.storage.local.get([USER_KNOWLEDGE_KEY]);
   const knowledge = normalizeUserKnowledge(stored[USER_KNOWLEDGE_KEY]);
   const signature = JSON.stringify(knowledge);
-  if (signature !== userKnowledgeSignature) {
-    await Promise.all(knowledge.userDecisions.map((decision) => database.put(USER_STORE, decision)));
-    userKnowledgeSignature = signature;
+  try {
+    if (signature !== userKnowledgeSignature) {
+      await Promise.all(knowledge.userDecisions.map((decision) => database.put(USER_STORE, decision)));
+      userKnowledgeSignature = signature;
+    }
+    return await database.getAll<UserDecisionRecord>(USER_STORE);
+  } catch {
+    return knowledge.userDecisions;
   }
-  return database.getAll<UserDecisionRecord>(USER_STORE);
 }
 
 export async function loadDecisionLookupContext(
@@ -288,16 +295,20 @@ export async function loadDecisionLookupContext(
   now = Date.now(),
 ): Promise<DecisionLookupContext> {
   const uniqueLanguages = [...new Set(languages)];
-  const [userDecisions, semanticEntries] = await Promise.all([
-    loadUserDecisions(),
-    policy && uniqueLanguages.length > 0
-      ? Promise.all(
-          uniqueLanguages.map((language) =>
-            database.getAllByIndex<CacheEntry>("semanticCache", "policyLanguage", [policy, language]),
-          ),
-        ).then((groups) => groups.flat())
-      : database.getAll<CacheEntry>("semanticCache"),
-  ]);
+  const userDecisions = await loadUserDecisions();
+  let semanticEntries: CacheEntry[] = [];
+  try {
+    semanticEntries =
+      policy && uniqueLanguages.length > 0
+        ? await Promise.all(
+            uniqueLanguages.map((language) =>
+              database.getAllByIndex<CacheEntry>("semanticCache", "policyLanguage", [policy, language]),
+            ),
+          ).then((groups) => groups.flat())
+        : await database.getAll<CacheEntry>("semanticCache");
+  } catch {
+    semanticEntries = [];
+  }
   return {
     userDecisions,
     semanticEntries: semanticEntries.filter((entry) => entry.expiresAt > now),
@@ -320,19 +331,33 @@ export async function findLocalDecision(
   now = Date.now(),
   context?: DecisionLookupContext,
   authorId?: string,
+  postId?: string,
 ): Promise<LocalDecisionHit | null> {
-  const values = await fingerprints(text);
   const userDecisions = context?.userDecisions ?? (await loadUserDecisions());
-  const explicit = userDecisions
+  const singlePost = postId
+    ? userDecisions
+        .filter(
+          (decision) =>
+            decision.scope === "content" &&
+            decision.surface === surface &&
+            decision.policyId === surface &&
+            decision.postId === postId,
+        )
+        .toSorted((left, right) => right.updatedAt - left.updatedAt)[0]
+    : undefined;
+  if (singlePost) return userHit(singlePost);
+
+  const values = await fingerprints(text);
+  const policyCorrection = userDecisions
     .filter(
       (decision) =>
         decision.scope === "content" &&
         decision.surface === surface &&
-        decision.contentHash === values.contentHash &&
-        (decision.policyId === surface || decision.policyId === policy),
+        decision.policyId === policy &&
+        decision.contentHash === values.contentHash,
     )
     .toSorted((left, right) => right.updatedAt - left.updatedAt)[0];
-  if (explicit) return userHit(explicit);
+  if (policyCorrection) return userHit(policyCorrection);
 
   const normalizedAuthor = authorId?.toLocaleLowerCase();
   const authorDecision = normalizedAuthor
@@ -424,23 +449,37 @@ export async function rememberJevDecision(
   const exact: CacheEntry = { ...base, key: cacheKey(policy, values.contentHash), sampleCount: 1 };
   const normalized: CacheEntry = { ...base, key: cacheKey(policy, values.normalizedHash), sampleCount: 1 };
   const templateKey = cacheKey(policy, values.templateHash);
-  const previousTemplate = await readCache("templateCache", templateKey, now);
-  const template: CacheEntry = {
-    ...base,
-    key: templateKey,
-    sampleCount: previousTemplate?.decision === decision ? previousTemplate.sampleCount + 1 : 1,
-    confidence:
-      previousTemplate?.decision === decision
-        ? Math.min(entryConfidence(previousTemplate), base.confidence)
-        : base.confidence,
-  };
   const semantic: CacheEntry = { ...base, key: cacheKey(policy, values.contentHash), sampleCount: 1 };
-  await Promise.all([
-    database.put("exactCache", exact),
-    database.put("normalizedCache", normalized),
-    database.put("templateCache", template),
-    database.put("semanticCache", semantic),
-  ]);
+  const previousTemplateWrite = templateWriteQueues.get(templateKey) ?? Promise.resolve();
+  const templateWrite = previousTemplateWrite
+    .catch(() => undefined)
+    .then(async () => {
+      const storedTemplate = await database.get<CacheEntry>("templateCache", templateKey);
+      const previousTemplate = storedTemplate && storedTemplate.expiresAt > now ? storedTemplate : undefined;
+      if (storedTemplate && !previousTemplate) await database.delete("templateCache", templateKey);
+      const template: CacheEntry = {
+        ...base,
+        key: templateKey,
+        sampleCount: previousTemplate?.decision === decision ? previousTemplate.sampleCount + 1 : 1,
+        confidence:
+          previousTemplate?.decision === decision
+            ? Math.min(entryConfidence(previousTemplate), base.confidence)
+            : base.confidence,
+      };
+      await database.put("templateCache", template);
+      return undefined;
+    });
+  templateWriteQueues.set(templateKey, templateWrite);
+  try {
+    await Promise.all([
+      database.put("exactCache", exact),
+      database.put("normalizedCache", normalized),
+      templateWrite,
+      database.put("semanticCache", semantic),
+    ]);
+  } finally {
+    if (templateWriteQueues.get(templateKey) === templateWrite) templateWriteQueues.delete(templateKey);
+  }
   void cleanupDecisionCache(now).catch(() => undefined);
 }
 
@@ -459,47 +498,55 @@ export async function saveUserDecision(
   now = Date.now(),
   policy: string = surface,
 ): Promise<LocalDecisionHit> {
-  const values = await fingerprints(post.text);
   const policyCorrection = action === "correct-hide" || action === "correct-allow";
   const scope = action === "hide" || action === "allow" || policyCorrection ? "content" : "semantic";
   const authorAction = action === "block-author" || action === "allow-author";
   if (authorAction && !post.authorId) throw new Error("当前内容缺少可用的作者标识。");
   const effectiveScope = authorAction ? "author" : scope;
+  const needsContentFeatures = policyCorrection || effectiveScope === "semantic";
+  const values = needsContentFeatures ? await fingerprints(post.text) : undefined;
   const id = authorAction
     ? `${surface}:author:${post.authorId!.toLocaleLowerCase()}`
     : policyCorrection
-      ? `${surface}:policy:${policy}:${values.contentHash}`
-      : `${surface}:${effectiveScope}:${values.contentHash}`;
-  const previous = await database.get<UserDecisionRecord>(USER_STORE, id);
-  const record: UserDecisionRecord = {
-    id,
-    scope: effectiveScope,
-    surface,
-    policyId: policyCorrection ? policy : surface,
-    contentHash: values.contentHash,
-    normalizedContent: values.normalized,
-    semanticTokens: values.tokens,
-    semanticEmbedding: values.embedding,
-    templateHash: effectiveScope === "semantic" ? values.templateHash : undefined,
-    authorId: authorAction ? post.authorId!.toLocaleLowerCase() : undefined,
-    decision:
-      action === "allow" || action === "allow-author" || action === "correct-allow"
-        ? "allow"
-        : action === "block-similar" || action === "block-author"
-          ? "block"
-          : "blur",
-    similarityThreshold: action === "reduce-similar" ? 0.82 : action === "block-similar" ? 0.75 : undefined,
-    createdAt: previous?.createdAt ?? now,
-    updatedAt: now,
-    deviceId: await deviceId(),
-  };
-  await database.put(USER_STORE, record);
-  const stored = await chrome.storage.local.get([USER_KNOWLEDGE_KEY]);
-  const knowledge = mergeUserKnowledge(normalizeUserKnowledge(stored[USER_KNOWLEDGE_KEY]), {
-    userDecisions: [record],
+      ? `${surface}:policy:${policy}:${values!.contentHash}`
+      : effectiveScope === "content"
+        ? `${surface}:post:${post.id}`
+        : `${surface}:${effectiveScope}:${values!.contentHash}`;
+  let record: UserDecisionRecord | undefined;
+  let knowledgeSignature = "";
+  await updateUserKnowledge(async (knowledge) => {
+    const previous = knowledge.userDecisions.find((decision) => decision.id === id);
+    const updatedAt = Math.max(now, (previous?.updatedAt ?? Number.NEGATIVE_INFINITY) + 1);
+    record = {
+      id,
+      scope: effectiveScope,
+      surface,
+      policyId: policyCorrection ? policy : surface,
+      postId: effectiveScope === "content" && !policyCorrection ? post.id : undefined,
+      contentHash: values?.contentHash ?? "",
+      normalizedContent: values?.normalized ?? "",
+      semanticTokens: values?.tokens ?? [],
+      semanticEmbedding: values?.embedding,
+      templateHash: effectiveScope === "semantic" ? values?.templateHash : undefined,
+      authorId: authorAction ? post.authorId!.toLocaleLowerCase() : undefined,
+      decision:
+        action === "allow" || action === "allow-author" || action === "correct-allow"
+          ? "allow"
+          : action === "block-similar" || action === "block-author"
+            ? "block"
+            : "blur",
+      similarityThreshold: action === "reduce-similar" ? 0.82 : action === "block-similar" ? 0.75 : undefined,
+      createdAt: previous?.createdAt ?? now,
+      updatedAt,
+      deviceId: await deviceId(),
+    };
+    await database.put(USER_STORE, record);
+    const nextKnowledge = mergeUserKnowledge(knowledge, { userDecisions: [record] });
+    knowledgeSignature = JSON.stringify(nextKnowledge);
+    return nextKnowledge;
   });
-  await writeUserKnowledge(knowledge);
-  userKnowledgeSignature = JSON.stringify(knowledge);
+  if (!record) throw new Error("用户标注保存失败。");
+  userKnowledgeSignature = knowledgeSignature;
   return userHit(record);
 }
 
@@ -523,4 +570,5 @@ export function resetDecisionCacheForTests(): void {
   database.resetMemory();
   cleanupAt = 0;
   userKnowledgeSignature = "";
+  templateWriteQueues.clear();
 }

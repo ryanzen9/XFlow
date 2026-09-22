@@ -94,7 +94,7 @@ Hover 文案支持：
 
 ### Data and S3 sync
 
-「数据」页只展示可修改的应用配置。`schemaVersion`、`configVersion` 与 `updatedAt` 由持久化层维护，不能通过 JSON 编辑器覆盖。
+「数据」页只展示可修改的应用配置。`schemaVersion`、`configVersion`、`knowledgeRevision` 与 `updatedAt` 由持久化层维护，不能通过 JSON 编辑器覆盖。
 
 S3 同步使用 path-style URL：`{endpoint}/{bucket}/{objectKey}`。首次启用时扩展会请求 Endpoint 权限；之后在配置写入、浏览器启动和每 15 分钟定时检查时自动同步：
 
@@ -102,7 +102,7 @@ S3 同步使用 path-style URL：`{endpoint}/{bucket}/{objectKey}`。首次启�
 - 远程版本较新：拉取并应用远程配置。
 - 版本相同：不覆盖。
 
-用户标注、用户创建的模板/语义规则和作者规则属于长期知识，会随配置文档同步；多设备合并按标注 ID 取并集，同一标注按 `updatedAt` 与设备 ID 决定最后写入。普通 Jev 缓存、语义向量和临时运行状态只保存在本机 IndexedDB，不上传 S3，也不参与实时过滤请求。
+用户标注、用户创建的模板/语义规则和作者规则属于长期知识，会随配置文档同步；多设备合并按标注 ID 取并集，同一标注按 `updatedAt` 与设备 ID 决定最后写入。配置版本与知识修订号独立推进，知识更新不会让旧配置覆盖其他设备上的新策略。普通 Jev 缓存、语义向量和临时运行状态只保存在本机 IndexedDB，不上传 S3，也不参与实时过滤请求。
 
 Bucket 需要允许扩展来源执行 GET、PUT 和 CORS 预检。
 
@@ -112,8 +112,8 @@ Background Worker 按“单条标注 → 作者规则 → 用户模板/语义规
 
 每条检测到的内容右上角都有 `J` 入口；远程判定尚未返回或 Provider 未配置时也可以主动标注。菜单可查看命中率和来源，并选择：
 
-- 仅隐藏此内容
-- 显示此内容
+- 仅隐藏当前 Tweet（按 Tweet ID 保存，不写入自动缓存或相似内容学习）
+- 显示当前 Tweet（按 Tweet ID 保存）
 - 纠正当前策略判定
 - 减少类似内容
 - 屏蔽类似内容
