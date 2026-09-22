@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, expect, test } from "bun:test";
-import { normalizeSettings, type ConfigurationDocument, type S3SyncSettings } from "../../shared";
+import { EMPTY_ACTIVITY_DATA, normalizeSettings, type ConfigurationDocument, type S3SyncSettings } from "../../shared";
 import { runAutomaticSync } from "./config-sync";
 
 const originalChrome = globalThis.chrome;
@@ -24,6 +24,7 @@ const remote: ConfigurationDocument = {
   configVersion: 5,
   updatedAt: "2026-09-21T05:00:00.000Z",
   config: { ...normalizeSettings({}), modelNickname: "Remote", strategies: [] },
+  activity: EMPTY_ACTIVITY_DATA,
 };
 
 beforeEach(() => {

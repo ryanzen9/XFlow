@@ -18,20 +18,25 @@ Content Script ── normalized post text ──► Background Service Worker
       │
       ▼
 Blur Veil state machine
+      │ filtered / revealed
+      ▼
+Activity Service ──► local event store ──► Popup / General
+      │
+      └─ per-tab page identity ──► Toolbar Badge
 ```
 
-Content Script 负责发现帖子、提取文本和渲染遮罩，不持有 API Key。后台负责策略选择、外部请求、配置迁移和自动同步。
+Content Script 负责发现帖子、提取最小历史元数据和渲染遮罩，不持有 API Key。只有遮罩实际挂载、内容真正进入 Filtered 状态后，才向后台 Activity Service 发送事件。后台负责全局去重、页面 Badge、策略选择、外部请求、配置迁移和自动同步。
 
 ## Source boundaries
 
-| Directory               | Responsibility                                                 |
-| ----------------------- | -------------------------------------------------------------- |
-| `src/background`        | Service Worker、消息权限、策略编排、Provider Adapter、自动同步 |
-| `src/content`           | URL/DOM 监听、文本提取、Blur Veil 组件与状态机                 |
-| `src/dashboard`         | 通用设置、API Keys、策略编辑器、数据与 S3 配置                 |
-| `src/popup`             | 实时开关、当前渠道状态和 Dashboard 入口                        |
-| `src/shared`            | 消息协议、配置 schema、迁移、纯函数和 S3 核心逻辑              |
-| `src/ui` / `src/styles` | 跨入口 UI utility、主题逻辑和 Tailwind token                   |
+| Directory               | Responsibility                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| `src/background`        | Service Worker、消息权限、策略编排、Activity/Badge、Provider Adapter、自动同步 |
+| `src/content`           | URL/DOM 监听、最小元数据提取、Blur Veil、Activity 事件与状态机                 |
+| `src/dashboard`         | 通用设置、Activity、历史、周报、API Keys、策略和 S3 配置                       |
+| `src/popup`             | 今日/累计过滤数、实时开关、当前渠道状态和 Dashboard 入口                       |
+| `src/shared`            | 消息协议、配置 schema、Activity 派生/合并、迁移和 S3 核心逻辑                  |
+| `src/ui` / `src/styles` | 跨入口 UI utility、主题逻辑和 Tailwind token                                   |
 
 ## Review and provider layers
 
@@ -52,6 +57,8 @@ Content Script 负责发现帖子、提取文本和渲染遮罩，不持有 API 
 - API Key 管理消息必须同时匹配当前扩展 ID 与扩展 URL；来自 X 页面的 Content Script 无法读写密钥。
 - Dashboard 只接收“是否已配置”和末四位提示，不接收已保存的完整 API Key。
 - 配置 JSON 与 S3 远程文档不包含 Provider Key 或 S3 凭据。
+- Activity 只接受来自 X/Twitter Content Script 的记录消息；读取、错误标记和清除只接受可信扩展页面。
+- 历史不保存 HTML、DOM、Cookie、Session、媒体文件、Tracking 参数或无关网络数据。
 
 这些本机凭据没有额外加密，安全性依赖浏览器扩展存储和操作系统账户边界。
 
@@ -64,10 +71,17 @@ ConfigurationDocument
 ├── schemaVersion
 ├── configVersion
 ├── updatedAt
-└── config
+├── config
+└── activity
+    ├── clearedAt
+    └── events[]
 ```
 
-版本元数据不出现在 Dashboard 的可编辑 JSON 中。启用 S3 同步后，本地版本较新则 PUT，远程版本较新则 GET 并应用，版本相同则不覆盖。Endpoint 权限只在用户保存 S3 设置时申请；启动和定时后台同步不会弹出权限请求。
+Activity 事件 ID 来自稳定 X 内容 ID；没有稳定 ID 时优先使用移除查询参数与锚点后的 canonical URL，最后才使用作者与文本的 SHA-256。Today、Heatmap 和 Trend 从近期去重事件派生，因此刷新、DOM 重建、路由切换和重复同步不会增加累计值。详情字段在 30 天后压缩；事件身份在 12 周后折叠为按设备单调合并的紧凑计数，避免本地存储无限增长，同时维持 All Time。`clearedAt` 墓碑防止多设备同步恢复已清除事件。
+
+Toolbar Badge 与全局统计分离。后台在 `chrome.storage.session` 中按 Tab 保存页面 token 与本页已见事件 ID；新页面或刷新创建新 token 并清零，Tab 间计数互不影响，0 使用空 Badge。
+
+版本元数据不出现在 Dashboard 的可编辑 JSON 中。启用 S3 同步后，应用配置仍按 `configVersion` 决定方向，Activity 则在任何方向都按稳定事件 ID 合并，归档计数按设备取最大值，状态按 `Filtered → Revealed → Marked Incorrect` 单调合并。远程读取完成后会重新读取并合并最新本地 Activity，避免同步期间的新事件被旧快照覆盖。Endpoint 权限只在用户保存 S3 设置时申请；启动和每 15 分钟同步不会弹出权限请求，也不会进入逐条过滤热路径。
 
 ## Blur Veil state machine
 

@@ -14,6 +14,21 @@ export function extractPost(article: HTMLElement, fallbackId: string): Extracted
 
   const statusLink = article.querySelector<HTMLAnchorElement>('a[href*="/status/"] time')?.closest("a");
   const id = statusLink?.href.match(/\/status\/(\d+)/)?.[1] ?? fallbackId;
+  let url: string | undefined;
+  let author: string | undefined;
+  if (statusLink) {
+    const parsed = new URL(statusLink.href);
+    url = `${parsed.origin}${parsed.pathname}`;
+    const username = parsed.pathname.split("/").filter(Boolean)[0];
+    if (username) author = `@${username}`;
+  }
+  const mediaType = article.querySelector('[data-testid="videoPlayer"]')
+    ? "video"
+    : article.querySelector('[data-testid="tweetPhoto"]')
+      ? "image"
+      : article.querySelector('[data-testid="quoteTweet"]')
+        ? "quote"
+        : undefined;
 
-  return { post: { id, text } };
+  return { post: { id, text, author, url, mediaType } };
 }

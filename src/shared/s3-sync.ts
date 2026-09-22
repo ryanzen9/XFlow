@@ -6,6 +6,7 @@ import {
   type ConfigurationDocument,
   type S3SyncSettings,
 } from "./persistence";
+import { mergeActivityData } from "./activity";
 
 export type SyncDirection = "pushed" | "pulled" | "equal";
 
@@ -171,7 +172,7 @@ async function readRemote(
     };
     return {
       document: normalizeConfigurationDocument(raw),
-      legacy: raw.schemaVersion === 1 || typeof raw.config?.apiKey === "string",
+      legacy: raw.schemaVersion !== 3 || typeof raw.config?.apiKey === "string",
       legacyApiKey: typeof raw.config?.apiKey === "string" ? raw.config.apiKey : "",
     };
   } catch (error) {
@@ -181,14 +182,22 @@ async function readRemote(
   }
 }
 
+async function applyWithLatestActivity(document: ConfigurationDocument): Promise<ConfigurationDocument> {
+  const latest = await readConfigurationDocument();
+  return applyRemoteConfiguration({
+    ...document,
+    activity: mergeActivityData(latest.activity, document.activity),
+  });
+}
+
 export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncOptions = {}): Promise<SyncResult> {
   const validationError = validateS3Settings(settings);
   if (validationError) throw new Error(validationError);
   const allowPermissionRequest = options.allowPermissionRequest !== false;
-  const local = await readConfigurationDocument();
   const remoteResult = await readRemote(settings, allowPermissionRequest);
   if (remoteResult?.legacyApiKey) await migrateLegacyOpenRouterKey(remoteResult.legacyApiKey);
-  if (!remoteResult || local.configVersion > remoteResult.document.configVersion) {
+  const local = await readConfigurationDocument();
+  if (!remoteResult) {
     await push(settings, local, allowPermissionRequest);
     return {
       direction: "pushed",
@@ -198,14 +207,41 @@ export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncO
     };
   }
   const remote = remoteResult.document;
+  const activity = mergeActivityData(local.activity, remote.activity);
+  const localActivityChanged = JSON.stringify(activity) !== JSON.stringify(local.activity);
+  const remoteActivityChanged = JSON.stringify(activity) !== JSON.stringify(remote.activity);
+
+  if (local.configVersion > remote.configVersion) {
+    const document = localActivityChanged
+      ? await applyWithLatestActivity({ ...local, activity })
+      : { ...local, activity };
+    await push(settings, document, allowPermissionRequest);
+    return {
+      direction: "pushed",
+      localVersion: document.configVersion,
+      remoteVersion: document.configVersion,
+      document,
+    };
+  }
+
   if (remote.configVersion > local.configVersion) {
-    const applied = await applyRemoteConfiguration(remote);
-    if (remoteResult.legacy) await push(settings, applied, allowPermissionRequest);
+    const applied = await applyWithLatestActivity({ ...remote, activity });
+    if (remoteResult.legacy || remoteActivityChanged) await push(settings, applied, allowPermissionRequest);
     return {
       direction: "pulled",
       localVersion: applied.configVersion,
       remoteVersion: remote.configVersion,
       document: applied,
+    };
+  }
+  if (localActivityChanged || remoteActivityChanged) {
+    const merged = await applyWithLatestActivity({ ...local, activity });
+    await push(settings, merged, allowPermissionRequest);
+    return {
+      direction: "pushed",
+      localVersion: merged.configVersion,
+      remoteVersion: merged.configVersion,
+      document: merged,
     };
   }
   if (remoteResult.legacy) {

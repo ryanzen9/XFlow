@@ -3,10 +3,13 @@ import { ThemeToggle } from "../ui/theme";
 import { BrandHeader } from "./components/BrandHeader";
 import { ModelFooter } from "./components/ModelFooter";
 import { MonitorSwitch } from "./components/MonitorSwitch";
+import { ActivitySummary } from "./components/ActivitySummary";
 import { useSettingsForm } from "./hooks/use-settings-form";
+import { useActivity } from "./hooks/use-activity";
 
 export function App() {
   const form = useSettingsForm();
+  const activity = useActivity();
 
   return (
     <main className="min-h-[500px] w-[388px] bg-canvas bg-[linear-gradient(90deg,transparent_23px,color-mix(in_srgb,var(--color-ink)_4.5%,transparent)_24px,transparent_25px),linear-gradient(180deg,color-mix(in_srgb,var(--color-panel)_55%,transparent),transparent_42%)] px-[22px] pt-3 pb-2.5 font-sans text-ink transition-colors">
@@ -14,7 +17,11 @@ export function App() {
         <ThemeToggle value={form.theme} compact onChange={(theme) => void form.setTheme(theme)} />
       </BrandHeader>
 
-      <p className="mx-0.5 my-2.5 text-[13px] leading-[1.65] text-muted">
+      <div className="mt-3">
+        <ActivitySummary {...activity} />
+      </div>
+
+      <p className="mx-0.5 my-2.5 text-[11px] leading-[1.55] text-muted">
         为时间线与评论区附上一层安静的内容信号，快速识别推广与垃圾信息。
       </p>
 

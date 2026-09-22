@@ -13,7 +13,13 @@ import {
 } from "../shared";
 import { ARTICLE_SELECTOR, extractPost } from "./dom/post-extractor";
 import { mountPostVeil, type PostVeilPresentation } from "./render/post-veil";
-import { getExtensionStatus, reviewPosts } from "./services/extension-client";
+import {
+  getExtensionStatus,
+  markActivityRevealed,
+  recordFilterEvent,
+  resetPageActivity,
+  reviewPosts,
+} from "./services/extension-client";
 
 interface QueueItem extends PostInput {
   article: HTMLElement;
@@ -40,6 +46,7 @@ export class TimelineController {
   private readonly readingSince = new Map<HTMLElement, number>();
   private readonly revealedPostIds = new Set<string>();
   private readonly queue: QueueItem[] = [];
+  private readonly activityEvents = new Map<HTMLElement, Promise<string | null>>();
   private readonly observer: MutationObserver;
   private running = false;
   private active = false;
@@ -54,6 +61,7 @@ export class TimelineController {
   private lastScrollY = window.scrollY;
   private lastScrollAt = performance.now();
   private fastScrollUntil = 0;
+  private pageToken = this.createPageToken();
 
   constructor() {
     this.observer = new MutationObserver(() => this.handleMutation());
@@ -63,6 +71,7 @@ export class TimelineController {
     this.observer.observe(document.documentElement, { childList: true, subtree: true });
     chrome.storage.onChanged.addListener(this.handleStorageChange);
     window.addEventListener("scroll", this.handleScroll, { passive: true });
+    void resetPageActivity(this.pageToken);
     void this.refreshStatus();
   }
 
@@ -123,6 +132,8 @@ export class TimelineController {
   private handleMutation(): void {
     if (location.href !== this.lastUrl) {
       this.lastUrl = location.href;
+      this.pageToken = this.createPageToken();
+      void resetPageActivity(this.pageToken);
       void this.refreshStatus(true);
       return;
     }
@@ -238,7 +249,10 @@ export class TimelineController {
       probability,
       details,
       onReveal: (reason) => {
-        if (reason === "user") this.revealedPostIds.add(item.id);
+        if (reason === "user") {
+          this.revealedPostIds.add(item.id);
+          void this.markRevealed(item.article);
+        }
         if (this.presentations.has(item.article)) this.presentations.set(item.article, null);
         if (reason === "disabled" && this.active) {
           const filtered = this.filteredPosts.get(item.article);
@@ -247,6 +261,23 @@ export class TimelineController {
       },
     });
     this.presentations.set(item.article, presentation);
+    if (!this.activityEvents.has(item.article)) {
+      const recorded = recordFilterEvent(
+        item,
+        item.surface,
+        this.pageToken,
+        details?.strategy.id,
+        details?.strategy.name,
+      )
+        .then((response) => (response.ok && "eventId" in response ? response.eventId : null))
+        .catch(() => null);
+      this.activityEvents.set(item.article, recorded);
+    }
+  }
+
+  private async markRevealed(article: HTMLElement): Promise<void> {
+    const eventId = await this.activityEvents.get(article);
+    if (eventId) await markActivityRevealed(eventId);
   }
 
   private updateReadingZones(): void {
@@ -302,6 +333,7 @@ export class TimelineController {
       this.deferredObscures.delete(article);
       this.filteredPosts.delete(article);
       this.readingSince.delete(article);
+      this.activityEvents.delete(article);
     }
   }
 
@@ -317,6 +349,7 @@ export class TimelineController {
     this.deferredObscures.clear();
     this.filteredPosts.clear();
     this.readingSince.clear();
+    this.activityEvents.clear();
     for (const presentation of this.presentations.values()) presentation?.destroy();
     this.presentations.clear();
   }
@@ -396,5 +429,9 @@ export class TimelineController {
     if (this.surface === "timeline") return status.enabled;
     if (this.surface === "comments") return status.commentsEnabled;
     return false;
+  }
+
+  private createPageToken(): string {
+    return typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
   }
 }
