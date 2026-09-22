@@ -2,7 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { mountPostVeil, type PostVeilPresentation } from "../../content/render/post-veil";
 import { formatProbability, strategyThreshold, type FilterStrategy } from "../../shared";
 import { cn } from "../../ui/cn";
+import { useI18n } from "../../ui/i18n";
 import { control, eyebrow, field, fieldHelp, fieldLabel, textarea } from "../../ui/styles";
+
+export function updateLocalizedPreviewSample(current: string, previousDefault: string, nextDefault: string): string {
+  return current === previousDefault ? nextDefault : current;
+}
 
 export function StrategyPreview({
   strategy,
@@ -13,12 +18,13 @@ export function StrategyPreview({
   modelNickname: string;
   modelId: string;
 }) {
+  const { t } = useI18n();
+  const sample = t("preview.sample");
   const articleRef = useRef<HTMLElement>(null);
   const presentation = useRef<PostVeilPresentation | null>(null);
   const [probability, setProbability] = useState(0.86);
-  const [text, setText] = useState(
-    "限时福利！关注并转发，即可领取独家优惠。点击主页链接了解更多。\n\n这是一段用于调试过滤效果的示例内容。",
-  );
+  const [text, setText] = useState(sample);
+  const previousSample = useRef(sample);
   const [cycle, setCycle] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [theme, setTheme] = useState<"light" | "dim" | "dark">("light");
@@ -29,6 +35,12 @@ export function StrategyPreview({
   );
   const threshold = strategyThreshold(strategy);
   const hit = probability >= threshold;
+
+  useEffect(() => {
+    const previous = previousSample.current;
+    previousSample.current = sample;
+    setText((current) => updateLocalizedPreviewSample(current, previous, sample));
+  }, [sample]);
 
   useEffect(() => {
     const article = articleRef.current;
@@ -61,28 +73,28 @@ export function StrategyPreview({
   return (
     <aside
       className="min-w-0 rounded-lg border border-line-strong bg-surface/60 p-[18px] min-[961px]:sticky min-[961px]:top-6 min-[1151px]:p-[22px]"
-      aria-label="策略预览"
+      aria-label={t("preview.aria")}
     >
       <div className="mb-[22px] flex items-start justify-between gap-2.5">
         <div>
-          <span className={eyebrow}>LIVE PREVIEW</span>
-          <h2 className="mt-[7px] text-base font-semibold">看看它如何呈现</h2>
+          <span className={eyebrow}>{t("preview.live")}</span>
+          <h2 className="mt-[7px] text-base font-semibold">{t("preview.title")}</h2>
         </div>
         <span className="pt-0.5 text-caption whitespace-nowrap text-muted before:mr-[5px] before:inline-block before:size-[5px] before:rounded-full before:bg-fg-4 before:content-['']">
-          本地模拟
+          {t("preview.local")}
         </span>
       </div>
       <div className="mb-2.5 flex items-center justify-between gap-3 text-xs text-muted">
-        <span>{surface === "timeline" ? "时间线博文" : "评论区"}</span>
+        <span>{t(surface === "timeline" ? "strategy.timeline" : "strategy.comments")}</span>
         <select
           className={`${control} min-h-0 w-auto px-2 py-1 text-xs`}
-          aria-label="预览主题"
+          aria-label={t("preview.theme")}
           value={theme}
           onChange={(event) => setTheme(event.target.value as typeof theme)}
         >
-          <option value="light">浅色</option>
-          <option value="dim">Dim</option>
-          <option value="dark">深色</option>
+          <option value="light">{t("theme.light")}</option>
+          <option value="dim">{t("preview.dim")}</option>
+          <option value="dark">{t("theme.dark")}</option>
         </select>
       </div>
       {/* The mock below deliberately ignores the design tokens: it reproduces
@@ -103,7 +115,7 @@ export function StrategyPreview({
               </span>
               <div className="grid">
                 <strong className="text-xs">Lin / 林</strong>
-                <span className="text-meta opacity-65">@lin_notes · 刚刚</span>
+                <span className="text-meta opacity-65">@lin_notes · {t("preview.now")}</span>
               </div>
               <span className="ml-auto text-xl">···</span>
             </div>
@@ -128,19 +140,19 @@ export function StrategyPreview({
         </article>
       </div>
       <div className="flex min-h-[46px] flex-wrap items-center justify-between gap-2.5 text-meta text-ink">
-        <span>{!hit ? "未达到阈值 · 保持可见" : revealed ? "已揭示 · 内容可见" : "已命中 · Hover 查看变量"}</span>
+        <span>{t(!hit ? "preview.visible" : revealed ? "preview.revealed" : "preview.hit")}</span>
         <button
           className="bg-transparent px-0 py-[5px] text-meta text-ink disabled:opacity-50"
           type="button"
           onClick={() => setCycle((value) => value + 1)}
           disabled={!hit}
         >
-          重播遮罩 ↻
+          {t("preview.replay")}
         </button>
       </div>
       <label className={`${field} mt-2 border-t border-line pt-4`} htmlFor="preview-rate">
         <span className={fieldLabel}>
-          模拟 hitrate <output className="font-mono">{formatProbability(probability)}</output>
+          {t("preview.rate")} <output className="font-mono">{formatProbability(probability)}</output>
         </span>
         <input
           className="h-6 w-full cursor-pointer accent-ink"
@@ -151,10 +163,10 @@ export function StrategyPreview({
           value={Math.round(probability * 100)}
           onChange={(event) => setProbability(Number(event.target.value) / 100)}
         />
-        <small className={fieldHelp}>当前阈值 {formatProbability(threshold)}。此数值不是模型实际判断。</small>
+        <small className={fieldHelp}>{t("preview.threshold", { value: formatProbability(threshold) })}</small>
       </label>
       <label className={field} htmlFor="preview-content">
-        <span className={fieldLabel}>自定义预览内容</span>
+        <span className={fieldLabel}>{t("preview.content")}</span>
         <textarea
           className={textarea}
           id="preview-content"
@@ -164,9 +176,7 @@ export function StrategyPreview({
           onChange={(event) => setText(event.target.value)}
         />
       </label>
-      <p className="mt-4 text-meta leading-[1.8] text-muted">
-        将鼠标移到遮罩上查看 Hover，点击或按 Enter 揭示内容。预览不会发送 API 请求。
-      </p>
+      <p className="mt-4 text-meta leading-[1.8] text-muted">{t("preview.help")}</p>
     </aside>
   );
 }

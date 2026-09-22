@@ -21,7 +21,7 @@ test("renders every record on a busy day", () => {
     <FilterHistory history={history} now={now} busy={false} onIncorrect={() => {}} />,
   );
 
-  expect(markup).toContain("51 records");
+  expect(markup).toContain("51 条记录");
   expect(markup).toContain("preview 50");
-  expect(markup.match(/Not supposed to be filtered/g)).toHaveLength(51);
+  expect(markup.match(/不应被过滤/g)).toHaveLength(51);
 });

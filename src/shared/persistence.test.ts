@@ -55,6 +55,14 @@ describe("versioned configuration persistence", () => {
     expect((await readConfigurationDocument()).config.modelNickname).toBe("Local model");
   });
 
+  test("keeps the UI locale outside versioned and synchronized configuration", async () => {
+    storage["xflow.uiLocale"] = "en";
+    const document = await readConfigurationDocument();
+    expect((document.config as unknown as Record<string, unknown>)["xflow.uiLocale"]).toBeUndefined();
+    expect(storage["xflow.uiLocale"]).toBe("en");
+    expect(storage.configVersion).toBeUndefined();
+  });
+
   test("JSON editing normalizes configuration and owns the next local version", async () => {
     storage.configVersion = 7;
     const next = await applyEditedConfiguration({

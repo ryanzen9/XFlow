@@ -62,7 +62,7 @@ Policy 指纹包含 surface、Provider、策略 ID、启用状态、优先级、
 | `src/dashboard`         | 通用设置、Activity 概览、日志历史、周报、API Keys、策略和 S3 配置              |
 | `src/popup`             | 过滤计数为主，实时开关与当前渠道以次级列表呈现，附 Dashboard 入口              |
 | `src/shared`            | 消息协议、配置 schema、Activity 派生/合并、迁移和 S3 核心逻辑                  |
-| `src/ui` / `src/styles` | 跨入口 UI utility、主题逻辑和 Tailwind token                                   |
+| `src/ui` / `src/styles` | 跨入口 UI utility、主题与国际化逻辑和 Tailwind token                           |
 
 ## Review and provider layers
 
@@ -107,6 +107,10 @@ ConfigurationDocument
 ```
 
 运行时以 IndexedDB `xflow-decisions` 为本机判定数据源，包含 `userDecisions`、`exactCache`、`normalizedCache`、`templateCache` 和 `semanticCache`；其前方保留 300 条进程内热数据以减少重复 IndexedDB 查询。`semanticCache` 通过 `[policyVersion, language]` 复合索引预筛候选，不扫描其他 Policy 或语言分区。普通缓存 TTL 为 7 天，并按 LRU 控制总量；只将单条标注、用户模板/语义规则和作者规则镜像到版本化配置文档。启用 S3 同步后，长期知识按 ID 合并，同一对象执行确定性的 Last Write Wins；配置版本和知识修订使用独立时钟，并通过跨扩展上下文锁串行化合并写入；向量在目标设备由同步样本重建，Exact、Template、Semantic 运行缓存不会上传。Endpoint 权限只在用户保存 S3 设置时申请；启动和定时后台同步不会弹出权限请求，S3 不参与逐条内容的实时判定。
+
+Popup 与 Dashboard 的界面语言使用独立的本机键 `xflow.uiLocale`。它只控制静态标签、状态提示、日期与数字格式，不翻译或改写策略名称、提示词、Hover 模板、CSS、模型昵称和配置 JSON 等用户内容。该键不属于 `AppSettings`，因此不会增加 `configVersion`，也不会进入可编辑配置、S3 文档或 Content Script 的安全设置镜像。
+
+语言切换只重新渲染界面文案，不触发配置或 S3 的重新读取，因此 Data 页面中的未保存草稿保持原样。共享校验器和后台服务可以保留内部错误语义，但 UI 必须通过已知错误映射或 locale-neutral code 选择当前语言的用户文案；不得直接显示后台返回的中文错误字符串。
 
 Activity 事件 ID 来自稳定 X 内容 ID；没有稳定 ID 时优先使用移除查询参数与锚点后的 canonical URL，最后才使用作者与文本的 SHA-256。Today、Heatmap 和 Trend 从近期去重事件派生，因此刷新、DOM 重建、路由切换和重复同步不会增加累计值。详情字段在 30 天后压缩；事件身份在 12 周后折叠为按设备单调合并的紧凑计数，避免本地存储无限增长，同时维持 All Time。`clearedAt` 墓碑防止多设备同步恢复已清除事件。
 

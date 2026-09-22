@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from "react";
 import type { FilterSurface } from "../../shared";
 import { cn } from "../../ui/cn";
+import { useI18n } from "../../ui/i18n";
 
 interface Props {
   value: FilterSurface;
@@ -8,12 +9,12 @@ interface Props {
   onChange: (surface: FilterSurface) => void;
 }
 
-const surfaces: { id: FilterSurface; label: string; route: string }[] = [
-  { id: "timeline", label: "时间线博文", route: "/home" },
-  { id: "comments", label: "评论区", route: "/status" },
-];
-
 export function StrategyTabs({ value, counts, onChange }: Props) {
+  const { t } = useI18n();
+  const surfaces: { id: FilterSurface; label: string; route: string }[] = [
+    { id: "timeline", label: t("strategy.timeline"), route: "/home" },
+    { id: "comments", label: t("strategy.comments"), route: "/status" },
+  ];
   const selectFromKeyboard = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     let next = index;
     if (event.key === "ArrowRight") next = (index + 1) % surfaces.length;
@@ -31,7 +32,7 @@ export function StrategyTabs({ value, counts, onChange }: Props) {
     <div
       className="mb-[22px] grid max-w-[1100px] grid-cols-2 border-b border-line-strong sm:mb-[26px]"
       role="tablist"
-      aria-label="策略场景"
+      aria-label={t("strategy.tabs")}
     >
       {surfaces.map((surface, index) => (
         <button

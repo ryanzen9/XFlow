@@ -1,5 +1,6 @@
 import type { Theme } from "../shared";
 import { cn } from "./cn";
+import { useI18n } from "./i18n";
 import { focusRing } from "./styles";
 
 export function applyTheme(theme: Theme): void {
@@ -26,6 +27,7 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ value, disabled, compact = false, dense = false, onChange }: ThemeToggleProps) {
+  const { t } = useI18n();
   const next = value === "light" ? "dark" : "light";
   const iconOnly = compact || dense;
   return (
@@ -38,8 +40,8 @@ export function ThemeToggle({ value, disabled, compact = false, dense = false, o
         compact && "size-11",
         dense && "size-8 min-h-8",
       )}
-      aria-label={`切换为${next === "dark" ? "深色" : "浅色"}主题`}
-      title={`切换为${next === "dark" ? "深色" : "浅色"}主题`}
+      aria-label={t(next === "dark" ? "theme.switch.dark" : "theme.switch.light")}
+      title={t(next === "dark" ? "theme.switch.dark" : "theme.switch.light")}
       aria-pressed={value === "dark"}
       disabled={disabled}
       onClick={() => onChange(next)}
@@ -68,7 +70,7 @@ export function ThemeToggle({ value, disabled, compact = false, dense = false, o
           ◐
         </span>
       </span>
-      {!iconOnly && <span>{value === "light" ? "浅色" : "深色"}</span>}
+      {!iconOnly && <span>{t(value === "light" ? "theme.light" : "theme.dark")}</span>}
     </button>
   );
 }

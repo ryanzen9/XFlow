@@ -9,6 +9,7 @@ import {
   type FilterSurface,
 } from "../shared";
 import { cn } from "../ui/cn";
+import { LanguageToggle, localizeError, providerLabel, useI18n } from "../ui/i18n";
 import { card, eyebrow, textButton } from "../ui/styles";
 import { ThemeToggle, applyTheme } from "../ui/theme";
 import { ApiKeysPanel } from "./components/ApiKeysPanel";
@@ -22,34 +23,30 @@ import { useDashboard } from "./hooks/use-dashboard";
 
 type MenuPage = "general" | "api-keys" | "strategies" | "data" | "log";
 
-const menuItems: {
-  id: MenuPage;
-  label: string;
-  caption: string;
-  icon: string;
-}[] = [
-  { id: "general", label: "通用", caption: "General", icon: "⊞" },
-  { id: "api-keys", label: "API Keys", caption: "Providers", icon: "⌘" },
-  { id: "strategies", label: "策略", caption: "Strategies", icon: "≋" },
-  { id: "data", label: "数据", caption: "Data", icon: "⌁" },
-  { id: "log", label: "日志", caption: "Log", icon: "≡" },
-];
-
-function strategyError(strategy: FilterStrategy): string | null {
-  if (!strategy.name.trim() || !strategy.prompt.trim() || !strategy.hoverTemplate.trim()) {
-    return "请填写策略名称、提示词和 Hover 文案。";
-  }
-  if (strategy.surfaces.length === 0) return "请至少选择一个应用范围。";
-  return compileHoverCss(strategy.hoverCss, "#validation").error || validateTemplate(strategy.hoverTemplate);
-}
-
 export function App() {
+  const { locale, t } = useI18n();
   const [menu, setMenu] = useState<MenuPage>("general");
   const [strategySurface, setStrategySurface] = useState<FilterSurface>("timeline");
   const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
   const form = useDashboard();
   const { draft, saved } = form;
   const theme = draft?.theme;
+  const menuItems: { id: MenuPage; label: string; caption: string; icon: string }[] = [
+    { id: "general", label: t("nav.general"), caption: "General", icon: "⊞" },
+    { id: "api-keys", label: t("nav.apiKeys"), caption: "Providers", icon: "⌘" },
+    { id: "strategies", label: t("nav.strategies"), caption: "Strategies", icon: "≋" },
+    { id: "data", label: t("nav.data"), caption: "Data", icon: "⌁" },
+    { id: "log", label: t("nav.log"), caption: "Log", icon: "≡" },
+  ];
+  const strategyError = (strategy: FilterStrategy): string | null => {
+    if (!strategy.name.trim() || !strategy.prompt.trim() || !strategy.hoverTemplate.trim()) {
+      return t("strategy.required");
+    }
+    if (strategy.surfaces.length === 0) return t("strategy.surfaceRequired");
+    const validationError =
+      compileHoverCss(strategy.hoverCss, "#validation").error || validateTemplate(strategy.hoverTemplate);
+    return validationError ? localizeError(locale, validationError, "strategy.validationFailed") : null;
+  };
   useEffect(() => {
     if (theme) applyTheme(theme);
   }, [theme]);
@@ -70,7 +67,7 @@ export function App() {
     if (!draft) return;
     const modelNickname = draft.modelNickname.trim();
     if (!modelNickname) {
-      form.setStatus({ message: "请填写模型昵称。", error: true });
+      form.setStatus({ message: t("general.nicknameRequired"), error: true });
       document.getElementById("model-nickname")?.focus();
       return;
     }
@@ -104,10 +101,7 @@ export function App() {
       });
       return;
     }
-    void form.save(
-      { strategies: reindexStrategies(draft.strategies) },
-      "策略顺序与启用状态已保存，当前页面将按新优先级重新判断。",
-    );
+    void form.save({ strategies: reindexStrategies(draft.strategies) }, t("strategy.librarySaved"));
   };
 
   const createNewStrategy = () => {
@@ -147,39 +141,39 @@ export function App() {
           : strategy,
       ),
     );
-    void form.save({ strategies }, `策略「${selectedStrategy.name.trim()}」已保存，适用页面将按优先级重新判断。`);
+    void form.save({ strategies }, t("strategy.saved", { name: selectedStrategy.name.trim() }));
   };
 
   const page = {
     general: {
-      title: "通用设置",
-      description: "项目的基础设置。",
+      title: t("page.general.title"),
+      description: t("page.general.description"),
       eyebrow: "GENERAL",
     },
     "api-keys": {
       title: "API Keys",
-      description: "配置并且管理保存的 API Keys。",
+      description: t("page.apiKeys.description"),
       eyebrow: "API KEYS",
     },
     strategies: selectedStrategy
       ? {
-          title: "编辑策略",
+          title: t("page.strategies.edit"),
           description: `P${selectedStrategy.priority} · ${selectedStrategy.name}`,
           eyebrow: "STRATEGIES / EDIT",
         }
       : {
-          title: "策略管理",
-          description: "分别管理配置的多区域策略。",
+          title: t("page.strategies.title"),
+          description: t("page.strategies.description"),
           eyebrow: "STRATEGIES",
         },
     data: {
-      title: "数据与同步",
-      description: "编辑浏览器配置，并按需启用 S3 自动同步。",
+      title: t("page.data.title"),
+      description: t("page.data.description"),
       eyebrow: "DATA",
     },
     log: {
-      title: "日志",
-      description: "最近 30 天的过滤记录。",
+      title: t("nav.log"),
+      description: t("page.log.description"),
       eyebrow: "LOG",
     },
   }[menu];
@@ -201,7 +195,7 @@ export function App() {
             <div className="mt-1 font-mono text-caption text-muted">READ WITH INTENTION</div>
           </div>
         </div>
-        <nav className="flex flex-wrap gap-2.5 sm:grid sm:gap-1.5" aria-label="Dashboard 菜单">
+        <nav className="flex flex-wrap gap-2.5 sm:grid sm:gap-1.5" aria-label={t("nav.menu")}>
           {menuItems.map((item) => (
             <button
               key={item.id}
@@ -219,16 +213,24 @@ export function App() {
           ))}
         </nav>
         <div className="mt-6 flex items-center justify-between gap-2 border-t border-line pt-5 sm:mt-auto sm:pt-6">
-          {draft && (
-            <ThemeToggle
-              value={draft.theme}
-              disabled={form.busy}
-              compact
-              onChange={(nextTheme) =>
-                void form.save({ theme: nextTheme }, `已切换为${nextTheme === "dark" ? "深色" : "浅色"}主题。`)
-              }
-            />
-          )}
+          <div className="flex gap-2">
+            <LanguageToggle disabled={form.busy} compact />
+            {draft && (
+              <ThemeToggle
+                value={draft.theme}
+                disabled={form.busy}
+                compact
+                onChange={(nextTheme) =>
+                  void form.save(
+                    { theme: nextTheme },
+                    t("status.themeChanged", {
+                      theme: t(nextTheme === "dark" ? "theme.dark" : "theme.light"),
+                    }),
+                  )
+                }
+              />
+            )}
+          </div>
           <span className="font-mono text-caption text-muted">XFlow / 0.1</span>
         </div>
       </aside>
@@ -243,7 +245,7 @@ export function App() {
             className="mt-1.5 text-caption whitespace-nowrap text-muted before:mr-2 before:inline-block before:size-1.5 before:rounded-full before:bg-fg-4 before:content-[''] data-[dirty=true]:before:bg-warn sm:mt-0 sm:text-xs"
             data-dirty={form.dirty}
           >
-            {form.busy ? "正在保存…" : form.dirty ? "有未保存的更改" : "已与本地同步"}
+            {form.busy ? t("status.saving") : form.dirty ? t("status.unsaved") : t("status.synced")}
           </span>
         </header>
         <div
@@ -256,13 +258,13 @@ export function App() {
           <div className={card} role="status">
             {form.loadFailed ? (
               <>
-                无法加载设置。
+                {t("status.loadFailed")}
                 <button className={textButton} onClick={() => location.reload()}>
-                  重新加载
+                  {t("common.reload")}
                 </button>
               </>
             ) : (
-              "正在加载本地设置…"
+              t("status.loadingSettings")
             )}
           </div>
         ) : menu === "general" ? (
@@ -280,7 +282,7 @@ export function App() {
             onProviderChange={(providerId) =>
               form.save(
                 { activeProvider: providerId },
-                `已切换到 ${providerId === "vercel-ai-gateway" ? "Vercel AI Gateway" : providerId === "typesafe" ? "TypeSafe 官方" : "OpenRouter"}。`,
+                t("api.providerChanged", { provider: providerLabel(providerId, locale) }),
               )
             }
             onStatus={form.setStatus}

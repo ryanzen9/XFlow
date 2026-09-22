@@ -12,6 +12,7 @@ import {
 } from "../../shared";
 import { StrategyPreview } from "./StrategyPreview";
 import { cn } from "../../ui/cn";
+import { localizeError, useI18n } from "../../ui/i18n";
 import {
   card,
   control,
@@ -56,9 +57,12 @@ export function StrategyPanel({
   onPriorityChange,
   onSave,
 }: Props) {
+  const { locale, t } = useI18n();
   const update = (patch: Partial<FilterStrategy>) => onChange({ ...strategy, ...patch });
-  const cssError = compileHoverCss(strategy.hoverCss, "#preview").error;
-  const templateError = validateTemplate(strategy.hoverTemplate);
+  const rawCssError = compileHoverCss(strategy.hoverCss, "#preview").error;
+  const rawTemplateError = validateTemplate(strategy.hoverTemplate);
+  const cssError = rawCssError ? localizeError(locale, rawCssError, "strategy.validationFailed") : null;
+  const templateError = rawTemplateError ? localizeError(locale, rawTemplateError, "strategy.validationFailed") : null;
   const submit = (event: FormEvent) => {
     event.preventDefault();
     onSave();
@@ -67,16 +71,16 @@ export function StrategyPanel({
     const defaults = defaultStrategy(surface, strategy.priority, strategy.id);
     onChange({ ...defaults, enabled: strategy.enabled });
   };
-  const surfaceName = surface === "timeline" ? "时间线博文" : "评论区";
+  const surfaceName = t(surface === "timeline" ? "strategy.timeline" : "strategy.comments");
 
   return (
     <>
       <div className="mb-5 flex items-center justify-between">
         <button type="button" className={`${secondaryButton} min-h-[38px] px-3 py-[7px]`} onClick={onBack}>
-          ← 返回{surfaceName}表格
+          {t("strategy.back", { surface: surfaceName })}
         </button>
         <span className="font-mono text-meta text-ink">
-          P{strategy.priority} · {strategy.enabled ? "已启用" : "已停用"}
+          P{strategy.priority} · {t(strategy.enabled ? "common.enabled" : "common.disabled")}
         </span>
       </div>
       <div className="grid items-start gap-[18px] min-[961px]:grid-cols-[minmax(0,1.15fr)_minmax(280px,.85fr)] min-[1151px]:grid-cols-[minmax(0,1.15fr)_minmax(320px,.85fr)] min-[1151px]:gap-6">
@@ -88,13 +92,13 @@ export function StrategyPanel({
                   ⌘
                 </span>
                 <div>
-                  <h2 className={sectionHeading}>定义过滤策略</h2>
-                  <p className={sectionDescription}>设置匹配目标、适用位置和在队列中的顺序。</p>
+                  <h2 className={sectionHeading}>{t("strategy.define")}</h2>
+                  <p className={sectionDescription}>{t("strategy.defineDescription")}</p>
                 </div>
               </div>
               <div className="grid gap-3.5 min-[601px]:grid-cols-[minmax(0,1fr)_140px]">
                 <label className={`${field} mt-0`} htmlFor="strategy-name">
-                  <span className={fieldLabel}>策略名称</span>
+                  <span className={fieldLabel}>{t("strategy.name")}</span>
                   <input
                     className={control}
                     id="strategy-name"
@@ -105,7 +109,7 @@ export function StrategyPanel({
                   />
                 </label>
                 <label className={`${field} mt-0`} htmlFor="strategy-priority">
-                  <span className={fieldLabel}>优先级</span>
+                  <span className={fieldLabel}>{t("strategy.priority")}</span>
                   <select
                     className={control}
                     id="strategy-priority"
@@ -115,7 +119,7 @@ export function StrategyPanel({
                     {Array.from({ length: strategyCount }, (_, index) => (
                       <option key={index + 1} value={index + 1}>
                         P{index + 1}
-                        {index === 0 ? " · 最高" : ""}
+                        {index === 0 ? t("strategy.highest") : ""}
                       </option>
                     ))}
                   </select>
@@ -123,10 +127,10 @@ export function StrategyPanel({
               </div>
               <div className="mt-[18px] grid gap-3.5 min-[601px]:grid-cols-[minmax(0,1fr)_minmax(190px,.7fr)]">
                 <div className="strategy-surface min-w-0 rounded-md border border-line bg-canvas/45 p-3.5">
-                  <span className="block text-caption text-muted">所属策略表</span>
+                  <span className="block text-caption text-muted">{t("strategy.table")}</span>
                   <strong className="mt-[3px] block text-xs">{surfaceName}</strong>
                   <small className="mt-0.5 block font-mono text-caption text-muted">
-                    {surface === "timeline" ? "/home" : "/status"} · 优先级仅在此表内生效
+                    {surface === "timeline" ? "/home" : "/status"} · {t("strategy.tablePriority")}
                   </small>
                 </div>
                 <label
@@ -134,13 +138,13 @@ export function StrategyPanel({
                   htmlFor="strategy-enabled"
                 >
                   <span>
-                    <strong className="block text-xs">启用策略</strong>
-                    <small className="block text-caption text-muted">停用后仍保留配置</small>
+                    <strong className="block text-xs">{t("strategy.enableStrategy")}</strong>
+                    <small className="block text-caption text-muted">{t("strategy.keepConfig")}</small>
                   </span>
                   <span className={switchShell}>
                     <input
                       id="strategy-enabled"
-                      aria-label="启用策略"
+                      aria-label={t("strategy.enableStrategy")}
                       className={switchInput}
                       type="checkbox"
                       role="switch"
@@ -154,7 +158,7 @@ export function StrategyPanel({
               </div>
               <label className={field} htmlFor="strategy-prompt">
                 <span className={fieldLabel}>
-                  策略提示词 <small className={fieldHelp}>{strategy.prompt.length} / 6000</small>
+                  {t("strategy.prompt")} <small className={fieldHelp}>{strategy.prompt.length} / 6000</small>
                 </span>
                 <textarea
                   className={textarea}
@@ -165,13 +169,11 @@ export function StrategyPanel({
                   maxLength={6000}
                   onChange={(event) => update({ prompt: event.target.value })}
                 />
-                <small className={fieldHelp}>
-                  每条适用内容都会分别评估此策略；优先级最高且达到阈值的策略成为最终命中。
-                </small>
+                <small className={fieldHelp}>{t("strategy.promptHelp")}</small>
               </label>
               <label className={`${field} border-t border-line pt-[18px]`} htmlFor="strategy-sensitivity">
                 <span className={fieldLabel}>
-                  敏感度{" "}
+                  {t("strategy.sensitivity", { value: "" }).trim()}{" "}
                   <output className="font-mono text-xl text-ink">
                     {strategy.sensitivity}
                     <small className={fieldHelp}> / 100</small>
@@ -187,11 +189,11 @@ export function StrategyPanel({
                   onChange={(event) => update({ sensitivity: Number(event.target.value) })}
                 />
                 <span className="flex justify-between gap-2 text-meta">
-                  <small className={fieldHelp}>更宽松</small>
+                  <small className={fieldHelp}>{t("strategy.looser")}</small>
                   <strong className="text-center text-xs font-medium text-ink">
-                    命中概率 ≥ {formatProbability(strategyThreshold(strategy))} 时通过此策略
+                    {t("strategy.threshold", { value: formatProbability(strategyThreshold(strategy)) })}
                   </strong>
-                  <small className={fieldHelp}>更敏感</small>
+                  <small className={fieldHelp}>{t("strategy.sensitive")}</small>
                 </span>
               </label>
             </section>
@@ -201,12 +203,12 @@ export function StrategyPanel({
                   ◌
                 </span>
                 <div>
-                  <h2 className={sectionHeading}>Hover 的表达方式</h2>
-                  <p className={sectionDescription}>展示最终命中的策略及其判断数据。</p>
+                  <h2 className={sectionHeading}>{t("strategy.hoverTitle")}</h2>
+                  <p className={sectionDescription}>{t("strategy.hoverDescription")}</p>
                 </div>
               </div>
               <label className={field} htmlFor="hover-template">
-                <span className={fieldLabel}>Hover 文案</span>
+                <span className={fieldLabel}>{t("strategy.hoverTemplate")}</span>
                 <textarea
                   id="hover-template"
                   className={`${textarea} bg-canvas/45 font-mono text-xs leading-[1.9]`}
@@ -220,7 +222,7 @@ export function StrategyPanel({
                 />
               </label>
               <p id="template-help" className={cn(`${fieldHelp} mt-2`, templateError && "text-danger")}>
-                {templateError || "点击变量插入文案。hitrate 是当前内容对最终命中策略的概率。"}
+                {templateError || t("strategy.templateHelp")}
               </p>
               <div className="mt-3 mb-[22px] flex flex-wrap gap-1.5">
                 {HOVER_VARIABLES.map((variable) => (
@@ -228,8 +230,8 @@ export function StrategyPanel({
                     className="rounded-sm border border-line-strong bg-selected px-[7px] py-[5px] text-caption text-ink hover:bg-hover"
                     type="button"
                     key={variable}
-                    aria-label={`插入 ${variable}`}
-                    title={`插入 {{${variable}}}`}
+                    aria-label={t("strategy.insert", { variable })}
+                    title={t("strategy.insert", { variable: `{{${variable}}}` })}
                     onClick={() => {
                       update({ hoverTemplate: `${strategy.hoverTemplate} {{${variable}}}`.slice(0, 500) });
                       document.getElementById("hover-template")?.focus();
@@ -241,9 +243,9 @@ export function StrategyPanel({
               </div>
               <label className={field} htmlFor="hover-css">
                 <span className={fieldLabel}>
-                  自定义 Hover CSS{" "}
+                  {t("strategy.customCss")}{" "}
                   <button type="button" className={textButton} onClick={() => update({ hoverCss: DEFAULT_HOVER_CSS })}>
-                    填入示例
+                    {t("strategy.fillExample")}
                   </button>
                 </span>
                 <textarea
@@ -260,32 +262,24 @@ export function StrategyPanel({
                 />
               </label>
               <p id="css-help" className={cn(`${fieldHelp} mt-2`, cssError && "text-danger")}>
-                {cssError || "留空使用默认样式。样式仅在 Hover / 键盘聚焦时生效。"}
+                {cssError || t("strategy.cssHelp")}
               </p>
               <details className="mt-4 text-xs text-muted">
-                <summary className="cursor-pointer">支持的选择器、属性与变量</summary>
-                <p className="mt-2.5 break-words">
-                  <code>.veil</code> 遮罩背景，<code>.label</code> 变量文案，<code>.action</code> 揭示按钮。
-                </p>
-                <p className="mt-2.5 break-words">
-                  支持
-                  color、background、background-color、border、border-color、border-width、border-style、border-radius、box-shadow、text-shadow、font-size、font-weight、font-style、letter-spacing、line-height、text-decoration、padding。
-                </p>
-                <p className="mt-2.5 break-words">
-                  <code>var(--hitrate)</code> 与 <code>var(--threshold)</code> 为 0–1 数值，可在 calc()
-                  或颜色函数中使用。
-                </p>
+                <summary className="cursor-pointer">{t("strategy.cssDetails")}</summary>
+                <p className="mt-2.5 break-words">{t("strategy.cssSelectors")}</p>
+                <p className="mt-2.5 break-words">{t("strategy.cssProperties")}</p>
+                <p className="mt-2.5 break-words">{t("strategy.cssVariables")}</p>
               </details>
             </section>
             <div className="flex flex-wrap items-center gap-3 pb-2.5">
               <button type="button" className={secondaryButton} onClick={reset}>
-                恢复默认草稿
+                {t("strategy.reset")}
               </button>
               <span className="hidden flex-1 text-meta text-muted min-[1151px]:block">
-                预览即刻更新，保存后应用并重新判断
+                {t("strategy.previewUpdates")}
               </span>
               <button type="submit" className={primaryButton} disabled={!!cssError || !!templateError}>
-                {busy ? "保存中…" : "保存策略"}
+                {busy ? t("common.saving") : t("strategy.save")}
               </button>
             </div>
           </fieldset>
