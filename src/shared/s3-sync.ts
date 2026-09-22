@@ -182,13 +182,21 @@ async function readRemote(
   }
 }
 
+async function applyWithLatestActivity(document: ConfigurationDocument): Promise<ConfigurationDocument> {
+  const latest = await readConfigurationDocument();
+  return applyRemoteConfiguration({
+    ...document,
+    activity: mergeActivityData(latest.activity, document.activity),
+  });
+}
+
 export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncOptions = {}): Promise<SyncResult> {
   const validationError = validateS3Settings(settings);
   if (validationError) throw new Error(validationError);
   const allowPermissionRequest = options.allowPermissionRequest !== false;
-  const local = await readConfigurationDocument();
   const remoteResult = await readRemote(settings, allowPermissionRequest);
   if (remoteResult?.legacyApiKey) await migrateLegacyOpenRouterKey(remoteResult.legacyApiKey);
+  const local = await readConfigurationDocument();
   if (!remoteResult) {
     await push(settings, local, allowPermissionRequest);
     return {
@@ -204,8 +212,9 @@ export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncO
   const remoteActivityChanged = JSON.stringify(activity) !== JSON.stringify(remote.activity);
 
   if (local.configVersion > remote.configVersion) {
-    const document = { ...local, activity };
-    if (localActivityChanged) await applyRemoteConfiguration(document);
+    const document = localActivityChanged
+      ? await applyWithLatestActivity({ ...local, activity })
+      : { ...local, activity };
     await push(settings, document, allowPermissionRequest);
     return {
       direction: "pushed",
@@ -216,7 +225,7 @@ export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncO
   }
 
   if (remote.configVersion > local.configVersion) {
-    const applied = await applyRemoteConfiguration({ ...remote, activity });
+    const applied = await applyWithLatestActivity({ ...remote, activity });
     if (remoteResult.legacy || remoteActivityChanged) await push(settings, applied, allowPermissionRequest);
     return {
       direction: "pulled",
@@ -226,7 +235,7 @@ export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncO
     };
   }
   if (localActivityChanged || remoteActivityChanged) {
-    const merged = await applyRemoteConfiguration({ ...local, activity });
+    const merged = await applyWithLatestActivity({ ...local, activity });
     await push(settings, merged, allowPermissionRequest);
     return {
       direction: "pushed",

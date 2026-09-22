@@ -77,11 +77,11 @@ ConfigurationDocument
     └── events[]
 ```
 
-Activity 事件 ID 来自稳定 X 内容 ID；没有稳定 ID 时使用作者与文本的 SHA-256。全局 Today、All Time、Heatmap 和 Trend 都从去重事件派生，因此刷新、DOM 重建、路由切换和重复同步不会增加累计值。事件保留首次过滤的本地日期；详情字段在 30 天后压缩，只留下累计与去重所需的最小身份。`clearedAt` 墓碑防止多设备同步恢复已清除事件。
+Activity 事件 ID 来自稳定 X 内容 ID；没有稳定 ID 时优先使用移除查询参数与锚点后的 canonical URL，最后才使用作者与文本的 SHA-256。Today、Heatmap 和 Trend 从近期去重事件派生，因此刷新、DOM 重建、路由切换和重复同步不会增加累计值。详情字段在 30 天后压缩；事件身份在 12 周后折叠为按设备单调合并的紧凑计数，避免本地存储无限增长，同时维持 All Time。`clearedAt` 墓碑防止多设备同步恢复已清除事件。
 
 Toolbar Badge 与全局统计分离。后台在 `chrome.storage.session` 中按 Tab 保存页面 token 与本页已见事件 ID；新页面或刷新创建新 token 并清零，Tab 间计数互不影响，0 使用空 Badge。
 
-版本元数据不出现在 Dashboard 的可编辑 JSON 中。启用 S3 同步后，应用配置仍按 `configVersion` 决定方向，Activity 则在任何方向都按稳定事件 ID 合并，状态按 `Filtered → Revealed → Marked Incorrect` 单调合并。Endpoint 权限只在用户保存 S3 设置时申请；启动和每 15 分钟同步不会弹出权限请求，也不会进入逐条过滤热路径。
+版本元数据不出现在 Dashboard 的可编辑 JSON 中。启用 S3 同步后，应用配置仍按 `configVersion` 决定方向，Activity 则在任何方向都按稳定事件 ID 合并，归档计数按设备取最大值，状态按 `Filtered → Revealed → Marked Incorrect` 单调合并。远程读取完成后会重新读取并合并最新本地 Activity，避免同步期间的新事件被旧快照覆盖。Endpoint 权限只在用户保存 S3 设置时申请；启动和每 15 分钟同步不会弹出权限请求，也不会进入逐条过滤热路径。
 
 ## Blur Veil state machine
 

@@ -94,6 +94,47 @@ describe("activity service", () => {
     expect(badges.filter(({ tabId }) => tabId === 4).at(-1)?.text).toBe("1");
   });
 
+  test("uses canonical URLs to distinguish non-numeric post identities", async () => {
+    const first = await recordFilterEvent({
+      post: {
+        id: "fallback",
+        text: "Same text",
+        author: "@person",
+        url: "https://x.com/person/status/101?utm_source=tracker",
+      },
+      surface: "timeline",
+      pageToken: "page",
+      tabId: 4,
+    });
+    const duplicate = await recordFilterEvent({
+      post: {
+        id: "fallback-again",
+        text: "Same text",
+        author: "@person",
+        url: "https://x.com/person/status/101#fragment",
+      },
+      surface: "timeline",
+      pageToken: "page",
+      tabId: 4,
+    });
+    const second = await recordFilterEvent({
+      post: {
+        id: "fallback",
+        text: "Same text",
+        author: "@person",
+        url: "https://x.com/person/status/102",
+      },
+      surface: "timeline",
+      pageToken: "page",
+      tabId: 4,
+    });
+    expect(first.added).toBeTrue();
+    expect(duplicate).toMatchObject({ eventId: first.eventId, added: false });
+    expect(second.added).toBeTrue();
+    expect(second.eventId).not.toBe(first.eventId);
+    expect((await getActivitySnapshot()).summary.allTime).toBe(2);
+  });
+
   test("distinguishes reveal from explicit incorrect feedback", async () => {
     const recorded = await recordFilterEvent({
       post: { id: "9", text: "Review me" },

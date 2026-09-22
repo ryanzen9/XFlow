@@ -2,6 +2,7 @@ import {
   ACTIVITY_DATA_KEY,
   ACTIVITY_DEVICE_ID_KEY,
   activitySummary,
+  canonicalPostUrl,
   compactActivityData,
   localDayKey,
   normalizeActivityData,
@@ -50,6 +51,8 @@ async function sha256(value: string): Promise<string> {
 
 async function eventId(post: PostInput): Promise<string> {
   if (/^\d+$/.test(post.id)) return `x:${post.id}`;
+  const url = canonicalPostUrl(post.url);
+  if (url) return `url:${await sha256(url)}`;
   return `content:${await sha256(`${post.author ?? ""}\n${post.text}`)}`;
 }
 
@@ -191,7 +194,7 @@ export function getActivitySnapshot(
 
 export function clearActivity(now = Date.now()): Promise<ActivityData> {
   return enqueue(async () => {
-    const activity = normalizeActivityData({ schemaVersion: 1, clearedAt: now, events: [] });
+    const activity = normalizeActivityData({ schemaVersion: 1, clearedAt: now, archivedByDevice: {}, events: [] });
     await writeActivity(activity);
     const state = await readPageState();
     await Promise.all(Object.keys(state).map((tabId) => setBadge(Number(tabId), 0)));

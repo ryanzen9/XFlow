@@ -101,7 +101,7 @@ export function FilterHistory({
         [...groups].map(([day, items]) => (
           <div key={day} className="mt-4 first:mt-2">
             <h3 className="font-mono text-[9px] font-semibold tracking-[0.1em] text-muted">{groupLabel(day)}</h3>
-            {items.slice(0, 50).map((item) => (
+            {items.map((item) => (
               <HistoryItem key={item.id} item={item} busy={busy} onIncorrect={() => onIncorrect(item.id)} />
             ))}
           </div>

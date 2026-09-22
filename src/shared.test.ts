@@ -65,5 +65,15 @@ describe("post sanitization", () => {
       mediaType: "image",
     });
     expect(sanitizePost({ id: "42", text: "preview", url: "https://tracker.example/post/42" })?.url).toBeUndefined();
+    expect(
+      sanitizePost({
+        id: "42",
+        text: "preview",
+        url: "https://x.com/person/status/42/?utm_source=tracker#analytics",
+      })?.url,
+    ).toBe("https://x.com/person/status/42");
+    expect(
+      sanitizePost({ id: "42", text: "preview", url: "https://x.com/home?utm_source=tracker" })?.url,
+    ).toBeUndefined();
   });
 });

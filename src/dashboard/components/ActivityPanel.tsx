@@ -55,7 +55,8 @@ export function ActivityPanel() {
           <h2 className="text-sm font-semibold">Privacy & retention</h2>
           <p className="mt-1 max-w-xl text-[10px] leading-relaxed text-muted">
             XFlow stores only content identity, a short text preview, author, time and matched policy. Detailed history
-            expires after 30 days; aggregate identity records remain for accurate totals and deduplication.
+            expires after 30 days; recent identities are bounded to 12 weeks, then folded into compact per-device
+            totals.
           </p>
         </div>
         <ClearActivityDialog busy={activity.busy} onClear={activity.clear} />

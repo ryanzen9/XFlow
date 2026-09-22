@@ -116,7 +116,7 @@ Bucket 需要允许扩展来源执行 GET、PUT 和 CORS 预检。
 - Content Script 只能访问不含密钥的 session 设置镜像。
 - 配置 JSON 和 S3 远程对象不包含 Provider API Key 或 S3 凭据。
 - Activity 只保存内容 ID、短文本预览、作者、过滤时间、命中策略和必要状态；不保存 HTML、DOM、Cookie、Session、媒体内容或访问路径。
-- 筛选历史详情保留 30 天；用于累计计数和去重的最小事件身份长期保留，用户可随时清除全部 Activity 数据。
+- 筛选历史详情保留 30 天；事件身份最多保留 12 周以支持 Heatmap 与近期去重，之后折叠为紧凑的设备计数，用户可随时清除全部 Activity 数据。
 - 固定主机权限仅包含 X/Twitter 与三个 Provider；任意 S3 HTTPS Endpoint 通过可选权限在用户操作下授予。
 
 加载扩展前，请自行审阅 `manifest.json` 与所选 Provider 的数据政策。不要在测试、Issue、日志或截图中提交真实凭据。

@@ -72,8 +72,14 @@ describe("activity data", () => {
 
   test("uses the newest clear marker so remote sync cannot resurrect old activity", () => {
     const local = normalizeActivityData({ clearedAt: at(19), events: [] });
-    const remote = normalizeActivityData({ events: [event("x:old", 18), event("x:new", 20)] });
-    expect(mergeActivityData(local, remote).events.map(({ id }) => id)).toEqual(["x:new"]);
+    const remote = normalizeActivityData({
+      archivedByDevice: { "device-a": 20 },
+      events: [event("x:old", 18), event("x:new", 20)],
+    });
+    const merged = mergeActivityData(local, remote, at(20));
+    expect(merged.events.map(({ id }) => id)).toEqual(["x:new"]);
+    expect(merged.archivedByDevice).toEqual({});
+    expect(activitySummary(merged, at(20)).allTime).toBe(1);
   });
 
   test("keeps all-time aggregates when 30-day history details expire", () => {
@@ -84,6 +90,41 @@ describe("activity data", () => {
     expect(activitySummary(compacted, now).allTime).toBe(2);
     expect(activityHistory(compacted, now).map(({ id }) => id)).toEqual(["x:recent"]);
     expect(compacted.events.find(({ id }) => id === "x:old")?.preview).toBeUndefined();
+  });
+
+  test("folds identities older than the heatmap window into bounded device counters", () => {
+    const now = at(22);
+    const archived = Array.from({ length: 250 }, (_, index) =>
+      event(`archived-${index}`, 1, {
+        filteredAt: new Date(2026, 4, 1, 12, index % 60).getTime(),
+        day: "2026-05-01",
+        deviceId: index < 200 ? "device-a" : "device-b",
+      }),
+    );
+    const compacted = compactActivityData(normalizeActivityData({ events: [...archived, event("recent", 22)] }), now);
+    expect(compacted.events.map(({ id }) => id)).toEqual(["recent"]);
+    expect(compacted.archivedByDevice).toEqual({ "device-a": 200, "device-b": 50 });
+    expect(activitySummary(compacted, now)).toEqual({ today: 1, allTime: 251 });
+    expect(compactActivityData(compacted, now)).toEqual(compacted);
+  });
+
+  test("merges archived per-device counters monotonically", () => {
+    const left = normalizeActivityData({ archivedByDevice: { "device-a": 100, "device-b": 20 } });
+    const right = normalizeActivityData({ archivedByDevice: { "device-a": 80, "device-b": 30 } });
+    const merged = mergeActivityData(left, right, at(22));
+    expect(merged.archivedByDevice).toEqual({ "device-a": 100, "device-b": 30 });
+    expect(activitySummary(merged, at(22)).allTime).toBe(130);
+  });
+
+  test("canonicalizes persisted post URLs", () => {
+    const data = normalizeActivityData({
+      events: [
+        event("x:url", 22, {
+          url: "https://x.com/person/status/42?utm_source=tracker#fragment",
+        }),
+      ],
+    });
+    expect(data.events[0]?.url).toBe("https://x.com/person/status/42");
   });
 
   test("derives an exact seven-day trend and current-week review", () => {

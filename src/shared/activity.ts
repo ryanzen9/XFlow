@@ -1,4 +1,5 @@
 import type { FilterSurface } from "./contracts";
+import { canonicalPostUrl } from "./posts";
 
 export const ACTIVITY_DATA_KEY = "activityData";
 export const ACTIVITY_DEVICE_ID_KEY = "activityDeviceId";
@@ -29,6 +30,7 @@ export interface ActivityEvent {
 export interface ActivityData {
   schemaVersion: 1;
   clearedAt: number;
+  archivedByDevice: Record<string, number>;
   events: ActivityEvent[];
 }
 
@@ -52,10 +54,14 @@ export interface WeeklyActivity {
   mostActive?: ActivityDay;
 }
 
-export const EMPTY_ACTIVITY_DATA: ActivityData = { schemaVersion: 1, clearedAt: 0, events: [] };
+export const EMPTY_ACTIVITY_DATA: ActivityData = { schemaVersion: 1, clearedAt: 0, archivedByDevice: {}, events: [] };
 
 function finiteTimestamp(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : null;
+}
+
+function nonNegativeInteger(value: unknown): number | null {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
 }
 
 function text(value: unknown, limit: number): string | undefined {
@@ -104,7 +110,6 @@ export function normalizeActivityEvent(value: unknown): ActivityEvent | null {
   if (!id || !contentId || filteredAt === null || updatedAt === null || !deviceId || !isSurface(input.surface)) {
     return null;
   }
-  const url = text(input.url, 500);
   return {
     id,
     contentId,
@@ -116,11 +121,28 @@ export function normalizeActivityEvent(value: unknown): ActivityEvent | null {
     status: isStatus(input.status) ? input.status : "filtered",
     author: text(input.author, 80),
     preview: text(input.preview, 500),
-    url: url && /^https:\/\/(x\.com|twitter\.com)\//i.test(url) ? url : undefined,
+    url: canonicalPostUrl(input.url),
     mediaType: isMediaType(input.mediaType) ? input.mediaType : undefined,
     policyId: text(input.policyId, 80),
     policyName: text(input.policyName, 80),
   };
+}
+
+function normalizeArchive(value: unknown): Record<string, number> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const archive: Record<string, number> = {};
+  for (const [rawDeviceId, rawCount] of Object.entries(value as Record<string, unknown>)) {
+    const deviceId = text(rawDeviceId, 120);
+    const count = nonNegativeInteger(rawCount);
+    if (deviceId && count) archive[deviceId] = Math.max(archive[deviceId] ?? 0, count);
+  }
+  return archive;
+}
+
+function mergeArchives(left: Record<string, number>, right: Record<string, number>): Record<string, number> {
+  const result = { ...left };
+  for (const [deviceId, count] of Object.entries(right)) result[deviceId] = Math.max(result[deviceId] ?? 0, count);
+  return result;
 }
 
 function compareEventVersion(left: ActivityEvent, right: ActivityEvent): number {
@@ -157,26 +179,44 @@ export function normalizeActivityData(value: unknown): ActivityData {
   return {
     schemaVersion: 1,
     clearedAt,
+    archivedByDevice: normalizeArchive(input.archivedByDevice),
     events: [...byId.values()].toSorted(
       (left, right) => right.filteredAt - left.filteredAt || left.id.localeCompare(right.id),
     ),
   };
 }
 
-export function mergeActivityData(left: ActivityData, right: ActivityData): ActivityData {
-  const clearedAt = Math.max(left.clearedAt, right.clearedAt);
-  return normalizeActivityData({
-    schemaVersion: 1,
-    clearedAt,
-    events: [...left.events, ...right.events],
-  });
+export function mergeActivityData(left: ActivityData, right: ActivityData, now = Date.now()): ActivityData {
+  const normalizedLeft = normalizeActivityData(left);
+  const normalizedRight = normalizeActivityData(right);
+  const clearedAt = Math.max(normalizedLeft.clearedAt, normalizedRight.clearedAt);
+  const archivedByDevice = mergeArchives(
+    normalizedLeft.clearedAt === clearedAt ? normalizedLeft.archivedByDevice : {},
+    normalizedRight.clearedAt === clearedAt ? normalizedRight.archivedByDevice : {},
+  );
+  return compactActivityData(
+    normalizeActivityData({
+      schemaVersion: 1,
+      clearedAt,
+      archivedByDevice,
+      events: [...normalizedLeft.events, ...normalizedRight.events],
+    }),
+    now,
+  );
 }
 
 export function compactActivityData(data: ActivityData, now = Date.now()): ActivityData {
+  const normalized = normalizeActivityData(data);
   const detailCutoff = addLocalDays(startOfLocalDay(now), -ACTIVITY_HISTORY_DAYS).getTime();
-  return normalizeActivityData({
-    ...data,
-    events: data.events.map((event) =>
+  const identityCutoff = addLocalDays(startOfLocalDay(now), -(ACTIVITY_HEATMAP_DAYS - 1)).getTime();
+  const archivedByDevice = { ...normalized.archivedByDevice };
+  const events: ActivityEvent[] = [];
+  for (const event of normalized.events) {
+    if (event.filteredAt < identityCutoff) {
+      archivedByDevice[event.deviceId] = (archivedByDevice[event.deviceId] ?? 0) + 1;
+      continue;
+    }
+    events.push(
       event.filteredAt >= detailCutoff
         ? event
         : {
@@ -189,7 +229,13 @@ export function compactActivityData(data: ActivityData, now = Date.now()): Activ
             surface: event.surface,
             status: event.status,
           },
-    ),
+    );
+  }
+  return normalizeActivityData({
+    schemaVersion: 1,
+    clearedAt: normalized.clearedAt,
+    archivedByDevice,
+    events,
   });
 }
 
@@ -198,7 +244,8 @@ export function activitySummary(data: ActivityData, now = Date.now()): ActivityS
   const today = localDayKey(now);
   return {
     today: normalized.events.filter((event) => event.day === today).length,
-    allTime: normalized.events.length,
+    allTime:
+      normalized.events.length + Object.values(normalized.archivedByDevice).reduce((sum, count) => sum + count, 0),
   };
 }
 

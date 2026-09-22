@@ -4,6 +4,7 @@ import {
   localDayKey,
   normalizeSettings,
   synchronizeWithS3,
+  type ActivityData,
   type ActivityEvent,
   type ConfigurationDocument,
   type S3SyncSettings,
@@ -14,6 +15,7 @@ const originalFetch = globalThis.fetch;
 let storage: Record<string, unknown> = {};
 let requests: { url: string; method: string; headers: Headers; body?: string }[] = [];
 let remote: ConfigurationDocument | null = null;
+let duringGet: (() => void) | null = null;
 
 const settings: S3SyncSettings = {
   autoSyncEnabled: true,
@@ -52,6 +54,7 @@ beforeEach(() => {
   storage = {};
   requests = [];
   remote = null;
+  duringGet = null;
   globalThis.chrome = {
     permissions: { contains: async () => true, request: async () => true },
     storage: {
@@ -75,10 +78,12 @@ beforeEach(() => {
       headers: new Headers(init?.headers),
       body: typeof init?.body === "string" ? init.body : undefined,
     });
-    if (method === "GET")
+    if (method === "GET") {
+      duringGet?.();
       return remote
         ? new Response(JSON.stringify(remote), { status: 200, headers: { "content-type": "application/json" } })
         : new Response("missing", { status: 404 });
+    }
     remote = JSON.parse(String(init?.body)) as ConfigurationDocument;
     return new Response("", { status: 200 });
   }) as typeof fetch;
@@ -173,6 +178,7 @@ test("merges multi-device activity by stable event id without double counting", 
     activityData: {
       schemaVersion: 1,
       clearedAt: 0,
+      archivedByDevice: {},
       events: [activityEvent("x:shared", "a"), activityEvent("x:local", "a")],
     },
   });
@@ -181,6 +187,7 @@ test("merges multi-device activity by stable event id without double counting", 
     activity: {
       schemaVersion: 1,
       clearedAt: 0,
+      archivedByDevice: {},
       events: [activityEvent("x:shared", "b"), activityEvent("x:remote", "b")],
     },
   };
@@ -188,4 +195,36 @@ test("merges multi-device activity by stable event id without double counting", 
   expect(result.document.activity.events.map(({ id }) => id).toSorted()).toEqual(["x:local", "x:remote", "x:shared"]);
   expect(remote?.activity.events).toHaveLength(3);
   expect((storage.activityData as { events: unknown[] }).events).toHaveLength(3);
+});
+
+test("preserves activity recorded while the remote document is loading", async () => {
+  const localDocument = documentAt(4, "Same");
+  Object.assign(storage, localDocument.config, {
+    configVersion: 4,
+    configUpdatedAt: localDocument.updatedAt,
+    activityData: {
+      ...EMPTY_ACTIVITY_DATA,
+      events: [activityEvent("x:before", "a")],
+    },
+  });
+  remote = {
+    ...documentAt(5, "Remote"),
+    activity: { ...EMPTY_ACTIVITY_DATA, events: [activityEvent("x:remote", "b")] },
+  };
+  duringGet = () => {
+    storage.activityData = {
+      ...EMPTY_ACTIVITY_DATA,
+      events: [activityEvent("x:during", "a"), activityEvent("x:before", "a")],
+    };
+  };
+
+  const result = await synchronizeWithS3(settings);
+
+  expect(result.direction).toBe("pulled");
+  expect(result.document.activity.events.map(({ id }) => id).toSorted()).toEqual(["x:before", "x:during", "x:remote"]);
+  expect((storage.activityData as ActivityData).events.map(({ id }) => id).toSorted()).toEqual([
+    "x:before",
+    "x:during",
+    "x:remote",
+  ]);
 });
