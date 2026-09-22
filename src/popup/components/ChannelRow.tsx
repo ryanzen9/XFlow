@@ -1,4 +1,5 @@
 import { cn } from "../../ui/cn";
+import { useI18n } from "../../ui/i18n";
 
 export interface ChannelRowProps {
   name: string;
@@ -10,6 +11,7 @@ export interface ChannelRowProps {
  * a local credential. Credentials themselves never render here.
  */
 export function ChannelRow({ name, configured }: ChannelRowProps) {
+  const { t } = useI18n();
   return (
     <div className="flex min-h-12 items-center gap-2.5 px-3 py-2" data-state={configured ? "configured" : "empty"}>
       <span className="min-w-0 flex-1 truncate text-ui leading-tight" title={name}>
@@ -21,7 +23,7 @@ export function ChannelRow({ name, configured }: ChannelRowProps) {
           configured ? "text-muted" : "text-warn",
         )}
       >
-        {configured ? "已配置" : "需要 API Key"}
+        {t(configured ? "popup.configured" : "popup.needsKey")}
       </span>
     </div>
   );

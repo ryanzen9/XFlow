@@ -11,6 +11,7 @@ import {
   type S3SyncSettings,
 } from "../../shared";
 import { cn } from "../../ui/cn";
+import { useI18n } from "../../ui/i18n";
 import {
   card,
   control,
@@ -34,6 +35,7 @@ function pretty(config: AppSettings): string {
 }
 
 export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?: () => void | Promise<void> }) {
+  const { t } = useI18n();
   const [config, setConfig] = useState<AppSettings | null>(null);
   const [source, setSource] = useState("");
   const [s3, setS3] = useState<S3SyncSettings | null>(null);
@@ -58,25 +60,25 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
         if (result.direction === "pulled") await onConfigurationApplied?.();
       } catch (error) {
         setStatus({
-          message: error instanceof Error ? `自动同步暂不可用：${error.message}` : "自动同步暂不可用。",
+          message: error instanceof Error ? `${t("data.autoUnavailable")} ${error.message}` : t("data.autoUnavailable"),
           error: true,
         });
       }
     },
-    [onConfigurationApplied, showConfig],
+    [onConfigurationApplied, showConfig, t],
   );
 
   useEffect(() => {
-    void load(true).catch(() => setStatus({ message: "无法读取浏览器存储。", error: true }));
-  }, [load]);
+    void load(true).catch(() => setStatus({ message: t("data.storageReadError"), error: true }));
+  }, [load, t]);
 
   const formatJson = () => {
     try {
       setSource(JSON.stringify(JSON.parse(source), null, 2));
-      setStatus({ message: "JSON 格式正确，尚未写入浏览器。", error: false });
+      setStatus({ message: t("data.jsonValid"), error: false });
     } catch (error) {
       setStatus({
-        message: error instanceof Error ? `JSON 语法错误：${error.message}` : "JSON 语法错误。",
+        message: error instanceof Error ? `${t("data.jsonSyntax")} ${error.message}` : t("data.jsonSyntax"),
         error: true,
       });
     }
@@ -88,9 +90,9 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
       const next = await applyEditedConfiguration(JSON.parse(source));
       await onConfigurationApplied?.();
       showConfig(next.config);
-      setStatus({ message: "配置已写入浏览器；如已启用云端同步，后台会自动处理。", error: false });
+      setStatus({ message: t("data.applied"), error: false });
     } catch (error) {
-      setStatus({ message: error instanceof Error ? error.message : "配置写入失败。", error: true });
+      setStatus({ message: error instanceof Error ? error.message : t("data.applyFailed"), error: true });
     } finally {
       setBusy(false);
     }
@@ -116,9 +118,9 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
       setS3(saved);
       showConfig(result.document.config);
       if (result.direction === "pulled") await onConfigurationApplied?.();
-      setStatus({ message: "S3 自动同步已启用，配置比较与传输将在后台完成。", error: false });
+      setStatus({ message: t("data.syncStarted"), error: false });
     } catch (error) {
-      setStatus({ message: error instanceof Error ? error.message : "S3 自动同步启用失败。", error: true });
+      setStatus({ message: error instanceof Error ? error.message : t("data.syncStartFailed"), error: true });
     } finally {
       setBusy(false);
     }
@@ -130,9 +132,9 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
     try {
       const saved = await saveS3SyncSettings({ ...s3, autoSyncEnabled: false });
       setS3(saved);
-      setStatus({ message: "S3 自动同步已停用，连接配置仍保存在本机。", error: false });
+      setStatus({ message: t("data.syncStopped"), error: false });
     } catch {
-      setStatus({ message: "S3 配置保存失败。", error: true });
+      setStatus({ message: t("data.s3SaveFailed"), error: true });
     } finally {
       setBusy(false);
     }
@@ -141,7 +143,7 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
   if (!config || !s3)
     return (
       <div className={card} role="status">
-        正在读取配置…
+        {t("data.loading")}
       </div>
     );
 
@@ -155,14 +157,14 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
             </span>
             <div>
               <h2 className={sectionHeading} id="config-title">
-                配置 JSON
+                {t("data.configTitle")}
               </h2>
-              <p className={sectionDescription}>直接编辑扩展配置。同步所需的系统字段由后台维护，不会出现在编辑区。</p>
+              <p className={sectionDescription}>{t("data.configDescription")}</p>
             </div>
           </div>
           <label className={field} htmlFor="config-json">
             <span className={fieldLabel}>
-              Config <small className={fieldHelp}>{source.length} characters</small>
+              Config <small className={fieldHelp}>{t("data.characters", { count: source.length })}</small>
             </span>
             <textarea
               id="config-json"
@@ -180,17 +182,18 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
             id="config-help"
             className="mt-3.5 border-l-[3px] border-warn bg-warn-soft px-[13px] py-[11px] text-meta leading-[1.7] text-warn"
           >
-            <strong>说明：</strong>API Key 与此配置分开保存在本机，不会出现在 JSON 或上传到 S3。
+            <strong>{t("data.note")}</strong>
+            {t("data.keySeparated")}
           </p>
           <div className="mt-[18px] flex flex-col justify-end gap-2 min-[601px]:flex-row min-[601px]:flex-wrap">
             <button type="button" className={secondaryButton} onClick={formatJson} disabled={busy}>
-              格式化 JSON
+              {t("data.format")}
             </button>
             <button type="button" className={secondaryButton} onClick={() => void load()} disabled={busy}>
-              放弃修改并重载
+              {t("data.discard")}
             </button>
             <button type="button" className={primaryButton} onClick={() => void applyJson()} disabled={busy}>
-              {busy ? "写入中…" : "应用到浏览器存储"}
+              {busy ? t("data.writing") : t("data.apply")}
             </button>
           </div>
         </div>
@@ -204,9 +207,9 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
             </span>
             <div>
               <h2 className={sectionHeading} id="s3-title">
-                S3 配置同步
+                {t("data.s3Title")}
               </h2>
-              <p className={sectionDescription}>首次保存后，扩展自动比较并同步配置。</p>
+              <p className={sectionDescription}>{t("data.s3Description")}</p>
             </div>
           </div>
           <div
@@ -221,11 +224,11 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
               aria-hidden="true"
             />
             <div className="grid gap-0.5">
-              <strong className="text-xs text-ink">{s3.autoSyncEnabled ? "自动同步已启用" : "自动同步尚未启用"}</strong>
+              <strong className="text-xs text-ink">
+                {t(s3.autoSyncEnabled ? "data.syncEnabled" : "data.syncDisabled")}
+              </strong>
               <small className="text-caption leading-normal text-muted">
-                {s3.autoSyncEnabled
-                  ? "配置变更、浏览器启动与定时检查时自动运行"
-                  : "保存连接配置并授权 Endpoint 后即可启用"}
+                {s3.autoSyncEnabled ? t("data.syncEnabledHelp") : t("data.syncDisabledHelp")}
               </small>
             </div>
           </div>
@@ -288,7 +291,7 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
                 aria-pressed={showSecret}
                 onClick={() => setShowSecret((value) => !value)}
               >
-                {showSecret ? "隐藏" : "显示"}
+                {t(showSecret ? "common.hide" : "common.show")}
               </button>
             </span>
             <input
@@ -302,7 +305,7 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
           </label>
           <label className={`${field} mt-[15px]`} htmlFor="s3-session-token">
             <span className={fieldLabel}>
-              Session Token <small className={fieldHelp}>可选</small>
+              Session Token <small className={fieldHelp}>{t("common.optional")}</small>
             </span>
             <textarea
               className={textarea}
@@ -312,17 +315,15 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
               onChange={(event) => updateS3({ sessionToken: event.target.value })}
             />
           </label>
-          <p className={`${fieldHelp} mt-4 border-t border-line pt-3.5`}>
-            Bucket 必须允许扩展来源进行 GET、PUT 和 CORS 预检。首次启用会请求该 Endpoint 的访问权限；凭据只保存在本机。
-          </p>
+          <p className={`${fieldHelp} mt-4 border-t border-line pt-3.5`}>{t("data.bucketHelp")}</p>
           <div className="mt-[18px] flex flex-col justify-end gap-2 min-[601px]:flex-row min-[601px]:flex-wrap">
             {s3.autoSyncEnabled && (
               <button type="button" className={secondaryButton} disabled={busy} onClick={() => void disableSync()}>
-                停用自动同步
+                {t("data.disableSync")}
               </button>
             )}
             <button type="submit" className={primaryButton} disabled={busy}>
-              {busy ? "保存中…" : s3.autoSyncEnabled ? "保存自动同步配置" : "保存并启用自动同步"}
+              {busy ? t("common.saving") : t(s3.autoSyncEnabled ? "data.saveSync" : "data.enableSync")}
             </button>
           </div>
         </form>

@@ -9,6 +9,7 @@ import {
   type FilterSurface,
 } from "../shared";
 import { cn } from "../ui/cn";
+import { LanguageToggle, providerLabel, useI18n } from "../ui/i18n";
 import { card, eyebrow, textButton } from "../ui/styles";
 import { ThemeToggle, applyTheme } from "../ui/theme";
 import { ApiKeysPanel } from "./components/ApiKeysPanel";
@@ -22,65 +23,37 @@ import { useDashboard } from "./hooks/use-dashboard";
 
 type MenuPage = "general" | "api-keys" | "strategies" | "data" | "log";
 
-const menuItems: {
-  id: MenuPage;
-  label: string;
-  caption: string;
-  icon: string;
-}[] = [
-  { id: "general", label: "通用", caption: "General", icon: "⊞" },
-  { id: "api-keys", label: "API Keys", caption: "Providers", icon: "⌘" },
-  { id: "strategies", label: "策略", caption: "Strategies", icon: "≋" },
-  { id: "data", label: "数据", caption: "Data", icon: "⌁" },
-  { id: "log", label: "日志", caption: "Log", icon: "≡" },
-];
-
-function strategyError(strategy: FilterStrategy): string | null {
-  if (
-    !strategy.name.trim() ||
-    !strategy.prompt.trim() ||
-    !strategy.hoverTemplate.trim()
-  ) {
-    return "请填写策略名称、提示词和 Hover 文案。";
-  }
-  if (strategy.surfaces.length === 0) return "请至少选择一个应用范围。";
-  return (
-    compileHoverCss(strategy.hoverCss, "#validation").error ||
-    validateTemplate(strategy.hoverTemplate)
-  );
-}
-
 export function App() {
+  const { locale, t } = useI18n();
   const [menu, setMenu] = useState<MenuPage>("general");
-  const [strategySurface, setStrategySurface] =
-    useState<FilterSurface>("timeline");
-  const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(
-    null,
-  );
+  const [strategySurface, setStrategySurface] = useState<FilterSurface>("timeline");
+  const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
   const form = useDashboard();
   const { draft, saved } = form;
   const theme = draft?.theme;
+  const menuItems: { id: MenuPage; label: string; caption: string; icon: string }[] = [
+    { id: "general", label: t("nav.general"), caption: "General", icon: "⊞" },
+    { id: "api-keys", label: t("nav.apiKeys"), caption: "Providers", icon: "⌘" },
+    { id: "strategies", label: t("nav.strategies"), caption: "Strategies", icon: "≋" },
+    { id: "data", label: t("nav.data"), caption: "Data", icon: "⌁" },
+    { id: "log", label: t("nav.log"), caption: "Log", icon: "≡" },
+  ];
+  const strategyError = (strategy: FilterStrategy): string | null => {
+    if (!strategy.name.trim() || !strategy.prompt.trim() || !strategy.hoverTemplate.trim()) {
+      return t("strategy.required");
+    }
+    if (strategy.surfaces.length === 0) return t("strategy.surfaceRequired");
+    return compileHoverCss(strategy.hoverCss, "#validation").error || validateTemplate(strategy.hoverTemplate);
+  };
   useEffect(() => {
     if (theme) applyTheme(theme);
   }, [theme]);
-  const selectedStrategy =
-    draft?.strategies.find((strategy) => strategy.id === selectedStrategyId) ??
-    null;
-  const libraryDirty =
-    JSON.stringify(draft?.strategies) !== JSON.stringify(saved?.strategies);
-  const surfaceStrategies =
-    draft?.strategies.filter(
-      (strategy) => strategy.surfaces[0] === strategySurface,
-    ) ?? [];
+  const selectedStrategy = draft?.strategies.find((strategy) => strategy.id === selectedStrategyId) ?? null;
+  const libraryDirty = JSON.stringify(draft?.strategies) !== JSON.stringify(saved?.strategies);
+  const surfaceStrategies = draft?.strategies.filter((strategy) => strategy.surfaces[0] === strategySurface) ?? [];
   const strategyCounts: Record<FilterSurface, number> = {
-    timeline:
-      draft?.strategies.filter(
-        (strategy) => strategy.surfaces[0] === "timeline",
-      ).length ?? 0,
-    comments:
-      draft?.strategies.filter(
-        (strategy) => strategy.surfaces[0] === "comments",
-      ).length ?? 0,
+    timeline: draft?.strategies.filter((strategy) => strategy.surfaces[0] === "timeline").length ?? 0,
+    comments: draft?.strategies.filter((strategy) => strategy.surfaces[0] === "comments").length ?? 0,
   };
 
   const setMenuPage = (nextMenu: MenuPage) => {
@@ -92,7 +65,7 @@ export function App() {
     if (!draft) return;
     const modelNickname = draft.modelNickname.trim();
     if (!modelNickname) {
-      form.setStatus({ message: "请填写模型昵称。", error: true });
+      form.setStatus({ message: t("general.nicknameRequired"), error: true });
       document.getElementById("model-nickname")?.focus();
       return;
     }
@@ -108,23 +81,17 @@ export function App() {
     const timeline =
       strategySurface === "timeline"
         ? strategies
-        : draft.strategies.filter(
-            (strategy) => strategy.surfaces[0] === "timeline",
-          );
+        : draft.strategies.filter((strategy) => strategy.surfaces[0] === "timeline");
     const comments =
       strategySurface === "comments"
         ? strategies
-        : draft.strategies.filter(
-            (strategy) => strategy.surfaces[0] === "comments",
-          );
+        : draft.strategies.filter((strategy) => strategy.surfaces[0] === "comments");
     updateStrategies([...timeline, ...comments]);
   };
 
   const saveLibrary = () => {
     if (!draft) return;
-    const invalid = draft.strategies.find((strategy) =>
-      strategyError(strategy),
-    );
+    const invalid = draft.strategies.find((strategy) => strategyError(strategy));
     if (invalid) {
       form.setStatus({
         message: `${invalid.name}：${strategyError(invalid)}`,
@@ -132,41 +99,25 @@ export function App() {
       });
       return;
     }
-    void form.save(
-      { strategies: reindexStrategies(draft.strategies) },
-      "策略顺序与启用状态已保存，当前页面将按新优先级重新判断。",
-    );
+    void form.save({ strategies: reindexStrategies(draft.strategies) }, t("strategy.librarySaved"));
   };
 
   const createNewStrategy = () => {
     if (!draft) return;
-    const strategy = createStrategy(
-      strategySurface,
-      surfaceStrategies.length + 1,
-    );
+    const strategy = createStrategy(strategySurface, surfaceStrategies.length + 1);
     updateSurfaceStrategies([...surfaceStrategies, strategy]);
     setSelectedStrategyId(strategy.id);
   };
 
   const updateSelectedStrategy = (strategy: FilterStrategy) => {
     if (!draft) return;
-    updateStrategies(
-      draft.strategies.map((item) =>
-        item.id === strategy.id ? strategy : item,
-      ),
-    );
+    updateStrategies(draft.strategies.map((item) => (item.id === strategy.id ? strategy : item)));
   };
 
   const changeSelectedPriority = (priority: number) => {
     if (!draft || !selectedStrategy) return;
-    const remaining = surfaceStrategies.filter(
-      (strategy) => strategy.id !== selectedStrategy.id,
-    );
-    remaining.splice(
-      Math.max(0, Math.min(priority - 1, remaining.length)),
-      0,
-      selectedStrategy,
-    );
+    const remaining = surfaceStrategies.filter((strategy) => strategy.id !== selectedStrategy.id);
+    remaining.splice(Math.max(0, Math.min(priority - 1, remaining.length)), 0, selectedStrategy);
     updateSurfaceStrategies(remaining);
   };
 
@@ -188,42 +139,39 @@ export function App() {
           : strategy,
       ),
     );
-    void form.save(
-      { strategies },
-      `策略「${selectedStrategy.name.trim()}」已保存，适用页面将按优先级重新判断。`,
-    );
+    void form.save({ strategies }, t("strategy.saved", { name: selectedStrategy.name.trim() }));
   };
 
   const page = {
     general: {
-      title: "通用设置",
-      description: "项目的基础设置。",
+      title: t("page.general.title"),
+      description: t("page.general.description"),
       eyebrow: "GENERAL",
     },
     "api-keys": {
       title: "API Keys",
-      description: "配置并且管理保存的 API Keys。",
+      description: t("page.apiKeys.description"),
       eyebrow: "API KEYS",
     },
     strategies: selectedStrategy
       ? {
-          title: "编辑策略",
+          title: t("page.strategies.edit"),
           description: `P${selectedStrategy.priority} · ${selectedStrategy.name}`,
           eyebrow: "STRATEGIES / EDIT",
         }
       : {
-          title: "策略管理",
-          description: "分别管理配置的多区域策略。",
+          title: t("page.strategies.title"),
+          description: t("page.strategies.description"),
           eyebrow: "STRATEGIES",
         },
     data: {
-      title: "数据与同步",
-      description: "编辑浏览器配置，并按需启用 S3 自动同步。",
+      title: t("page.data.title"),
+      description: t("page.data.description"),
       eyebrow: "DATA",
     },
     log: {
-      title: "日志",
-      description: "最近 30 天的过滤记录。",
+      title: t("nav.log"),
+      description: t("page.log.description"),
       eyebrow: "LOG",
     },
   }[menu];
@@ -241,18 +189,11 @@ export function App() {
             alt="XFlow logo"
           />
           <div>
-            <div className="font-display text-sm leading-none font-bold text-ink">
-              XFlow
-            </div>
-            <div className="mt-1 font-mono text-caption text-muted">
-              READ WITH INTENTION
-            </div>
+            <div className="font-display text-sm leading-none font-bold text-ink">XFlow</div>
+            <div className="mt-1 font-mono text-caption text-muted">READ WITH INTENTION</div>
           </div>
         </div>
-        <nav
-          className="flex flex-wrap gap-2.5 sm:grid sm:gap-1.5"
-          aria-label="Dashboard 菜单"
-        >
+        <nav className="flex flex-wrap gap-2.5 sm:grid sm:gap-1.5" aria-label={t("nav.menu")}>
           {menuItems.map((item) => (
             <button
               key={item.id}
@@ -261,63 +202,52 @@ export function App() {
               aria-current={menu === item.id ? "page" : undefined}
               onClick={() => setMenuPage(item.id)}
             >
-              <span
-                className="w-[18px] text-xl leading-none xl:w-6 xl:text-2xl"
-                aria-hidden="true"
-              >
+              <span className="w-[18px] text-xl leading-none xl:w-6 xl:text-2xl" aria-hidden="true">
                 {item.icon}
               </span>
               {item.label}
-              <small className="ml-auto hidden font-mono text-caption font-normal xl:block">
-                {item.caption}
-              </small>
+              <small className="ml-auto hidden font-mono text-caption font-normal xl:block">{item.caption}</small>
             </button>
           ))}
         </nav>
         <div className="mt-6 flex items-center justify-between gap-2 border-t border-line pt-5 sm:mt-auto sm:pt-6">
-          {draft && (
-            <ThemeToggle
-              value={draft.theme}
-              disabled={form.busy}
-              compact
-              onChange={(nextTheme) =>
-                void form.save(
-                  { theme: nextTheme },
-                  `已切换为${nextTheme === "dark" ? "深色" : "浅色"}主题。`,
-                )
-              }
-            />
-          )}
-          <span className="font-mono text-caption text-muted">
-            XFlow / 0.1
-          </span>
+          <div className="flex gap-2">
+            <LanguageToggle disabled={form.busy} compact />
+            {draft && (
+              <ThemeToggle
+                value={draft.theme}
+                disabled={form.busy}
+                compact
+                onChange={(nextTheme) =>
+                  void form.save(
+                    { theme: nextTheme },
+                    t("status.themeChanged", {
+                      theme: t(nextTheme === "dark" ? "theme.dark" : "theme.light"),
+                    }),
+                  )
+                }
+              />
+            )}
+          </div>
+          <span className="font-mono text-caption text-muted">XFlow / 0.1</span>
         </div>
       </aside>
       <main className="mx-auto w-full max-w-[1540px] min-w-0 px-4 pt-6 pb-5 min-[1600px]:pt-[50px] sm:px-6 sm:pt-7 sm:pb-[22px] xl:px-[clamp(24px,3.8vw,64px)] xl:pt-[38px] xl:pb-6">
         <header className="flex items-start justify-between gap-2.5 border-b border-line pb-5 sm:items-center sm:gap-5">
           <div>
             <p className={eyebrow}>WORKSPACE / {page.eyebrow}</p>
-            <h1 className="mt-2.5 mb-[7px] text-title font-semibold sm:text-3xl">
-              {page.title}
-            </h1>
+            <h1 className="mt-2.5 mb-[7px] text-title font-semibold sm:text-3xl">{page.title}</h1>
             <p className="text-xs text-muted sm:text-ui">{page.description}</p>
           </div>
           <span
             className="mt-1.5 text-caption whitespace-nowrap text-muted before:mr-2 before:inline-block before:size-1.5 before:rounded-full before:bg-fg-4 before:content-[''] data-[dirty=true]:before:bg-warn sm:mt-0 sm:text-xs"
             data-dirty={form.dirty}
           >
-            {form.busy
-              ? "正在保存…"
-              : form.dirty
-                ? "有未保存的更改"
-                : "已与本地同步"}
+            {form.busy ? t("status.saving") : form.dirty ? t("status.unsaved") : t("status.synced")}
           </span>
         </header>
         <div
-          className={cn(
-            "min-h-9 py-2 text-xs text-ink",
-            form.status.error && "text-danger",
-          )}
+          className={cn("min-h-9 py-2 text-xs text-ink", form.status.error && "text-danger")}
           role={form.status.error ? "alert" : "status"}
         >
           {form.status.message}
@@ -326,16 +256,13 @@ export function App() {
           <div className={card} role="status">
             {form.loadFailed ? (
               <>
-                无法加载设置。
-                <button
-                  className={textButton}
-                  onClick={() => location.reload()}
-                >
-                  重新加载
+                {t("status.loadFailed")}
+                <button className={textButton} onClick={() => location.reload()}>
+                  {t("common.reload")}
                 </button>
               </>
             ) : (
-              "正在加载本地设置…"
+              t("status.loadingSettings")
             )}
           </div>
         ) : menu === "general" ? (
@@ -353,7 +280,7 @@ export function App() {
             onProviderChange={(providerId) =>
               form.save(
                 { activeProvider: providerId },
-                `已切换到 ${providerId === "vercel-ai-gateway" ? "Vercel AI Gateway" : providerId === "typesafe" ? "TypeSafe 官方" : "OpenRouter"}。`,
+                t("api.providerChanged", { provider: providerLabel(providerId, locale) }),
               )
             }
             onStatus={form.setStatus}

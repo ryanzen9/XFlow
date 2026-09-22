@@ -1,5 +1,6 @@
 import type { ChangeEventHandler } from "react";
 import { cn } from "../../ui/cn";
+import { useI18n } from "../../ui/i18n";
 
 export interface MonitorSwitchProps {
   id: string;
@@ -27,10 +28,11 @@ export function MonitorSwitch({
   pending = false,
   onChange,
 }: MonitorSwitchProps) {
+  const { t } = useI18n();
   const titleId = `${id}-title`;
   const stateId = `${id}-state`;
   const state = pending ? "pending" : checked ? "on" : "off";
-  const stateLabel = pending ? "同步中" : checked ? "已启用" : "已暂停";
+  const stateLabel = t(pending ? "popup.syncing" : checked ? "common.enabled" : "popup.paused");
 
   return (
     <div

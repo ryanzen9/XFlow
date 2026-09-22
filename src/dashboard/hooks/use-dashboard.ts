@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { normalizeSettings, type AppSettings } from "../../shared";
 import { loadDashboardSettings, saveDashboardSettings } from "../services/settings";
+import { useI18n } from "../../ui/i18n";
 
 export function useDashboard() {
+  const { t } = useI18n();
   const [saved, setSaved] = useState<AppSettings | null>(null);
   const savedRef = useRef<AppSettings | null>(null);
   const [draft, setDraft] = useState<AppSettings | null>(null);
@@ -76,7 +78,7 @@ export function useDashboard() {
     setStatus({ message: "", error: false });
   }, []);
 
-  const save = async (patch: Partial<AppSettings>, message = "设置已保存并生效。") => {
+  const save = async (patch: Partial<AppSettings>, message = t("status.saved")) => {
     if (busyRef.current) return false;
     busyRef.current = true;
     setBusy(true);
@@ -89,7 +91,7 @@ export function useDashboard() {
       setStatus({ message, error: false });
       return true;
     } catch {
-      setStatus({ message: "保存失败，草稿已保留。请重试。", error: true });
+      setStatus({ message: t("status.saveFailed"), error: true });
       return false;
     } finally {
       busyRef.current = false;
@@ -100,7 +102,10 @@ export function useDashboard() {
   const toggle = (key: "enabled" | "commentsEnabled", value: boolean) =>
     save(
       { [key]: value },
-      `${key === "enabled" ? "Home" : "评论区"}过滤已${value ? "启用" : "暂停"}，页面状态正在同步。`,
+      t("status.filterChanged", {
+        surface: key === "enabled" ? "Home" : t("general.comments"),
+        state: value ? t("common.enabled") : t("popup.paused"),
+      }),
     );
 
   return { saved, draft, busy, dirty, status, loadFailed, update, save, toggle, reload, setStatus };

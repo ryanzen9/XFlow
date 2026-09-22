@@ -1,9 +1,10 @@
 import type { ActivityDay } from "../../../shared";
-
-const number = new Intl.NumberFormat();
-const dayFormatter = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
+import { useI18n } from "../../../ui/i18n";
 
 export function ActivityHeatmap({ days }: { days: ActivityDay[] }) {
+  const { locale, t } = useI18n();
+  const number = new Intl.NumberFormat(locale);
+  const dayFormatter = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" });
   const max = Math.max(...days.map(({ count }) => count), 0);
   const level = (count: number) => (count === 0 || max === 0 ? 0 : Math.max(1, Math.ceil((count / max) * 4)));
 
@@ -11,15 +12,18 @@ export function ActivityHeatmap({ days }: { days: ActivityDay[] }) {
     <div>
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <div>
-          <h3 className="text-ui font-semibold">Activity Heatmap</h3>
-          <p className="mt-0.5 text-meta text-muted">过去 12 周</p>
+          <h3 className="text-ui font-semibold">{t("activity.heatmap")}</h3>
+          <p className="mt-0.5 text-meta text-muted">{t("activity.last12Weeks")}</p>
         </div>
-        <span className="text-caption text-muted">Less · More</span>
+        <span className="text-caption text-muted">{t("activity.lessMore")}</span>
       </div>
       <div className="overflow-x-auto pb-1">
-        <div className="grid w-max grid-flow-col grid-rows-7 gap-1" role="grid" aria-label="过去 12 周每日过滤活动">
+        <div className="grid w-max grid-flow-col grid-rows-7 gap-1" role="grid" aria-label={t("activity.heatmapAria")}>
           {days.map((item) => {
-            const label = `${dayFormatter.format(item.date)}，${number.format(item.count)} filtered`;
+            const label = t("activity.count", {
+              date: dayFormatter.format(item.date),
+              count: number.format(item.count),
+            });
             return (
               <button
                 key={item.day}
@@ -37,7 +41,7 @@ export function ActivityHeatmap({ days }: { days: ActivityDay[] }) {
           })}
         </div>
       </div>
-      {max === 0 && <p className="mt-3 text-meta text-muted">No filtering activity yet.</p>}
+      {max === 0 && <p className="mt-3 text-meta text-muted">{t("activity.none")}</p>}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PROVIDERS, PROVIDER_IDS, type AppSettings, type ProviderId, type ProviderSummary } from "../../shared";
 import { cn } from "../../ui/cn";
+import { providerLabel, useI18n } from "../../ui/i18n";
 import { control, field, fieldHelp, fieldLabel, primaryButton, secondaryButton, tag } from "../../ui/styles";
 import {
   clearProviderCredential,
@@ -22,6 +23,7 @@ const emptyDrafts = (): Record<ProviderId, string> => ({
 });
 
 export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Props) {
+  const { locale, t } = useI18n();
   const [summaries, setSummaries] = useState<ProviderSummary[]>([]);
   const [drafts, setDrafts] = useState(emptyDrafts);
   const [revealed, setRevealed] = useState<Record<ProviderId, boolean>>({
@@ -39,24 +41,24 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
         if (live) setSummaries(next);
       } catch (error) {
         if (live) {
-          onStatus({ message: error instanceof Error ? error.message : "无法读取 API Key 状态。", error: true });
+          onStatus({ message: error instanceof Error ? error.message : t("api.readError"), error: true });
         }
       }
     })();
     return () => {
       live = false;
     };
-  }, [onStatus]);
+  }, [onStatus, t]);
 
   const saveKey = async (providerId: ProviderId) => {
     const key = drafts[providerId].trim();
     if (!key) {
-      onStatus({ message: `请输入 ${PROVIDERS[providerId].label} API Key。`, error: true });
+      onStatus({ message: t("api.enterKey", { provider: providerLabel(providerId, locale) }), error: true });
       document.getElementById(`provider-key-${providerId}`)?.focus();
       return;
     }
     if (providerId === "openrouter" && !key.startsWith("sk-or-")) {
-      onStatus({ message: "OpenRouter API Key 应以 sk-or- 开头。", error: true });
+      onStatus({ message: t("api.prefixError"), error: true });
       document.getElementById(`provider-key-${providerId}`)?.focus();
       return;
     }
@@ -64,9 +66,9 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
     try {
       setSummaries(await saveProviderCredential(providerId, key));
       setDrafts((current) => ({ ...current, [providerId]: "" }));
-      onStatus({ message: `${PROVIDERS[providerId].label} API Key 已安全保存到本机。`, error: false });
+      onStatus({ message: t("api.saved", { provider: providerLabel(providerId, locale) }), error: false });
     } catch (error) {
-      onStatus({ message: error instanceof Error ? error.message : "API Key 保存失败。", error: true });
+      onStatus({ message: error instanceof Error ? error.message : t("api.saveFailed"), error: true });
     } finally {
       setPending(null);
     }
@@ -77,9 +79,9 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
     try {
       setSummaries(await clearProviderCredential(providerId));
       setDrafts((current) => ({ ...current, [providerId]: "" }));
-      onStatus({ message: `${PROVIDERS[providerId].label} API Key 已从本机清除。`, error: false });
+      onStatus({ message: t("api.cleared", { provider: providerLabel(providerId, locale) }), error: false });
     } catch (error) {
-      onStatus({ message: error instanceof Error ? error.message : "API Key 清除失败。", error: true });
+      onStatus({ message: error instanceof Error ? error.message : t("api.clearFailed"), error: true });
     } finally {
       setPending(null);
     }
@@ -98,10 +100,10 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
         className="min-w-0 border-0 border-b border-line p-0 lg:border-r lg:border-b-0"
         disabled={credentialsBusy}
       >
-        <legend className="sr-only">选择 Jev API 渠道</legend>
+        <legend className="sr-only">{t("api.chooseProvider")}</legend>
         <div className="border-b border-line px-5 py-[18px]">
-          <p className="text-label text-ink">调用渠道</p>
-          <p className="mt-1 text-xs text-muted">一次仅使用一个渠道</p>
+          <p className="text-label text-ink">{t("api.provider")}</p>
+          <p className="mt-1 text-xs text-muted">{t("api.oneProvider")}</p>
         </div>
         <div className="grid divide-y divide-line">
           {PROVIDER_IDS.map((providerId) => {
@@ -111,7 +113,7 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
             return (
               <label
                 htmlFor={`active-provider-${providerId}`}
-                aria-label={`${provider.label}，${configured ? "已配置密钥" : "需要 API Key"}`}
+                aria-label={`${providerLabel(providerId, locale)}, ${t(configured ? "api.configured" : "api.needsKey")}`}
                 className={cn(
                   "relative flex min-h-24 cursor-pointer items-center gap-3.5 px-5 py-4 text-muted transition-colors before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-transparent before:content-[''] hover:bg-hover hover:text-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-55 has-[:focus-visible]:outline-(length:--focus-ring-width) has-[:focus-visible]:outline-offset-(--focus-ring-offset) has-[:focus-visible]:outline-focus",
                   selected && "bg-selected text-ink before:bg-ink",
@@ -133,10 +135,10 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
                   aria-hidden="true"
                 />
                 <span className="grid min-w-0 flex-1 gap-1">
-                  <strong className="truncate text-xs text-ink">{provider.label}</strong>
+                  <strong className="truncate text-xs text-ink">{providerLabel(providerId, locale)}</strong>
                   <small className="truncate font-mono text-caption text-muted">{provider.modelId}</small>
                   <small className={cn("mt-1 text-caption", configured ? "text-muted" : "text-warn")}>
-                    {configured ? "已配置密钥" : "需要 API Key"}
+                    {t(configured ? "api.configured" : "api.needsKey")}
                   </small>
                 </span>
               </label>
@@ -150,32 +152,34 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
           <div>
             <p className="font-mono text-meta text-muted">PROVIDER / ACTIVE</p>
             <h2 className="mt-2 text-heading text-ink" id={`provider-detail-title-${activeProviderId}`}>
-              {activeProvider.label}
+              {providerLabel(activeProviderId, locale)}
             </h2>
-            <p className="mt-1.5 max-w-(--layout-measure-narrow) text-xs text-muted">
-              配置该渠道访问 Jev 所需的本地凭据。切换左侧渠道后，此处会显示对应配置。
-            </p>
+            <p className="mt-1.5 max-w-(--layout-measure-narrow) text-xs text-muted">{t("api.description")}</p>
           </div>
           <span className={cn(tag, activeSummary?.configured && "border border-line-strong bg-selected")}>
-            {activeSummary?.configured ? `已配置 ${activeSummary.keyHint}` : "未配置"}
+            {activeSummary?.configured
+              ? t("api.configuredHint", { hint: activeSummary.keyHint })
+              : t("api.notConfigured")}
           </span>
         </div>
 
         <dl className="mt-7 grid border-y border-line sm:grid-cols-2 sm:divide-x sm:divide-line">
           <div className="py-4 sm:pr-5">
-            <dt className="text-meta text-muted">调用模型</dt>
+            <dt className="text-meta text-muted">{t("api.model")}</dt>
             <dd className="mt-1.5 truncate font-mono text-xs text-ink" title={activeProvider.modelId}>
               {activeProvider.modelId}
             </dd>
           </div>
           <div className="border-t border-line py-4 sm:border-t-0 sm:pl-5">
-            <dt className="text-meta text-muted">凭据状态</dt>
+            <dt className="text-meta text-muted">{t("api.credentialStatus")}</dt>
             <dd className="mt-1.5 flex items-center gap-2 text-xs text-ink">
               <span
                 className={cn("size-1.5 rounded-full bg-warn", activeSummary?.configured && "bg-live")}
                 aria-hidden="true"
               />
-              {activeSummary?.configured ? `已保存在本机 · ${activeSummary.keyHint}` : "等待配置 API Key"}
+              {activeSummary?.configured
+                ? t("api.savedLocally", { hint: activeSummary.keyHint })
+                : t("api.awaitingKey")}
             </dd>
           </div>
         </dl>
@@ -196,7 +200,7 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
                 target="_blank"
                 rel="noreferrer"
               >
-                获取 API Key ↗
+                {t("api.getKey")}
               </a>
             </span>
             <span className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -209,7 +213,7 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
                 maxLength={512}
                 placeholder={
                   activeSummary?.configured
-                    ? `已保存 ${activeSummary.keyHint}；输入新 Key 可替换`
+                    ? t("api.replacePlaceholder", { hint: activeSummary.keyHint })
                     : activeProvider.keyPlaceholder
                 }
                 value={drafts[activeProviderId]}
@@ -221,17 +225,20 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
                 className={secondaryButton}
                 type="button"
                 disabled={credentialsBusy}
-                aria-label={`${revealed[activeProviderId] ? "隐藏" : "显示"}${activeProvider.label} API Key`}
+                aria-label={t("api.toggleKey", {
+                  action: t(revealed[activeProviderId] ? "common.hide" : "common.show"),
+                  provider: providerLabel(activeProviderId, locale),
+                })}
                 aria-pressed={revealed[activeProviderId]}
                 onClick={() =>
                   setRevealed((current) => ({ ...current, [activeProviderId]: !current[activeProviderId] }))
                 }
               >
-                {revealed[activeProviderId] ? "隐藏" : "显示"}
+                {t(revealed[activeProviderId] ? "common.hide" : "common.show")}
               </button>
             </span>
             <small className={fieldHelp} id={helpId}>
-              密钥只保存在浏览器本地，不进入配置 JSON 或 S3 同步。
+              {t("api.localOnly")}
             </small>
           </label>
           <div className="mt-6 flex flex-col-reverse gap-2 border-t border-line pt-5 sm:flex-row sm:flex-wrap sm:justify-end">
@@ -242,7 +249,7 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
                 disabled={credentialsBusy}
                 onClick={() => void clearKey(activeProviderId)}
               >
-                清除本机密钥
+                {t("api.clearLocal")}
               </button>
             )}
             <button
@@ -250,7 +257,7 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
               type="submit"
               disabled={credentialsBusy || !drafts[activeProviderId].trim()}
             >
-              {isPending ? "保存中…" : activeSummary?.configured ? "替换 API Key" : "保存 API Key"}
+              {isPending ? t("common.saving") : t(activeSummary?.configured ? "api.replace" : "api.save")}
             </button>
           </div>
         </form>
