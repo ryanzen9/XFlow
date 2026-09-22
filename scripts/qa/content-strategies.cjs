@@ -103,6 +103,14 @@ async function run(page) {
   });
   await page.goto("https://x.com/home");
   await page.waitForFunction(() => document.querySelectorAll('article[data-xfilter-state="obscured"]').length === 2);
+  assert(
+    await page.evaluate(() =>
+      qa.requests.some(
+        (message) => message.type === "REVIEW_POSTS" && message.posts.some((post) => post.authorId === "example"),
+      ),
+    ),
+    "Author id was not forwarded to the decision pipeline",
+  );
   assert((await page.locator(".xfilter-feedback-host").count()) === 2, "Feedback entry missing from detected posts");
   await page.locator("#post-100 .xfilter-feedback__trigger").click();
   assert(await page.getByRole("menu", { name: "XFlow 内容标注" }).isVisible(), "Feedback menu did not open");

@@ -189,7 +189,7 @@ export class TimelineController {
         let response;
         try {
           response = await reviewPosts(
-            batch.map(({ id, text }) => ({ id, text })),
+            batch.map(({ id, text, authorId }) => ({ id, text, ...(authorId ? { authorId } : {}) })),
             surface,
           );
         } catch {
