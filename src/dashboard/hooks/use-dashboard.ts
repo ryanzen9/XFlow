@@ -103,8 +103,8 @@ export function useDashboard() {
     save(
       { [key]: value },
       t("status.filterChanged", {
-        surface: key === "enabled" ? "Home" : t("general.comments"),
-        state: value ? t("common.enabled") : t("popup.paused"),
+        surface: key === "enabled" ? t("general.homeTimeline") : t("general.comments"),
+        state: t(value ? "status.filterEnabled" : "status.filterPaused"),
       }),
     );
 

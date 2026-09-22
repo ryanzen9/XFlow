@@ -9,7 +9,7 @@ import {
   type FilterSurface,
 } from "../shared";
 import { cn } from "../ui/cn";
-import { LanguageToggle, providerLabel, useI18n } from "../ui/i18n";
+import { LanguageToggle, localizeError, providerLabel, useI18n } from "../ui/i18n";
 import { card, eyebrow, textButton } from "../ui/styles";
 import { ThemeToggle, applyTheme } from "../ui/theme";
 import { ApiKeysPanel } from "./components/ApiKeysPanel";
@@ -43,7 +43,9 @@ export function App() {
       return t("strategy.required");
     }
     if (strategy.surfaces.length === 0) return t("strategy.surfaceRequired");
-    return compileHoverCss(strategy.hoverCss, "#validation").error || validateTemplate(strategy.hoverTemplate);
+    const validationError =
+      compileHoverCss(strategy.hoverCss, "#validation").error || validateTemplate(strategy.hoverTemplate);
+    return validationError ? localizeError(locale, validationError, "strategy.validationFailed") : null;
   };
   useEffect(() => {
     if (theme) applyTheme(theme);

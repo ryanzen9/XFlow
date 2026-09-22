@@ -1,9 +1,22 @@
-import type { ExtensionRequest, ExtensionResponse, ProviderId, ProviderSummary } from "../../shared";
+import type {
+  ExtensionErrorCode,
+  ExtensionRequest,
+  ExtensionResponse,
+  ProviderId,
+  ProviderSummary,
+} from "../../shared";
+
+export class ProviderCredentialError extends Error {
+  constructor(readonly code: ExtensionErrorCode) {
+    super(code);
+    this.name = "ProviderCredentialError";
+  }
+}
 
 async function send(request: ExtensionRequest): Promise<ProviderSummary[]> {
   const response = (await chrome.runtime.sendMessage(request)) as ExtensionResponse;
-  if (!response.ok) throw new Error(response.error);
-  if (!("providerSummaries" in response)) throw new Error("扩展后台返回了无效的渠道状态。");
+  if (!response.ok) throw new ProviderCredentialError(response.code);
+  if (!("providerSummaries" in response)) throw new ProviderCredentialError("API_ERROR");
   return response.providerSummaries;
 }
 

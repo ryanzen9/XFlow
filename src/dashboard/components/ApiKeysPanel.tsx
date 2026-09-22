@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { PROVIDERS, PROVIDER_IDS, type AppSettings, type ProviderId, type ProviderSummary } from "../../shared";
 import { cn } from "../../ui/cn";
-import { providerLabel, useI18n } from "../../ui/i18n";
+import { providerLabel, translate, useI18n, type Locale, type MessageKey } from "../../ui/i18n";
 import { control, field, fieldHelp, fieldLabel, primaryButton, secondaryButton, tag } from "../../ui/styles";
 import {
   clearProviderCredential,
   loadProviderSummaries,
+  ProviderCredentialError,
   saveProviderCredential,
 } from "../services/provider-credentials";
 
@@ -22,6 +23,16 @@ const emptyDrafts = (): Record<ProviderId, string> => ({
   typesafe: "",
 });
 
+function credentialErrorMessage(locale: Locale, error: unknown, fallback: MessageKey): string {
+  const key =
+    error instanceof ProviderCredentialError && error.code === "FORBIDDEN"
+      ? "api.forbidden"
+      : error instanceof ProviderCredentialError && error.code === "INVALID_REQUEST"
+        ? "api.invalidRequest"
+        : fallback;
+  return translate(locale, key);
+}
+
 export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Props) {
   const { locale, t } = useI18n();
   const [summaries, setSummaries] = useState<ProviderSummary[]>([]);
@@ -32,6 +43,18 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
     typesafe: false,
   });
   const [pending, setPending] = useState<ProviderId | null>(null);
+  const activeProviderId = settings.activeProvider;
+  const activeProvider = PROVIDERS[activeProviderId];
+  const activeSummary = summaries.find((summary) => summary.id === activeProviderId);
+  const isPending = pending === activeProviderId;
+  const credentialsBusy = busy || pending !== null;
+  const helpId = `provider-key-help-${activeProviderId}`;
+  const placeholder =
+    activeProviderId === "openrouter"
+      ? t("api.placeholder.openrouter")
+      : activeProviderId === "vercel-ai-gateway"
+        ? t("api.placeholder.vercel")
+        : t("api.placeholder.typesafe");
 
   useEffect(() => {
     let live = true;
@@ -41,14 +64,14 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
         if (live) setSummaries(next);
       } catch (error) {
         if (live) {
-          onStatus({ message: error instanceof Error ? error.message : t("api.readError"), error: true });
+          onStatus({ message: credentialErrorMessage(locale, error, "api.readError"), error: true });
         }
       }
     })();
     return () => {
       live = false;
     };
-  }, [onStatus, t]);
+  }, [locale, onStatus]);
 
   const saveKey = async (providerId: ProviderId) => {
     const key = drafts[providerId].trim();
@@ -68,7 +91,7 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
       setDrafts((current) => ({ ...current, [providerId]: "" }));
       onStatus({ message: t("api.saved", { provider: providerLabel(providerId, locale) }), error: false });
     } catch (error) {
-      onStatus({ message: error instanceof Error ? error.message : t("api.saveFailed"), error: true });
+      onStatus({ message: credentialErrorMessage(locale, error, "api.saveFailed"), error: true });
     } finally {
       setPending(null);
     }
@@ -81,18 +104,11 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
       setDrafts((current) => ({ ...current, [providerId]: "" }));
       onStatus({ message: t("api.cleared", { provider: providerLabel(providerId, locale) }), error: false });
     } catch (error) {
-      onStatus({ message: error instanceof Error ? error.message : t("api.clearFailed"), error: true });
+      onStatus({ message: credentialErrorMessage(locale, error, "api.clearFailed"), error: true });
     } finally {
       setPending(null);
     }
   };
-
-  const activeProviderId = settings.activeProvider;
-  const activeProvider = PROVIDERS[activeProviderId];
-  const activeSummary = summaries.find((summary) => summary.id === activeProviderId);
-  const isPending = pending === activeProviderId;
-  const credentialsBusy = busy || pending !== null;
-  const helpId = `provider-key-help-${activeProviderId}`;
 
   return (
     <div className="grid max-w-(--layout-content-max) overflow-hidden rounded-lg border border-line bg-surface lg:grid-cols-[minmax(220px,.72fr)_minmax(0,2fr)]">
@@ -212,9 +228,7 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
                 spellCheck={false}
                 maxLength={512}
                 placeholder={
-                  activeSummary?.configured
-                    ? t("api.replacePlaceholder", { hint: activeSummary.keyHint })
-                    : activeProvider.keyPlaceholder
+                  activeSummary?.configured ? t("api.replacePlaceholder", { hint: activeSummary.keyHint }) : placeholder
                 }
                 value={drafts[activeProviderId]}
                 disabled={credentialsBusy}

@@ -78,7 +78,9 @@ const zh = {
   "status.saved": "设置已保存并生效。",
   "status.saveFailed": "保存失败，草稿已保留。请重试。",
   "status.themeChanged": "已切换为{theme}主题。",
-  "status.filterChanged": "{surface}过滤已{state}，页面状态正在同步。",
+  "status.filterChanged": "{surface}过滤{state}，页面状态正在同步。",
+  "status.filterEnabled": "已启用",
+  "status.filterPaused": "已暂停",
   "general.activity": "活动",
   "general.activityPrivacy": "过滤活动保存在本机，仅在你启用 S3 时同步。",
   "general.localFirst": "本机优先",
@@ -168,6 +170,11 @@ const zh = {
   "api.saveFailed": "API Key 保存失败。",
   "api.cleared": "{provider} API Key 已从本机清除。",
   "api.clearFailed": "API Key 清除失败。",
+  "api.forbidden": "当前页面无权管理 API Key。",
+  "api.invalidRequest": "API Key 请求无效。",
+  "api.placeholder.openrouter": "输入 OpenRouter API Key",
+  "api.placeholder.vercel": "输入 AI Gateway API Key",
+  "api.placeholder.typesafe": "输入 TypeSafe API Key",
   "data.loading": "正在读取配置…",
   "data.configTitle": "配置 JSON",
   "data.configDescription": "直接编辑扩展配置。同步所需的系统字段由后台维护，不会出现在编辑区。",
@@ -199,6 +206,10 @@ const zh = {
   "data.syncStartFailed": "S3 自动同步启用失败。",
   "data.syncStopped": "S3 自动同步已停用，连接配置仍保存在本机。",
   "data.s3SaveFailed": "S3 配置保存失败。",
+  "data.s3Required": "请填写 Endpoint、Region、Bucket、Object Key、Access Key ID 和 Secret Access Key。",
+  "data.s3Https": "S3 Endpoint 必须使用 HTTPS；仅本机调试允许 HTTP。",
+  "data.s3InvalidUrl": "S3 Endpoint 不是有效 URL。",
+  "data.s3NoQuery": "S3 Endpoint 不能包含查询参数或锚点。",
   "strategy.timeline": "时间线博文",
   "strategy.comments": "评论区",
   "strategy.tabs": "策略场景",
@@ -257,6 +268,15 @@ const zh = {
   "strategy.surfaceRequired": "请至少选择一个应用范围。",
   "strategy.saved": "策略「{name}」已保存，适用页面将按优先级重新判断。",
   "strategy.librarySaved": "策略顺序与启用状态已保存，当前页面将按新优先级重新判断。",
+  "strategy.validationFailed": "策略验证失败，请检查 Hover 文案与 CSS。",
+  "validation.templateUnknown": "未知变量：{token}",
+  "validation.templateMalformed": "变量请使用完整的 {{变量名}} 格式。",
+  "validation.cssExternal": "CSS 不支持外部资源、@规则、转义字符或 !important。",
+  "validation.cssFormat": "请使用 .veil { 属性: 值; } 格式。",
+  "validation.cssSelector": "仅支持 .veil、.label 和 .action 选择器。",
+  "validation.cssProperty": "不支持的 CSS 属性或空值：{detail}",
+  "validation.cssValue": "无法解析 {property} 的值。",
+  "validation.cssVariable": "CSS 变量仅支持 --hitrate 和 --threshold。",
   "preview.aria": "策略预览",
   "preview.live": "实时预览",
   "preview.title": "看看它如何呈现",
@@ -276,7 +296,7 @@ const zh = {
   "preview.help": "将鼠标移到遮罩上查看 Hover，点击或按 Enter 揭示内容。预览不会发送 API 请求。",
 } as const;
 
-type MessageKey = keyof typeof zh;
+export type MessageKey = keyof typeof zh;
 
 const en: Record<MessageKey, string> = {
   "language.switch": "Switch to Chinese",
@@ -349,7 +369,9 @@ const en: Record<MessageKey, string> = {
   "status.saved": "Settings saved and applied.",
   "status.saveFailed": "Save failed. Your draft is preserved; please try again.",
   "status.themeChanged": "Switched to the {theme} theme.",
-  "status.filterChanged": "{surface} filtering {state}; syncing page state.",
+  "status.filterChanged": "{surface} filtering is {state}; syncing page state.",
+  "status.filterEnabled": "enabled",
+  "status.filterPaused": "paused",
   "general.activity": "Activity",
   "general.activityPrivacy": "Filtering activity stays on your device and syncs only when you enable S3.",
   "general.localFirst": "Local first",
@@ -440,6 +462,11 @@ const en: Record<MessageKey, string> = {
   "api.saveFailed": "Could not save the API Key.",
   "api.cleared": "The {provider} API Key was removed from this device.",
   "api.clearFailed": "Could not clear the API Key.",
+  "api.forbidden": "This page is not allowed to manage API Keys.",
+  "api.invalidRequest": "The API Key request is invalid.",
+  "api.placeholder.openrouter": "Enter the OpenRouter API Key",
+  "api.placeholder.vercel": "Enter the AI Gateway API Key",
+  "api.placeholder.typesafe": "Enter the TypeSafe API Key",
   "data.loading": "Reading configuration…",
   "data.configTitle": "Configuration JSON",
   "data.configDescription":
@@ -472,6 +499,10 @@ const en: Record<MessageKey, string> = {
   "data.syncStartFailed": "Could not enable automatic S3 sync.",
   "data.syncStopped": "Automatic S3 sync is disabled. Connection settings remain on this device.",
   "data.s3SaveFailed": "Could not save the S3 configuration.",
+  "data.s3Required": "Enter the Endpoint, Region, Bucket, Object Key, Access Key ID, and Secret Access Key.",
+  "data.s3Https": "The S3 Endpoint must use HTTPS; HTTP is allowed only for local development.",
+  "data.s3InvalidUrl": "The S3 Endpoint is not a valid URL.",
+  "data.s3NoQuery": "The S3 Endpoint cannot contain a query string or fragment.",
   "strategy.timeline": "Timeline posts",
   "strategy.comments": "Replies",
   "strategy.tabs": "Strategy surfaces",
@@ -536,6 +567,15 @@ const en: Record<MessageKey, string> = {
   "strategy.saved": "Strategy “{name}” was saved; applicable pages will re-evaluate by priority.",
   "strategy.librarySaved":
     "Strategy order and enabled states were saved; this page will re-evaluate with the new priorities.",
+  "strategy.validationFailed": "Strategy validation failed. Check the Hover copy and CSS.",
+  "validation.templateUnknown": "Unknown variable: {token}",
+  "validation.templateMalformed": "Use the complete {{variable}} format.",
+  "validation.cssExternal": "CSS cannot use external resources, at-rules, escapes, or !important.",
+  "validation.cssFormat": "Use the .veil { property: value; } format.",
+  "validation.cssSelector": "Only the .veil, .label, and .action selectors are supported.",
+  "validation.cssProperty": "Unsupported CSS property or empty value: {detail}",
+  "validation.cssValue": "Could not parse the value for {property}.",
+  "validation.cssVariable": "Only the --hitrate and --threshold CSS variables are supported.",
   "preview.aria": "Strategy preview",
   "preview.live": "Live preview",
   "preview.title": "See how it appears",
@@ -567,6 +607,30 @@ export function normalizeLocale(value: unknown): Locale {
 
 export function translate(locale: Locale, key: MessageKey, values: Record<string, string | number> = {}): string {
   return catalogs[locale][key].replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? `{${name}}`));
+}
+
+export function localizeError(locale: Locale, error: unknown, fallback: MessageKey): string {
+  const message = error instanceof Error ? error.message : typeof error === "string" ? error : "";
+  const exact: Record<string, MessageKey> = {
+    "变量请使用完整的 {{变量名}} 格式。": "validation.templateMalformed",
+    "CSS 不支持外部资源、@规则、转义字符或 !important。": "validation.cssExternal",
+    "请使用 .veil { 属性: 值; } 格式。": "validation.cssFormat",
+    "仅支持 .veil、.label 和 .action 选择器。": "validation.cssSelector",
+    "CSS 变量仅支持 --hitrate 和 --threshold。": "validation.cssVariable",
+    "请填写 Endpoint、Region、Bucket、Object Key、Access Key ID 和 Secret Access Key。": "data.s3Required",
+    "S3 Endpoint 必须使用 HTTPS；仅本机调试允许 HTTP。": "data.s3Https",
+    "S3 Endpoint 不是有效 URL。": "data.s3InvalidUrl",
+    "S3 Endpoint 不能包含查询参数或锚点。": "data.s3NoQuery",
+  };
+  const direct = exact[message];
+  if (direct) return translate(locale, direct);
+  const unknownVariable = message.match(/^未知变量：(.*)$/);
+  if (unknownVariable) return translate(locale, "validation.templateUnknown", { token: unknownVariable[1] ?? "" });
+  const cssProperty = message.match(/^不支持的 CSS 属性或空值：(.*)$/);
+  if (cssProperty) return translate(locale, "validation.cssProperty", { detail: cssProperty[1] ?? "" });
+  const cssValue = message.match(/^无法解析 (.*) 的值。$/);
+  if (cssValue) return translate(locale, "validation.cssValue", { property: cssValue[1] ?? "" });
+  return translate(locale, fallback);
 }
 
 export function applyLocale(locale: Locale): void {

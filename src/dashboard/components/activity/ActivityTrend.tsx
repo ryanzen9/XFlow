@@ -57,7 +57,9 @@ export function ActivityTrend({ days }: { days: ActivityDay[] }) {
       </svg>
       <ul className="sr-only">
         {days.map((item) => (
-          <li key={item.day}>{t("activity.count", { date: dayFormatter.format(item.date), count: item.count })}</li>
+          <li key={item.day}>
+            {t("activity.count", { date: dayFormatter.format(item.date), count: number.format(item.count) })}
+          </li>
         ))}
       </ul>
     </div>

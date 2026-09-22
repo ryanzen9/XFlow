@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
   applyEditedConfiguration,
   readConfigurationDocument,
@@ -11,7 +11,7 @@ import {
   type S3SyncSettings,
 } from "../../shared";
 import { cn } from "../../ui/cn";
-import { useI18n } from "../../ui/i18n";
+import { localizeError, useI18n } from "../../ui/i18n";
 import {
   card,
   control,
@@ -35,13 +35,20 @@ function pretty(config: AppSettings): string {
 }
 
 export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?: () => void | Promise<void> }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
+  const localeRef = useRef(locale);
+  const tRef = useRef(t);
   const [config, setConfig] = useState<AppSettings | null>(null);
   const [source, setSource] = useState("");
   const [s3, setS3] = useState<S3SyncSettings | null>(null);
   const [showSecret, setShowSecret] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<PanelStatus>({ message: "", error: false });
+
+  useEffect(() => {
+    localeRef.current = locale;
+    tRef.current = t;
+  }, [locale, t]);
 
   const showConfig = useCallback((next: AppSettings) => {
     setConfig(next);
@@ -60,27 +67,24 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
         if (result.direction === "pulled") await onConfigurationApplied?.();
       } catch (error) {
         setStatus({
-          message: error instanceof Error ? `${t("data.autoUnavailable")} ${error.message}` : t("data.autoUnavailable"),
+          message: localizeError(localeRef.current, error, "data.autoUnavailable"),
           error: true,
         });
       }
     },
-    [onConfigurationApplied, showConfig, t],
+    [onConfigurationApplied, showConfig],
   );
 
   useEffect(() => {
-    void load(true).catch(() => setStatus({ message: t("data.storageReadError"), error: true }));
-  }, [load, t]);
+    void load(true).catch(() => setStatus({ message: tRef.current("data.storageReadError"), error: true }));
+  }, [load]);
 
   const formatJson = () => {
     try {
       setSource(JSON.stringify(JSON.parse(source), null, 2));
       setStatus({ message: t("data.jsonValid"), error: false });
-    } catch (error) {
-      setStatus({
-        message: error instanceof Error ? `${t("data.jsonSyntax")} ${error.message}` : t("data.jsonSyntax"),
-        error: true,
-      });
+    } catch {
+      setStatus({ message: t("data.jsonSyntax"), error: true });
     }
   };
 
@@ -92,7 +96,7 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
       showConfig(next.config);
       setStatus({ message: t("data.applied"), error: false });
     } catch (error) {
-      setStatus({ message: error instanceof Error ? error.message : t("data.applyFailed"), error: true });
+      setStatus({ message: localizeError(locale, error, "data.applyFailed"), error: true });
     } finally {
       setBusy(false);
     }
@@ -106,7 +110,7 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
     if (!s3) return;
     const validationError = validateS3Settings(s3);
     if (validationError) {
-      setStatus({ message: validationError, error: true });
+      setStatus({ message: localizeError(locale, validationError, "data.syncStartFailed"), error: true });
       return;
     }
     setBusy(true);
@@ -120,7 +124,7 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
       if (result.direction === "pulled") await onConfigurationApplied?.();
       setStatus({ message: t("data.syncStarted"), error: false });
     } catch (error) {
-      setStatus({ message: error instanceof Error ? error.message : t("data.syncStartFailed"), error: true });
+      setStatus({ message: localizeError(locale, error, "data.syncStartFailed"), error: true });
     } finally {
       setBusy(false);
     }

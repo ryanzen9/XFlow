@@ -12,7 +12,7 @@ import {
 } from "../../shared";
 import { StrategyPreview } from "./StrategyPreview";
 import { cn } from "../../ui/cn";
-import { useI18n } from "../../ui/i18n";
+import { localizeError, useI18n } from "../../ui/i18n";
 import {
   card,
   control,
@@ -57,10 +57,12 @@ export function StrategyPanel({
   onPriorityChange,
   onSave,
 }: Props) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const update = (patch: Partial<FilterStrategy>) => onChange({ ...strategy, ...patch });
-  const cssError = compileHoverCss(strategy.hoverCss, "#preview").error;
-  const templateError = validateTemplate(strategy.hoverTemplate);
+  const rawCssError = compileHoverCss(strategy.hoverCss, "#preview").error;
+  const rawTemplateError = validateTemplate(strategy.hoverTemplate);
+  const cssError = rawCssError ? localizeError(locale, rawCssError, "strategy.validationFailed") : null;
+  const templateError = rawTemplateError ? localizeError(locale, rawTemplateError, "strategy.validationFailed") : null;
   const submit = (event: FormEvent) => {
     event.preventDefault();
     onSave();

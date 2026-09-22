@@ -5,6 +5,10 @@ import { cn } from "../../ui/cn";
 import { useI18n } from "../../ui/i18n";
 import { control, eyebrow, field, fieldHelp, fieldLabel, textarea } from "../../ui/styles";
 
+export function updateLocalizedPreviewSample(current: string, previousDefault: string, nextDefault: string): string {
+  return current === previousDefault ? nextDefault : current;
+}
+
 export function StrategyPreview({
   strategy,
   modelNickname,
@@ -15,10 +19,12 @@ export function StrategyPreview({
   modelId: string;
 }) {
   const { t } = useI18n();
+  const sample = t("preview.sample");
   const articleRef = useRef<HTMLElement>(null);
   const presentation = useRef<PostVeilPresentation | null>(null);
   const [probability, setProbability] = useState(0.86);
-  const [text, setText] = useState(() => t("preview.sample"));
+  const [text, setText] = useState(sample);
+  const previousSample = useRef(sample);
   const [cycle, setCycle] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [theme, setTheme] = useState<"light" | "dim" | "dark">("light");
@@ -29,6 +35,12 @@ export function StrategyPreview({
   );
   const threshold = strategyThreshold(strategy);
   const hit = probability >= threshold;
+
+  useEffect(() => {
+    const previous = previousSample.current;
+    previousSample.current = sample;
+    setText((current) => updateLocalizedPreviewSample(current, previous, sample));
+  }, [sample]);
 
   useEffect(() => {
     const article = articleRef.current;

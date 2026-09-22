@@ -47,9 +47,9 @@ export function useActivity() {
     setError("");
     try {
       const response = await send({ type: "MARK_ACTIVITY_STATUS", eventId, status: "incorrect" });
-      if (!response.ok) throw new Error(response.error);
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : t("activity.updateError"));
+      if (!response.ok) throw new Error(response.code);
+    } catch {
+      setError(t("activity.updateError"));
     } finally {
       setBusy(false);
     }
@@ -60,9 +60,9 @@ export function useActivity() {
     setError("");
     try {
       const response = await send({ type: "CLEAR_ACTIVITY_DATA" });
-      if (!response.ok) throw new Error(response.error);
+      if (!response.ok) throw new Error(response.code);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : t("activity.clearError"));
+      setError(t("activity.clearError"));
       throw reason;
     } finally {
       setBusy(false);
