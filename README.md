@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo-dark.png" alt="XFlow" width="50%" />
+  <img src="logo-dark.png" alt="XFlow" width="160" />
 </p>
 
 <p align="center">
