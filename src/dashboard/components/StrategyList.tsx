@@ -1,6 +1,7 @@
 import { formatProbability, strategyThreshold, type FilterStrategy, type FilterSurface } from "../../shared";
 import { cn } from "../../ui/cn";
 import { eyebrow, primaryButton } from "../../ui/styles";
+import { useI18n } from "../../ui/i18n";
 
 interface Props {
   surface: FilterSurface;
@@ -13,10 +14,9 @@ interface Props {
   onSave: () => void;
 }
 
-const surfaceLabel = (surface: FilterSurface) => (surface === "timeline" ? "时间线博文" : "评论区");
-
 export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpen, onCreate, onSave }: Props) {
-  const label = surfaceLabel(surface);
+  const { t } = useI18n();
+  const label = t(surface === "timeline" ? "strategy.timeline" : "strategy.comments");
   const update = (id: string, patch: Partial<FilterStrategy>) => {
     onChange(strategies.map((strategy) => (strategy.id === id ? { ...strategy, ...patch } : strategy)));
   };
@@ -36,14 +36,12 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
         <div>
           <p className={eyebrow}>{surface === "timeline" ? "TIMELINE POLICIES" : "COMMENT POLICIES"}</p>
           <h2 className="my-2 text-title" id="strategy-table-title">
-            {label}策略
+            {t("strategy.title", { surface: label })}
           </h2>
-          <p className="max-w-[650px] text-xs text-muted">
-            此处的优先级只作用于{label}。系统从 P1 开始采用第一条达到自身阈值的策略。
-          </p>
+          <p className="max-w-[650px] text-xs text-muted">{t("strategy.libraryHelp", { surface: label })}</p>
         </div>
         <button className={`${primaryButton} w-full sm:w-auto`} type="button" onClick={onCreate} disabled={busy}>
-          新建{label}策略 ＋
+          {t("strategy.createSurface", { surface: label })}
         </button>
       </div>
       {strategies.length === 0 ? (
@@ -51,10 +49,10 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
           <span className="text-display text-ink" aria-hidden="true">
             ◇
           </span>
-          <h3 className="text-ink">还没有{label}策略</h3>
-          <p className="mb-2.5 text-xs">新建第一条策略后，可以配置提示词、敏感度和 Hover 样式。</p>
+          <h3 className="text-ink">{t("strategy.empty", { surface: label })}</h3>
+          <p className="mb-2.5 text-xs">{t("strategy.emptyHelp")}</p>
           <button className={primaryButton} type="button" onClick={onCreate}>
-            新建策略
+            {t("strategy.create")}
           </button>
         </div>
       ) : (
@@ -62,21 +60,23 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
           <table className="strategy-table w-full table-fixed border-collapse max-[600px]:block">
             <thead className="max-[600px]:hidden">
               <tr>
-                {["优先级", "策略名称", "触发条件", "状态", ""].map((heading, index) => (
-                  <th
-                    className={cn(
-                      "h-[42px] border-b border-line bg-canvas/55 px-4 text-left font-mono text-caption font-semibold text-muted",
-                      index === 0 && "w-[148px]",
-                      index === 2 && "w-[120px]",
-                      index === 3 && "w-[128px]",
-                      index === 4 && "w-[142px]",
-                    )}
-                    scope="col"
-                    key={index}
-                  >
-                    {heading || <span className="sr-only">操作</span>}
-                  </th>
-                ))}
+                {[t("strategy.priority"), t("strategy.name"), t("strategy.condition"), t("strategy.state"), ""].map(
+                  (heading, index) => (
+                    <th
+                      className={cn(
+                        "h-[42px] border-b border-line bg-canvas/55 px-4 text-left font-mono text-caption font-semibold text-muted",
+                        index === 0 && "w-[148px]",
+                        index === 2 && "w-[120px]",
+                        index === 3 && "w-[128px]",
+                        index === 4 && "w-[142px]",
+                      )}
+                      scope="col"
+                      key={index}
+                    >
+                      {heading || <span className="sr-only">{t("strategy.actions")}</span>}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody className="max-[600px]:grid max-[600px]:gap-2.5">
@@ -88,7 +88,7 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
                 >
                   <td
                     className="h-[82px] border-r border-b border-line bg-canvas/40 px-4 py-3 align-middle whitespace-nowrap max-[600px]:row-[1/5] max-[600px]:grid max-[600px]:h-auto max-[600px]:content-center max-[600px]:justify-items-center max-[600px]:gap-2 max-[600px]:border-b-0 max-[600px]:px-1.5 max-[600px]:py-2.5"
-                    data-label="优先级"
+                    data-label={t("strategy.priority")}
                   >
                     <span className="table-priority inline-block min-w-[38px] font-mono text-base font-bold text-ink max-[600px]:min-w-0">
                       P{strategy.priority}
@@ -97,8 +97,8 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
                       <button
                         className={`${iconButton} font-mono text-sm`}
                         type="button"
-                        aria-label={`提高 ${strategy.name} 的优先级`}
-                        title="提高优先级"
+                        aria-label={t("strategy.raise", { name: strategy.name })}
+                        title={t("strategy.raiseTitle")}
                         disabled={busy || index === 0}
                         onClick={() => move(index, -1)}
                       >
@@ -107,8 +107,8 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
                       <button
                         className={`${iconButton} font-mono text-sm`}
                         type="button"
-                        aria-label={`降低 ${strategy.name} 的优先级`}
-                        title="降低优先级"
+                        aria-label={t("strategy.lower", { name: strategy.name })}
+                        title={t("strategy.lowerTitle")}
                         disabled={busy || index === strategies.length - 1}
                         onClick={() => move(index, 1)}
                       >
@@ -118,13 +118,13 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
                   </td>
                   <td
                     className="h-[82px] min-w-0 border-b border-line px-4 py-3 align-middle max-[600px]:flex max-[600px]:h-auto max-[600px]:min-h-[68px] max-[600px]:items-center max-[600px]:justify-between max-[600px]:px-3 max-[600px]:py-2.5"
-                    data-label="策略名称"
+                    data-label={t("strategy.name")}
                   >
                     <button
                       type="button"
                       className="grid w-full min-w-0 gap-[5px] bg-transparent p-0 text-left text-ink"
                       onClick={() => onOpen(strategy.id)}
-                      aria-label={`编辑策略 ${strategy.name}`}
+                      aria-label={t("strategy.edit", { name: strategy.name })}
                     >
                       <strong className="overflow-hidden text-ui text-ellipsis whitespace-nowrap">
                         {strategy.name}
@@ -136,23 +136,25 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
                   </td>
                   <td
                     className="h-[82px] border-b border-line px-4 py-3 align-middle before:mr-3 before:hidden before:font-mono before:text-caption before:text-muted before:content-[attr(data-label)] max-[600px]:flex max-[600px]:h-auto max-[600px]:min-h-12 max-[600px]:items-center max-[600px]:justify-between max-[600px]:px-3 max-[600px]:py-2.5 max-[600px]:before:block"
-                    data-label="触发条件"
+                    data-label={t("strategy.condition")}
                   >
                     <span>
                       <strong className="threshold-value block font-mono text-xs font-semibold text-ink">
                         ≥ {formatProbability(strategyThreshold(strategy))}
                       </strong>
-                      <span className="mt-1 block text-caption text-muted">敏感度 {strategy.sensitivity}</span>
+                      <span className="mt-1 block text-caption text-muted">
+                        {t("strategy.sensitivity", { value: strategy.sensitivity })}
+                      </span>
                     </span>
                   </td>
                   <td
                     className="h-[82px] border-b border-line px-4 py-3 align-middle before:mr-3 before:hidden before:font-mono before:text-caption before:text-muted before:content-[attr(data-label)] max-[600px]:flex max-[600px]:h-auto max-[600px]:min-h-12 max-[600px]:items-center max-[600px]:justify-between max-[600px]:border-b-0 max-[600px]:px-3 max-[600px]:py-2.5 max-[600px]:before:block"
-                    data-label="状态"
+                    data-label={t("strategy.state")}
                   >
                     <label className="flex cursor-pointer items-center justify-between gap-2 text-meta text-muted">
-                      <span>{strategy.enabled ? "已启用" : "已停用"}</span>
+                      <span>{t(strategy.enabled ? "common.enabled" : "common.disabled")}</span>
                       <span className="relative block h-[23px] w-[38px] shrink-0">
-                        <span className="sr-only">启用 {strategy.name}</span>
+                        <span className="sr-only">{t("strategy.enable", { name: strategy.name })}</span>
                         <input
                           className="peer absolute inset-y-[-10px] z-10 m-0 h-[43px] w-[38px] cursor-pointer opacity-0"
                           type="checkbox"
@@ -171,7 +173,7 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
                   </td>
                   <td className="h-[82px] border-b border-line px-4 py-3 text-right align-middle whitespace-nowrap group-last:border-b-0 max-[600px]:col-[1/-1] max-[600px]:flex max-[600px]:h-auto max-[600px]:min-h-[52px] max-[600px]:items-center max-[600px]:justify-end max-[600px]:border-t max-[600px]:border-b-0 max-[600px]:px-3 max-[600px]:py-2.5">
                     <button type="button" className={`${iconButton} min-w-[62px]`} onClick={() => onOpen(strategy.id)}>
-                      详情 →
+                      {t("strategy.details")}
                     </button>
                     <button
                       type="button"
@@ -184,7 +186,7 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
                         )
                       }
                     >
-                      删除
+                      {t("strategy.delete")}
                     </button>
                   </td>
                 </tr>
@@ -194,16 +196,14 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
         </div>
       )}
       <div className="mt-[18px] flex flex-col items-stretch justify-between gap-6 rounded-xl border border-dashed border-line-strong px-5 py-[18px] sm:flex-row sm:items-center">
-        <p className="text-xs text-muted">
-          <strong className="text-ink">{label}独立排序。</strong> 调整顺序、启停或删除后，点击保存才会应用到页面。
-        </p>
+        <p className="text-xs text-muted">{t("strategy.orderHelp", { surface: label })}</p>
         <button
           className={`${primaryButton} w-full sm:w-auto`}
           type="button"
           disabled={busy || !dirty}
           onClick={onSave}
         >
-          {busy ? "保存中…" : `保存${label}策略`}
+          {busy ? t("common.saving") : t("strategy.saveSurface", { surface: label })}
         </button>
       </div>
     </section>

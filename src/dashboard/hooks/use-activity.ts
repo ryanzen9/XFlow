@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { ACTIVITY_DATA_KEY, normalizeActivityData, type ActivityData, type ExtensionResponse } from "../../shared";
+import { useI18n } from "../../ui/i18n";
 
 async function send(message: unknown): Promise<ExtensionResponse> {
   return chrome.runtime.sendMessage(message) as Promise<ExtensionResponse>;
 }
 
 export function useActivity() {
+  const { t } = useI18n();
   const [data, setData] = useState<ActivityData>(() => normalizeActivityData(null));
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -22,7 +24,7 @@ export function useActivity() {
         setLoading(false);
       } catch {
         if (!live) return;
-        setError("无法读取 Activity 数据。");
+        setError(t("activity.readError"));
         setLoading(false);
       }
     })();
@@ -38,16 +40,16 @@ export function useActivity() {
       window.clearInterval(clock);
       chrome.storage.onChanged.removeListener(onChange);
     };
-  }, []);
+  }, [t]);
 
   const markIncorrect = async (eventId: string) => {
     setBusy(true);
     setError("");
     try {
       const response = await send({ type: "MARK_ACTIVITY_STATUS", eventId, status: "incorrect" });
-      if (!response.ok) throw new Error(response.error);
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "无法更新过滤记录。");
+      if (!response.ok) throw new Error(response.code);
+    } catch {
+      setError(t("activity.updateError"));
     } finally {
       setBusy(false);
     }
@@ -58,9 +60,9 @@ export function useActivity() {
     setError("");
     try {
       const response = await send({ type: "CLEAR_ACTIVITY_DATA" });
-      if (!response.ok) throw new Error(response.error);
+      if (!response.ok) throw new Error(response.code);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "无法清除 Activity 数据。");
+      setError(t("activity.clearError"));
       throw reason;
     } finally {
       setBusy(false);

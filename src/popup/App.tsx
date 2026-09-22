@@ -1,6 +1,7 @@
 import { cn } from "../ui/cn";
 import { focusRing } from "../ui/styles";
 import { ThemeToggle } from "../ui/theme";
+import { LanguageToggle, providerLabel, useI18n } from "../ui/i18n";
 import { ActivitySummary } from "./components/ActivitySummary";
 import { ChannelRow } from "./components/ChannelRow";
 import { ModelFooter } from "./components/ModelFooter";
@@ -15,6 +16,7 @@ const list = "divide-y divide-line overflow-hidden rounded-md border border-line
 export function App() {
   const form = useSettingsForm();
   const activity = useActivity();
+  const { locale, t } = useI18n();
 
   return (
     <main className="flex min-h-(--layout-popup-height) w-full flex-col bg-canvas bg-(image:--pattern-margin-rule) px-4 pt-3.5 pb-3 font-sans text-ink transition-colors">
@@ -29,14 +31,14 @@ export function App() {
 
       <ActivitySummary {...activity} live={form.enabled || form.commentsEnabled} />
 
-      <section className="mt-3.5" aria-label="过滤范围">
-        <p className={groupLabel}>Monitoring</p>
+      <section className="mt-3.5" aria-label={t("popup.monitoringScope")}>
+        <p className={groupLabel}>{t("popup.monitoring")}</p>
         <div className={list}>
           <MonitorSwitch
             id="enabled"
             routeLabel="/home"
-            title="时间线过滤"
-            ariaLabel="启用时间线分析"
+            title={t("popup.timeline")}
+            ariaLabel={t("popup.timelineAria")}
             checked={form.enabled}
             disabled={!form.settingsReady || form.enabledPending}
             pending={form.enabledPending}
@@ -45,8 +47,8 @@ export function App() {
           <MonitorSwitch
             id="comments-enabled"
             routeLabel="/status"
-            title="评论区过滤"
-            ariaLabel="启用评论区分析"
+            title={t("popup.comments")}
+            ariaLabel={t("popup.commentsAria")}
             checked={form.commentsEnabled}
             disabled={!form.settingsReady || form.commentsEnabledPending}
             pending={form.commentsEnabledPending}
@@ -55,10 +57,10 @@ export function App() {
         </div>
       </section>
 
-      <section className="mt-3.5" aria-label="当前渠道">
-        <p className={groupLabel}>Channel</p>
+      <section className="mt-3.5" aria-label={t("popup.currentProvider")}>
+        <p className={groupLabel}>{t("popup.provider")}</p>
         <div className={list}>
-          <ChannelRow name={form.providerName} configured={form.configured} />
+          <ChannelRow name={providerLabel(form.activeProvider, locale)} configured={form.configured} />
         </div>
       </section>
 
@@ -86,8 +88,9 @@ export function App() {
             type="button"
             onClick={() => void chrome.runtime.openOptionsPage()}
           >
-            Dashboard ↗
+            {t("popup.dashboard")}
           </button>
+          <LanguageToggle dense />
           <ThemeToggle value={form.theme} dense onChange={(theme) => void form.setTheme(theme)} />
         </div>
       </div>

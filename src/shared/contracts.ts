@@ -27,6 +27,8 @@ export interface ExtensionStatus {
   modelId: string;
 }
 
+export type ExtensionErrorCode = "CONFIG_REQUIRED" | "DISABLED" | "API_ERROR" | "FORBIDDEN" | "INVALID_REQUEST";
+
 export type ExtensionRequest =
   | { type: "GET_STATUS" }
   | { type: "REVIEW_POSTS"; surface: FilterSurface; posts: PostInput[] }
@@ -54,4 +56,4 @@ export type ExtensionResponse =
   | { ok: true; cleared: true }
   | { ok: true; updated: true }
   | { ok: true; providerSummaries: ProviderSummary[] }
-  | { ok: false; code: "CONFIG_REQUIRED" | "DISABLED" | "API_ERROR" | "FORBIDDEN" | "INVALID_REQUEST"; error: string };
+  | { ok: false; code: ExtensionErrorCode; error: string };

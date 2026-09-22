@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { secondaryButton } from "../../../ui/styles";
+import { useI18n } from "../../../ui/i18n";
 
 export function ClearActivityDialog({ busy, onClear }: { busy: boolean; onClear: () => Promise<void> }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const cancelButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -16,7 +18,7 @@ export function ClearActivityDialog({ busy, onClear }: { busy: boolean; onClear:
   return (
     <>
       <button className={`${secondaryButton} text-danger`} type="button" disabled={busy} onClick={() => setOpen(true)}>
-        Clear Activity Data
+        {t("activity.clearData")}
       </button>
       {open && (
         <div className="fixed inset-0 z-(--layer-dialog) grid place-items-center bg-scrim p-4" role="presentation">
@@ -27,13 +29,13 @@ export function ClearActivityDialog({ busy, onClear }: { busy: boolean; onClear:
             aria-labelledby="clear-activity-title"
           >
             <h3 id="clear-activity-title" className="text-base font-semibold">
-              Clear Activity Data?
+              {t("activity.clearTitle")}
             </h3>
-            <p className="mt-2 text-xs leading-relaxed text-muted">This action cannot be undone. It will remove:</p>
+            <p className="mt-2 text-xs leading-relaxed text-muted">{t("activity.clearWarning")}</p>
             <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-muted">
-              <li>Activity history, Heatmap and Trend data</li>
-              <li>Weekly reviews and Filter History</li>
-              <li>Total filtered count</li>
+              <li>{t("activity.clearHistory")}</li>
+              <li>{t("activity.clearWeekly")}</li>
+              <li>{t("activity.clearTotal")}</li>
             </ul>
             <div className="mt-5 flex justify-end gap-2">
               <button
@@ -43,7 +45,7 @@ export function ClearActivityDialog({ busy, onClear }: { busy: boolean; onClear:
                 disabled={busy}
                 onClick={() => setOpen(false)}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 className="min-h-9 rounded-md border border-danger-solid bg-danger-solid px-4 text-xs font-semibold text-danger-fg disabled:opacity-50"
@@ -55,7 +57,7 @@ export function ClearActivityDialog({ busy, onClear }: { busy: boolean; onClear:
                     .catch(() => undefined)
                 }
               >
-                {busy ? "Clearing…" : "Clear"}
+                {busy ? t("activity.clearing") : t("common.clear")}
               </button>
             </div>
           </section>

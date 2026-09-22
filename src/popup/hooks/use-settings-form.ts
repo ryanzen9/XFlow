@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PROVIDERS, PROVIDER_SECRETS_KEY, type ProviderId, type Theme } from "../../shared";
 import { applyTheme } from "../../ui/theme";
+import { useI18n } from "../../ui/i18n";
 import { loadSettings, saveCommentsEnabled, saveEnabled, saveTheme } from "../services/settings";
 
 export type StatusTone = "idle" | "success" | "error";
@@ -11,6 +12,7 @@ export interface FormStatus {
 }
 
 export function useSettingsForm() {
+  const { t } = useI18n();
   const [enabled, setEnabled] = useState(true);
   const [commentsEnabled, setCommentsEnabled] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
@@ -62,16 +64,16 @@ export function useSettingsForm() {
     const previousEnabled = enabled;
     setEnabled(nextEnabled);
     setEnabledPending(true);
-    setStatus({ message: nextEnabled ? "正在启用时间线过滤…" : "正在恢复被遮蔽的博文…", tone: "idle" });
+    setStatus({ message: t(nextEnabled ? "popup.timelineEnabling" : "popup.timelineRestoring"), tone: "idle" });
     try {
       await saveEnabled(nextEnabled);
       setStatus({
-        message: nextEnabled ? "时间线过滤已实时启用。" : "时间线过滤已暂停，博文正在恢复可见。",
+        message: t(nextEnabled ? "popup.timelineEnabled" : "popup.timelinePaused"),
         tone: "success",
       });
     } catch {
       setEnabled(previousEnabled);
-      setStatus({ message: "切换失败，请重试。", tone: "error" });
+      setStatus({ message: t("popup.switchFailed"), tone: "error" });
     } finally {
       setEnabledPending(false);
     }
@@ -82,16 +84,16 @@ export function useSettingsForm() {
     const previousEnabled = commentsEnabled;
     setCommentsEnabled(nextEnabled);
     setCommentsEnabledPending(true);
-    setStatus({ message: nextEnabled ? "正在启用评论区过滤…" : "正在恢复被遮蔽的评论…", tone: "idle" });
+    setStatus({ message: t(nextEnabled ? "popup.commentsEnabling" : "popup.commentsRestoring"), tone: "idle" });
     try {
       await saveCommentsEnabled(nextEnabled);
       setStatus({
-        message: nextEnabled ? "评论区过滤已实时启用。" : "评论区过滤已暂停，评论正在恢复可见。",
+        message: t(nextEnabled ? "popup.commentsEnabled" : "popup.commentsPaused"),
         tone: "success",
       });
     } catch {
       setCommentsEnabled(previousEnabled);
-      setStatus({ message: "切换失败，请重试。", tone: "error" });
+      setStatus({ message: t("popup.switchFailed"), tone: "error" });
     } finally {
       setCommentsEnabledPending(false);
     }
@@ -103,11 +105,14 @@ export function useSettingsForm() {
     applyTheme(nextTheme);
     try {
       await saveTheme(nextTheme);
-      setStatus({ message: `已切换为${nextTheme === "dark" ? "深色" : "浅色"}主题。`, tone: "success" });
+      setStatus({
+        message: t("popup.themeChanged", { theme: t(nextTheme === "dark" ? "theme.dark" : "theme.light") }),
+        tone: "success",
+      });
     } catch {
       setTheme(previous);
       applyTheme(previous);
-      setStatus({ message: "主题切换失败，请重试。", tone: "error" });
+      setStatus({ message: t("popup.themeFailed"), tone: "error" });
     }
   };
 
