@@ -1,0 +1,243 @@
+# Chrome Web Store 发布计划
+
+- 状态：规划中（Draft PR）
+- 发布分支：`codex/chrome-web-store-release`
+- 基线：`origin/main` (`754ddec`)
+- 独立工作区：`.agents/workflows/chrome-web-store-release`
+- 目标版本：`0.1.0`（首次商店发布）
+- 最后更新：2026-09-23（Asia/Shanghai）
+
+## 目标
+
+将 XFlow 以可审核、可复现、隐私披露完整的 Manifest V3 扩展提交到 Chrome Web Store，并建立后续版本可重复执行的发布流程。
+
+本 PR 负责完成代码仓库内的所有发布准备工作，并记录 Developer Dashboard 中需要填写的文案与操作步骤。注册开发者账号、支付注册费、Trader / Non-Trader 身份声明、上传凭据和最终点击发布等账号操作，由仓库所有者执行或在明确授权后执行。
+
+## 发布原则
+
+- 商店包必须由干净的 Git 提交可重复构建，ZIP 根目录直接包含 `manifest.json`。
+- 只申请当前功能必需的最小权限；开发调试权限不得进入生产包。
+- X 帖子内容、浏览活动、Provider API Key 与 S3 凭据的处理必须在 UI、隐私政策和商店 Privacy practices 中保持一致。
+- 不在仓库、日志、截图、测试、PR 或发布产物中写入真实 Provider / S3 凭据。
+- 不加载远程 JavaScript，不使用 `eval` / `new Function`；远程响应只作为数据处理。
+- `dist/`、发布 ZIP、CRX、源码映射和测试凭据不提交到 Git。
+- 每完成一个阶段，先更新本文档的进度与证据，再同步最新 `origin/main`。如主分支有新提交，使用独立 merge commit 优先合入并重新验证。
+
+## 当前基线审计
+
+- [x] `main` 已同步至 `754ddec`，包含 PR #8。
+- [x] 当前 manifest 为 V3，版本 `0.1.0`。
+- [x] `bun run check` 通过：87 tests / 312 assertions，生产构建成功。
+- [x] 构建产物未发现 `eval`、`new Function` 或远程 `<script>`。
+- [x] 当前 `dist/` 约 11 MB，其中大部分为不必上传的 source maps。
+- [ ] 发布隐私政策尚未创建和部署。
+- [ ] 商店标准尺寸图标、截图和宣传图尚未准备齐全。
+- [ ] 生产 manifest 仍包含 localhost 调试权限。
+- [ ] 尚未建立专用发布打包、产物校验和版本检查命令。
+- [ ] Chrome Web Store Developer Dashboard 尚未配置。
+
+## 关键决策
+
+以下决策必须在进入对应实现阶段前记录结论：
+
+1. **S3 权限策略**
+   - 方案 A（审核更稳）：首次商店版本移除 S3 同步及 `https://*/*` 可选权限。
+   - 方案 B（功能完整）：保留用户自定义 S3 Endpoint；只在用户主动保存设置时请求精确 Origin，并在权限说明中解释为什么必须声明通配可选权限。
+   - 无论采用哪种方案，生产包都移除 `http://localhost/*` 与 `http://127.0.0.1/*`。
+2. **发布者身份**
+   - 确认个人或组织发布者名称、联系邮箱、Trader / Non-Trader 状态与可公开展示的信息。
+3. **隐私政策托管**
+   - 推荐使用稳定的自有域名或 GitHub Pages；仓库内保留同源 Markdown 版本。
+4. **商店语言**
+   - 默认语言建议英语，并提供简体中文本地化；两个版本必须描述相同功能与数据实践。
+5. **审核测试方式**
+   - 决定是否向审核员提供低额度、可吊销的临时 Provider Key；不得使用生产凭据。
+
+## 数据与权限声明基线
+
+| 数据或权限           | 实际用途                                       | 是否离开设备                                  | 发布披露要求                           |
+| -------------------- | ---------------------------------------------- | --------------------------------------------- | -------------------------------------- |
+| X / Twitter 页面访问 | 读取可见帖子并渲染过滤遮罩                     | 帖子 ID、正文会发送到当前选中的 Provider      | Website content、Web browsing activity |
+| `storage`            | 保存设置、语言、活动、Provider Key 与 S3 配置  | 仅在用户启用相应 Provider / S3 时发送必要数据 | 说明本机存储范围与删除方式             |
+| `alarms`             | 用户启用后每 15 分钟执行 S3 同步               | 仅连接用户配置的 S3 Endpoint                  | 说明后台同步频率和关闭方式             |
+| Provider 主机权限    | 调用 OpenRouter、Vercel AI Gateway 或 TypeSafe | 帖子 ID、正文、策略名称与判断规则             | 列出第三方接收方及其用途               |
+| 可选 S3 主机权限     | 同步配置和 Activity                            | 配置、短文本预览、作者、URL、活动状态         | 说明用户主动授权、数据范围和凭据边界   |
+| Provider API Key     | 为用户选择的 Provider 请求鉴权                 | 只发送给对应 Provider                         | Authentication information             |
+| S3 凭据              | 对用户自己的 S3 请求签名                       | 签名请求只发送给所选 Endpoint                 | Authentication information             |
+
+当前代码未接入广告、遥测或开发者分析服务；发布前需要通过静态扫描再次确认。
+
+## 阶段规划
+
+### 阶段 0：发布决策与范围冻结
+
+目标：在改动 manifest 或 UI 前冻结首次发布范围。
+
+- [ ] 确认 S3 权限采用方案 A 或 B。
+- [ ] 确认发布者名称、支持邮箱、隐私政策域名与支持 URL。
+- [ ] 确认默认商店语言、发布地区和 Public / Unlisted / Private 策略。
+- [ ] 确认首次发布版本仍为 `0.1.0`。
+- [ ] 检查 “XFlow” 名称、图标和文案不会暗示获得 X Corp.、OpenRouter、Vercel 或 TypeSafe 官方授权。
+
+验收：所有决策写入本文档，不存在会改变 manifest 权限或商店文案的开放问题。
+
+### 阶段 1：生产 Manifest 与权限收敛
+
+目标：生成只包含生产功能所需权限和元数据的商店 manifest。
+
+- [ ] 移除生产包中的 localhost / 127.0.0.1 权限。
+- [ ] 按阶段 0 结论保留、收窄或移除任意 HTTPS S3 权限。
+- [ ] 为 16、32、48、128 尺寸分别提供清晰 PNG 图标，不再用 1254×1254 文件冒充全部尺寸。
+- [ ] 评估并设置 `minimum_chrome_version`；当前运行时代码使用 `toSorted`，建议最低 Chrome 110，或在构建期兼容。
+- [ ] 增加 manifest 本地化：`default_locale`、`_locales/en/messages.json`、`_locales/zh_CN/messages.json` 和 `__MSG_*__` 字段。
+- [ ] 补充 manifest / package 版本一致性检查。
+- [ ] 为权限清单增加自动化断言，阻止开发权限进入发布包。
+
+验收：Chrome 可加载生产 manifest；权限与当前功能一一对应；中英文名称和描述正确；相关测试通过。
+
+### 阶段 2：隐私披露与用户同意
+
+目标：让用户在启用 Provider 或 S3 前清楚理解数据流，并形成可公开托管的隐私政策。
+
+- [ ] 在 API Keys 页面显著说明：待判断的帖子 ID、正文和策略会通过 HTTPS 发送到选中的 Provider。
+- [ ] 说明 XFlow 开发者不接收这些数据，第三方 Provider 按各自政策处理。
+- [ ] 在 S3 页面说明同步文档包含配置和 Activity，但不包含 Provider Key 或 S3 凭据。
+- [ ] 明确 Activity 本地保留范围、30 天详情期限、12 周身份期限和清除方式。
+- [ ] 创建中英文隐私政策，覆盖收集、用途、接收方、安全、保留、删除、Limited Use 和联系方式。
+- [ ] 在 Dashboard 和 README 中提供隐私政策入口。
+- [ ] 增加针对披露文案和用户操作路径的测试。
+
+验收：UI、README、隐私政策与代码实际数据流一致；用户可在发送数据前看到说明；没有夸大“加密存储”等当前未实现能力。
+
+### 阶段 3：商店元数据与视觉素材
+
+目标：准备完整、准确且中英文一致的商店页面内容。
+
+- [ ] 编写短描述、详细描述、单一用途说明和版本说明。
+- [ ] 明确“需要用户自己的 Provider API Key，可能产生第三方费用”。
+- [ ] 添加与 X Corp. 及三个 Provider 无官方隶属关系的说明。
+- [ ] 准备至少三张 1280×800 截图：Popup、Activity Dashboard、策略编辑/遮罩效果。
+- [ ] 截图不得出现真实账号隐私、真实 Key、真实 S3 凭据或不必要的第三方个人内容。
+- [ ] 准备 128×128 商店图标和 440×280 小型宣传图。
+- [ ] 可选准备 1400×560 marquee 图；宣传图尽量避免不可本地化文字。
+- [ ] 建立 `docs/chrome-web-store/`，保存可复制到 Dashboard 的中英文文案、权限理由和素材说明。
+
+验收：商店所需素材齐全，尺寸和格式正确；列表文案与 Privacy practices、隐私政策及实际功能一致。
+
+### 阶段 4：可复现发布打包
+
+目标：通过 Bun 命令从干净提交生成唯一、可验证的上传 ZIP。
+
+- [ ] 增加 `bun run release:check`：运行完整检查并验证版本、manifest、权限、文件引用和禁用模式。
+- [ ] 增加 `bun run release:package`：清理旧产物、生产构建、排除 `.map`，生成版本化 ZIP。
+- [ ] ZIP 根目录直接包含 `manifest.json`，不能包含 `dist/` 外层目录。
+- [ ] ZIP 不包含源码、测试、`.env`、日志、浏览器 trace、真实凭据、`node_modules` 或 `.DS_Store`。
+- [ ] 输出 SHA-256 校验值和文件清单。
+- [ ] 发布 ZIP 与临时目录加入 `.gitignore`，不提交构建产物。
+- [ ] 增加 ZIP 内容测试，确保 manifest 引用的脚本、样式、图标和 HTML 全部存在。
+
+验收：在干净 checkout 中只使用 Bun 即可生成相同结构的 ZIP；解压校验与静态安全扫描通过。
+
+### 阶段 5：真实 Chrome 与安全 QA
+
+目标：验证审核员收到的精确 ZIP，而不是开发目录。
+
+- [ ] 从 ZIP 解压并以 unpacked extension 加载，记录扩展 ID 与错误状态。
+- [ ] 验证首次安装、Popup、Dashboard、中英文、Light / Dark。
+- [ ] 验证 X 首页和评论区检测、批量 Provider 请求、遮罩、揭示与错误标记。
+- [ ] 验证未配置 Key、无效 Key、401 / 403 / 429 / 5xx、超时和离线提示。
+- [ ] 验证三个 Provider，或明确商店版本实际支持范围。
+- [ ] 验证 S3 授权拒绝、启用、自动同步、停用和清除行为。
+- [ ] 验证扩展控制台无 CSP、权限、资源缺失或未处理异常。
+- [ ] 验证包内无远程代码、动态执行、开发 URL、source map 和凭据模式。
+- [ ] 完成 `bun run check` 并保存测试证据摘要。
+
+验收：精确发布包在稳定版 Chrome 中通过核心路径；所有已知限制进入发布说明或获得修复。
+
+### 阶段 6：Developer Dashboard 配置与测试提交
+
+目标：完成账号和商店条目配置，先以可控方式送审。
+
+- [ ] 注册 Chrome Web Store 开发者账号并支付页面显示的一次性费用。
+- [ ] 启用 Google 账号两步验证并验证开发者联系邮箱。
+- [ ] 完成 Trader / Non-Trader 声明及所需身份资料。
+- [ ] 创建新 Item，上传阶段 4 生成并经阶段 5 验证的 ZIP。
+- [ ] 填写 Store listing、Privacy practices、Distribution 和 Test instructions。
+- [ ] Privacy practices 申报 Website content、Web browsing activity、Authentication information 和 User activity。
+- [ ] Remote code 选择“No”；在审核备注中解释 Provider / S3 响应仅作为数据，受限 Hover CSS 经过 allowlist 校验且不执行远程 JavaScript。
+- [ ] 提供从安装、填写测试 Key 到在 X 页面触发遮罩的逐步测试说明。
+- [ ] 首次提交启用 Deferred publishing；必要时先使用 Private / Unlisted 测试可安装性。
+
+验收：Dashboard 所有必填项完成，ZIP 上传无错误，提交进入 Pending review；不自动公开发布。
+
+### 阶段 7：审核反馈闭环
+
+目标：对 Chrome Web Store 的审核问题形成可追踪的修复循环。
+
+- [ ] 将每条审核反馈原文、政策编号和对应修复记录到本文档。
+- [ ] 每轮修复前同步 `origin/main`，必要时独立 merge commit。
+- [ ] 修改包内容时递增 manifest 版本；只改商店文案时按 Dashboard 能力处理。
+- [ ] 重新执行阶段 4 和阶段 5 的全部门禁。
+- [ ] 提交新包并记录版本、Git commit、ZIP SHA-256 和提交时间。
+
+验收：状态变为 Staged / Approved，且没有未处理的政策或功能问题。
+
+### 阶段 8：正式发布与发布后验证
+
+目标：在明确批准后公开发布，并建立后续维护基线。
+
+- [ ] 获得仓库所有者对公开发布范围、地区和时间的明确确认。
+- [ ] 在批准后的 30 天有效期内执行 Publish。
+- [ ] 安装商店版本，验证版本号、权限提示、自动更新和主要功能。
+- [ ] 创建 `v0.1.0` Git Tag 与 GitHub Release，附发布说明和 ZIP SHA-256；不附带任何凭据。
+- [ ] 更新 README 商店链接、安装方式和 Roadmap 状态。
+- [ ] 记录 Chrome Web Store Item ID、公开 URL、发布时间和回滚方案。
+- [ ] 建立后续版本规则：每次更新递增版本、重新验证权限变化并经过审核。
+
+验收：商店页面可访问，商店版本安装与运行正常，仓库文档和 Release 与线上版本一致。
+
+## Chrome Web Store 字段草案
+
+### 单一用途
+
+> XFlow 在 X / Twitter 时间线和评论区中，根据用户创建的过滤规则，通过用户选择的 Jev Provider 判断可见帖子，并以可揭示的遮罩降低干扰内容的可见度。
+
+### 权限理由
+
+- `storage`：在本机保存过滤设置、策略、界面偏好、Activity、Provider Key 和可选 S3 配置。
+- `alarms`：仅在用户启用 S3 后，每 15 分钟检查一次配置与 Activity 同步。
+- `x.com` / `twitter.com`：读取用户当前看到的帖子文本并在原页面渲染可揭示遮罩。
+- Provider hosts：将需要判断的帖子文本和过滤规则发送到用户明确选择且自行提供 Key 的 Provider。
+- Optional S3 host：仅在用户主动配置并授权时访问该精确 Endpoint，用于同步配置与 Activity。
+
+### Remote code
+
+选择 **No**。所有可执行代码均包含在扩展包内。Provider 返回判断结果数据；S3 返回用户自己的配置数据。自定义 Hover CSS 仅允许固定选择器、属性和值，并在应用前进行解析、allowlist 校验和作用域隔离；不下载或执行远程 JavaScript。
+
+## 交付物
+
+- 生产级 manifest 与中英文 manifest locale。
+- 标准尺寸扩展图标和完整商店视觉素材。
+- 中英文隐私政策及稳定公开 URL。
+- 商店中英文文案、权限理由、Privacy practices 填写指南和审核测试说明。
+- 可复现 Bun 发布命令、ZIP 内容校验和安全扫描。
+- 经真实 Chrome 验证的 `0.1.0` 发布 ZIP 与 SHA-256。
+- 审核记录、最终 Item ID、商店 URL、Git Tag 和 GitHub Release。
+
+## 实时进度
+
+| 阶段                        | 状态   | 证据               |
+| --------------------------- | ------ | ------------------ |
+| 0. 发布决策与范围冻结       | 待开始 | 等待关键决策       |
+| 1. Manifest 与权限收敛      | 待开始 | —                  |
+| 2. 隐私披露与用户同意       | 待开始 | —                  |
+| 3. 商店元数据与视觉素材     | 待开始 | —                  |
+| 4. 可复现发布打包           | 待开始 | —                  |
+| 5. Chrome 与安全 QA         | 待开始 | —                  |
+| 6. Dashboard 配置与测试提交 | 待开始 | 需要开发者账号操作 |
+| 7. 审核反馈闭环             | 待开始 | 依赖商店审核       |
+| 8. 正式发布与发布后验证     | 待开始 | 需要发布者明确确认 |
+
+## 变更日志
+
+- 2026-09-23：从 `origin/main@754ddec` 创建发布分支与独立 worktree，建立首次发布规划。
