@@ -154,9 +154,12 @@ bun run typecheck       # TypeScript 静态检查
 bun test                # Bun 单元测试
 bun run build           # 构建 dist/
 bun run check           # 完整质量门禁
+bun run benchmark:cache # 测试并展示分层缓存命中率与性能影响
 bun run preview:dashboard
 bun run preview:tokens
 ```
+
+缓存基准使用固定的 80/20 合成工作负载，覆盖 Exact、Normalized、Template、Semantic 与 Miss 五类路径；本地查询耗时来自 Bun 高精度计时器，Jev 调用减少率来自真实缓存命中结果。端到端耗时对比属于单条顺序请求模型，默认假设每次 Jev 调用为 600ms，可通过 `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800` 调整；使用 `--json` 可输出机器可读结果。该脚本不会读取真实凭据或发起网络请求。
 
 Dashboard 预览使用独立的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。`bun run preview:tokens` 提供设计 token 索引页（`http://127.0.0.1:43993/`），可在浅色/深色之间切换并显示每个 token 的解析值。`scripts/qa/` 中保留关键浏览器验收流程，供 Playwright CLI 在预览环境中执行；这些脚本只断言行为，不生成或提交截图。
 
@@ -170,6 +173,8 @@ Dashboard 预览使用独立的 localStorage Mock，不读取已安装扩展的�
 │   └── design-tokens.md      # token 分层、命名与 light/dark 取值
 ├── scripts/
 │   ├── build.ts              # Bun 生产构建
+│   ├── cache-benchmark.sh    # 缓存测试与可视化基准入口
+│   ├── cache-benchmark.ts    # 基准 CLI
 │   ├── preview-dashboard.ts  # 无真实凭据的本地预览
 │   ├── preview-tokens.ts     # 设计 token 索引页
 │   └── qa/                   # 浏览器验收流程

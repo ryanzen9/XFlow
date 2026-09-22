@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "bun run scripts/build.ts",
+    "benchmark:cache": "sh scripts/cache-benchmark.sh",
     "format": "bunx oxfmt --write .",
     "format:check": "bunx oxfmt --check .",
     "lint": "bunx oxlint . --deny-warnings",
