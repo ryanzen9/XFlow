@@ -47,4 +47,23 @@ describe("post sanitization", () => {
     expect(sanitizePost({ id: " 42 ", text: "hello\n  world" })).toEqual({ id: "42", text: "hello world" });
     expect(sanitizePost({ id: "42", text: "   " })).toBeNull();
   });
+
+  test("keeps only minimal safe history metadata", () => {
+    expect(
+      sanitizePost({
+        id: "42",
+        text: "history preview",
+        author: "  @person  ",
+        url: "https://x.com/person/status/42",
+        mediaType: "image",
+      }),
+    ).toEqual({
+      id: "42",
+      text: "history preview",
+      author: "@person",
+      url: "https://x.com/person/status/42",
+      mediaType: "image",
+    });
+    expect(sanitizePost({ id: "42", text: "preview", url: "https://tracker.example/post/42" })?.url).toBeUndefined();
+  });
 });

@@ -9,3 +9,20 @@ body,
   width: 388px;
   min-height: 580px;
 }
+
+@keyframes activity-number-enter {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+.activity-number {
+  animation: activity-number-enter 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-number {
+    animation: none;
+  }
+}

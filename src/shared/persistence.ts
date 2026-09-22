@@ -1,7 +1,8 @@
 import { normalizeSettings, type AppSettings } from "./strategy";
 import { PROVIDER_SECRETS_KEY, normalizeProviderSecrets } from "./providers";
+import { ACTIVITY_DATA_KEY, normalizeActivityData, type ActivityData } from "./activity";
 
-export const CONFIG_SCHEMA_VERSION = 2;
+export const CONFIG_SCHEMA_VERSION = 3;
 export const CONFIG_VERSION_KEY = "configVersion";
 export const CONFIG_UPDATED_AT_KEY = "configUpdatedAt";
 export const S3_SYNC_KEY = "s3Sync";
@@ -11,6 +12,7 @@ export interface ConfigurationDocument {
   configVersion: number;
   updatedAt: string;
   config: AppSettings;
+  activity: ActivityData;
 }
 
 export interface S3SyncSettings {
@@ -69,14 +71,15 @@ export async function readConfigurationDocument(): Promise<ConfigurationDocument
     configVersion: positiveInteger(stored[CONFIG_VERSION_KEY], 1),
     updatedAt: timestamp(stored[CONFIG_UPDATED_AT_KEY]),
     config: normalizeSettings(stored),
+    activity: normalizeActivityData(stored[ACTIVITY_DATA_KEY]),
   };
 }
 
 export function normalizeConfigurationDocument(value: unknown): ConfigurationDocument {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("配置文档必须是 JSON 对象。");
   const input = value as Partial<ConfigurationDocument>;
-  if (input.schemaVersion !== 1 && input.schemaVersion !== CONFIG_SCHEMA_VERSION) {
-    throw new Error(`仅支持 schemaVersion 1 或 ${CONFIG_SCHEMA_VERSION}。`);
+  if (input.schemaVersion !== 1 && input.schemaVersion !== 2 && input.schemaVersion !== CONFIG_SCHEMA_VERSION) {
+    throw new Error(`仅支持 schemaVersion 1、2 或 ${CONFIG_SCHEMA_VERSION}。`);
   }
   if (!input.config || typeof input.config !== "object" || Array.isArray(input.config))
     throw new Error("config 必须是 JSON 对象。");
@@ -87,6 +90,7 @@ export function normalizeConfigurationDocument(value: unknown): ConfigurationDoc
     configVersion: positiveInteger(input.configVersion, 1),
     updatedAt: timestamp(input.updatedAt),
     config: normalizeSettings(input.config as unknown as Record<string, unknown>),
+    activity: normalizeActivityData(input.activity),
   };
 }
 
@@ -126,6 +130,7 @@ export async function applyRemoteConfiguration(document: ConfigurationDocument):
   await migrateLegacyOpenRouterKey(legacyApiKey);
   await chrome.storage.local.set({
     ...normalized.config,
+    [ACTIVITY_DATA_KEY]: normalized.activity,
     [CONFIG_VERSION_KEY]: normalized.configVersion,
     [CONFIG_UPDATED_AT_KEY]: normalized.updatedAt,
   });

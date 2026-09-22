@@ -1,5 +1,13 @@
 import { afterAll, beforeEach, expect, test } from "bun:test";
-import { normalizeSettings, synchronizeWithS3, type ConfigurationDocument, type S3SyncSettings } from "../../shared";
+import {
+  EMPTY_ACTIVITY_DATA,
+  localDayKey,
+  normalizeSettings,
+  synchronizeWithS3,
+  type ActivityEvent,
+  type ConfigurationDocument,
+  type S3SyncSettings,
+} from "../../shared";
 
 const originalChrome = globalThis.chrome;
 const originalFetch = globalThis.fetch;
@@ -23,7 +31,22 @@ const documentAt = (version: number, nickname: string): ConfigurationDocument =>
   configVersion: version,
   updatedAt: `2026-09-${String(Math.min(version, 28)).padStart(2, "0")}T00:00:00.000Z`,
   config: { ...normalizeSettings({}), modelNickname: nickname, strategies: [] },
+  activity: EMPTY_ACTIVITY_DATA,
 });
+
+const activityEvent = (id: string, deviceId: string): ActivityEvent => {
+  const filteredAt = Date.UTC(2026, 8, 22, 4);
+  return {
+    id,
+    contentId: id,
+    day: localDayKey(filteredAt),
+    filteredAt,
+    updatedAt: filteredAt,
+    deviceId,
+    surface: "timeline",
+    status: "filtered",
+  };
+};
 
 beforeEach(() => {
   storage = {};
@@ -94,7 +117,7 @@ test("pulls and applies the remote document when it has the newer version", asyn
   expect(storage.configVersion).toBe(8);
   expect(storage.modelNickname).toBe("Remote");
   expect(requests.map((request) => request.method)).toEqual(["GET", "PUT"]);
-  expect(remote?.schemaVersion).toBe(2);
+  expect(remote?.schemaVersion).toBe(3);
   expect(JSON.stringify(remote)).not.toContain("sk-or-legacy-remote");
   expect((storage.providerSecrets as { openrouter: string }).openrouter).toBe("sk-or-legacy-remote");
 });
@@ -141,4 +164,28 @@ test("automatic sync never opens a permission prompt", async () => {
   await expect(synchronizeWithS3(settings, { allowPermissionRequest: false })).rejects.toThrow("访问权限尚未授予");
   expect(permissionRequested).toBeFalse();
   expect(requests).toHaveLength(0);
+});
+
+test("merges multi-device activity by stable event id without double counting", async () => {
+  Object.assign(storage, documentAt(4, "Same").config, {
+    configVersion: 4,
+    configUpdatedAt: documentAt(4, "Same").updatedAt,
+    activityData: {
+      schemaVersion: 1,
+      clearedAt: 0,
+      events: [activityEvent("x:shared", "a"), activityEvent("x:local", "a")],
+    },
+  });
+  remote = {
+    ...documentAt(4, "Same"),
+    activity: {
+      schemaVersion: 1,
+      clearedAt: 0,
+      events: [activityEvent("x:shared", "b"), activityEvent("x:remote", "b")],
+    },
+  };
+  const result = await synchronizeWithS3(settings);
+  expect(result.document.activity.events.map(({ id }) => id).toSorted()).toEqual(["x:local", "x:remote", "x:shared"]);
+  expect(remote?.activity.events).toHaveLength(3);
+  expect((storage.activityData as { events: unknown[] }).events).toHaveLength(3);
 });
