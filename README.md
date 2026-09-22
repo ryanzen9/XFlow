@@ -187,6 +187,14 @@ bun run preview:tokens
 
 缓存基准使用固定的 80/20 合成工作负载，覆盖 Exact、Normalized、Template、Semantic 与 Miss 五类路径；本地查询耗时来自 Bun 高精度计时器，Jev 调用减少率来自真实缓存命中结果。端到端耗时对比属于单条顺序请求模型，默认假设每次 Jev 调用为 600ms，可通过 `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800` 调整；使用 `--json` 可输出机器可读结果。该脚本不会读取真实凭据或发起网络请求。
 
+真实 TypeSafe 模式通过官方 `@typesafe-ai/sdk` 对最多 5 条内置无敏感测试文本发起一次冷请求，再重复执行热缓存查询：
+
+```bash
+sh scripts/cache-benchmark.sh --live-typesafe --posts=3 --warm-runs=3
+```
+
+未设置 `TYPESAFE_API_KEY` 时，交互式终端会隐藏输入 Key；CI 可使用环境变量传入。Key 只存在于当前进程内存，不会打印、保存到扩展存储或写入报告。不要使用 `--key=...`，以免密钥进入 Shell 历史或进程列表。真实模式会产生一次 Provider 请求及相应费用；`--json` 同样可用。
+
 Dashboard 预览使用隔离的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。设计 token 索引页位于 `http://127.0.0.1:43993/`，可切换 Light / Dark 并查看解析值。
 
 ## Roadmap

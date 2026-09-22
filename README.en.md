@@ -176,6 +176,14 @@ bun run preview:tokens
 
 The cache benchmark runs a deterministic 80/20 synthetic workload across Exact, Normalized, Template, Semantic, and Miss paths. Local timings use Bun's high-resolution timer; the end-to-end comparison is an explicit sequential model with a configurable Jev latency. Run `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800`, or add `--json` for machine-readable output. It never reads credentials or makes network requests.
 
+Live TypeSafe mode uses the official `@typesafe-ai/sdk` for one cold request of up to five built-in, non-sensitive test posts, then repeats warm cache lookups:
+
+```bash
+sh scripts/cache-benchmark.sh --live-typesafe --posts=3 --warm-runs=3
+```
+
+An interactive terminal prompts for the key with hidden input when `TYPESAFE_API_KEY` is unset; CI may supply that environment variable. The key stays in process memory and is never printed, persisted, or written to reports. Do not use a `--key=...` argument, which could leak through shell history or process listings. Live mode makes one billable provider request; `--json` is also supported.
+
 The Dashboard preview uses an isolated localStorage mock. It does not read installed extension data or call a model. The token index is served at `http://127.0.0.1:43993/` and exposes resolved values in both Light and Dark themes.
 
 ## Roadmap

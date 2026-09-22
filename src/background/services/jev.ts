@@ -16,7 +16,7 @@ import {
 } from "../../shared";
 import { readableProviderError } from "../jev/errors";
 import { getJevProvider } from "../jev/provider-registry";
-import type { JevDecisionRequest } from "../jev/types";
+import type { JevDecisionRequest, JevProvider } from "../jev/types";
 import type { ExtensionSettings } from "./settings";
 import { findLocalDecision, loadDecisionLookupContext, rememberJevDecision } from "./decision-cache";
 
@@ -33,6 +33,7 @@ export async function requestPostReviews(
   settings: ExtensionSettings,
   surface: FilterSurface,
   secrets: ProviderSecrets,
+  providerOverride?: JevProvider,
 ): Promise<ExtensionResponse> {
   const enabled = surface === "timeline" ? settings.enabled : settings.commentsEnabled;
   if (!enabled) return { ok: false, code: "DISABLED", error: "XFlow 已暂停。" };
@@ -113,7 +114,7 @@ export async function requestPostReviews(
   }
   const uniqueMisses = [...missGroups.values()].map((group) => group[0]!);
 
-  const provider = getJevProvider(settings.activeProvider);
+  const provider = providerOverride ?? getJevProvider(settings.activeProvider);
   const apiKey = secrets[settings.activeProvider];
   if (!apiKey) {
     if (cachedResults.length > 0) return { ok: true, results: cachedResults };
