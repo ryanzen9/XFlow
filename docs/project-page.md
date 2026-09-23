@@ -1,6 +1,6 @@
 # Project page
 
-The project website is authored in React and TypeScript under `site/src/`. Bun server-renders the landing page and Chinese and English privacy policies into standalone HTML, then bundles the small client entry for page interactions. GitHub Pages publishes the generated `site-dist/` directory.
+The project website is authored in React and TypeScript under `src/site/`, alongside the extension's other source code. Bun server-renders the landing page and Chinese and English privacy policies into standalone HTML, then bundles the small client entry for page interactions. GitHub Pages publishes the generated `site-dist/` directory.
 
 ## Preview
 
@@ -14,10 +14,10 @@ The script builds the website before starting the local preview server. No API k
 
 ## Source and build
 
-- `site/src/app.tsx` owns the home page and policy page shell. `site/src/pages/PrivacyPolicy.tsx` contains the full Chinese and English policies as React components.
-- `site/src/components/` contains the React Refracted Beams canvas, Split Text Reveal headline, and Shimmer Button. Motion follows the shared duration and easing tokens, and respects reduced-motion settings.
-- `site/src/site.css` styles the site using the shared design tokens from `src/styles/token.css`; the three lilac beam values follow the RewampUI Refracted Beams reference.
-- `scripts/build-site.ts` renders all three pages with React DOM Server, bundles `site/src/client.tsx` with Bun, copies the shared tokens and stylesheet, and writes the old privacy route aliases.
+- `src/site/app.tsx` owns the home page and policy page shell. `src/site/pages/PrivacyPolicy.tsx` contains the full Chinese and English policies as React components.
+- `src/site/components/` contains the React Refracted Beams canvas, Split Text Reveal headline, and Shimmer Button. Motion follows the shared duration and easing tokens, and respects reduced-motion settings.
+- `src/site/site.css` styles the site using the shared design tokens from `src/styles/token.css`; the three lilac beam values follow the RewampUI Refracted Beams reference.
+- `scripts/build-site.ts` renders all three pages with React DOM Server, bundles `src/site/client.tsx` with Bun, copies the shared tokens and stylesheet, and writes the old privacy route aliases.
 - `scripts/preview-site.ts` serves the generated `site-dist/` output.
 - `.github/workflows/deploy-pages.yml` installs the locked Bun dependencies, builds the React site, and uploads `site-dist/` to GitHub Pages.
 

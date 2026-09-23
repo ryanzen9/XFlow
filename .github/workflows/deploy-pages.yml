@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "site/**"
+      - "src/site/**"
       - "src/styles/token.css"
       - "scripts/build-site.ts"
       - "package.json"

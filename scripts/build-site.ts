@@ -2,7 +2,7 @@ import { copyFile, mkdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import SiteApp, { type SitePage } from "../site/src/app";
+import SiteApp, { type SitePage } from "../src/site/app";
 
 const repositoryRoot = resolve(import.meta.dir, "..");
 const outputRoot = resolve(repositoryRoot, "site-dist");
@@ -68,12 +68,12 @@ for (const page of pages) {
 
 await Promise.all([
   copyFile(resolve(repositoryRoot, "src/styles/token.css"), resolve(assetsRoot, "tokens.css")),
-  copyFile(resolve(repositoryRoot, "site/src/site.css"), resolve(assetsRoot, "site.css")),
+  copyFile(resolve(repositoryRoot, "src/site/site.css"), resolve(assetsRoot, "site.css")),
   Bun.write(resolve(outputRoot, ".nojekyll"), ""),
 ]);
 
 const clientBuild = await Bun.build({
-  entrypoints: [resolve(repositoryRoot, "site/src/client.tsx")],
+  entrypoints: [resolve(repositoryRoot, "src/site/client.tsx")],
   outdir: assetsRoot,
   target: "browser",
   minify: true,
