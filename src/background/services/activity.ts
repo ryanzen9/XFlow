@@ -3,6 +3,7 @@ import {
   ACTIVITY_DEVICE_ID_KEY,
   activitySummary,
   canonicalPostUrl,
+  clearActivityEventDetails,
   compactActivityData,
   localDayKey,
   normalizeActivityData,
@@ -194,11 +195,33 @@ export function getActivitySnapshot(
 
 export function clearActivity(now = Date.now()): Promise<ActivityData> {
   return enqueue(async () => {
-    const activity = normalizeActivityData({ schemaVersion: 1, clearedAt: now, archivedByDevice: {}, events: [] });
+    const current = await readActivity(now);
+    const clearedAt = Math.max(now, current.clearedAt);
+    const activity = normalizeActivityData({
+      schemaVersion: 1,
+      clearedAt,
+      historyClearedAt: Math.max(clearedAt, current.historyClearedAt),
+      archivedByDevice: {},
+      events: [],
+    });
     await writeActivity(activity);
     const state = await readPageState();
     await Promise.all(Object.keys(state).map((tabId) => setBadge(Number(tabId), 0)));
     await chrome.storage.session.set({ [PAGE_ACTIVITY_KEY]: {} });
+    return activity;
+  });
+}
+
+export function clearActivityHistory(now = Date.now()): Promise<ActivityData> {
+  return enqueue(async () => {
+    const current = await readActivity(now);
+    const historyClearedAt = Math.max(now, current.historyClearedAt);
+    const activity = normalizeActivityData({
+      ...current,
+      historyClearedAt,
+      events: current.events.map((event) => clearActivityEventDetails(event, historyClearedAt)),
+    });
+    await writeActivity(activity);
     return activity;
   });
 }

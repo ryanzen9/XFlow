@@ -16,6 +16,7 @@ import {
 import { getSettings } from "./services/settings";
 import {
   clearActivity,
+  clearActivityHistory,
   getActivitySnapshot,
   markActivityStatus,
   recordFilterEvent,
@@ -146,7 +147,11 @@ export function handleMessage(
     return true;
   }
 
-  if (message.type === "GET_ACTIVITY_DATA" || message.type === "CLEAR_ACTIVITY_DATA") {
+  if (
+    message.type === "GET_ACTIVITY_DATA" ||
+    message.type === "CLEAR_ACTIVITY_DATA" ||
+    message.type === "CLEAR_ACTIVITY_HISTORY"
+  ) {
     if (!isExtensionPage(sender)) {
       sendResponse({ ok: false, code: "FORBIDDEN", error: "只有扩展页面可以读取或清除统计数据。" });
       return false;
@@ -156,7 +161,8 @@ export function handleMessage(
         .then((snapshot) => sendResponse({ ok: true, ...snapshot }))
         .catch(() => sendResponse({ ok: false, code: "API_ERROR", error: "无法读取统计数据。" }));
     } else {
-      void clearActivity()
+      const clear = message.type === "CLEAR_ACTIVITY_DATA" ? clearActivity : clearActivityHistory;
+      void clear()
         .then(() => {
           sendResponse({ ok: true, cleared: true });
           void requestAutomaticSync();

@@ -1,9 +1,14 @@
 import { expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { localDayKey, type ActivityEvent } from "../../../shared";
-import { FilterHistory } from "./FilterHistory";
+import { FilterHistory, stepHistoryPage } from "./FilterHistory";
 
-test("renders every record on a busy day", () => {
+test("steps from the visible page when history shrinks", () => {
+  expect(stepHistoryPage(6, 2, -1)).toBe(1);
+  expect(stepHistoryPage(6, 2, 1)).toBe(2);
+});
+
+test("paginates a busy day in ten-record pages", () => {
   const now = new Date(2026, 8, 22, 12).getTime();
   const history: ActivityEvent[] = Array.from({ length: 51 }, (_, index) => ({
     id: `x:${index}`,
@@ -22,6 +27,9 @@ test("renders every record on a busy day", () => {
   );
 
   expect(markup).toContain("51 条记录");
-  expect(markup).toContain("preview 50");
-  expect(markup.match(/不应被过滤/g)).toHaveLength(51);
+  expect(markup).toContain("显示 1–10，共 51 条");
+  expect(markup).toContain("第 1 / 6 页");
+  expect(markup).toContain("preview 9");
+  expect(markup).not.toContain("preview 10");
+  expect(markup.match(/不应被过滤/g)).toHaveLength(10);
 });

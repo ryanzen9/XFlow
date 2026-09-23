@@ -5,6 +5,8 @@ import { LogPanel } from "./LogPanel";
 test("log page owns the filter history record", () => {
   const markup = renderToStaticMarkup(<LogPanel />);
 
+  expect(markup).toContain("日志占用");
+  expect(markup).toContain("清理日志");
   expect(markup).toContain("过滤历史");
   expect(markup).toContain("暂无过滤历史。");
 });

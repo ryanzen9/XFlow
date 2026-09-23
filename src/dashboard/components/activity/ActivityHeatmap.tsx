@@ -18,7 +18,11 @@ export function ActivityHeatmap({ days }: { days: ActivityDay[] }) {
         <span className="text-caption text-muted">{t("activity.lessMore")}</span>
       </div>
       <div className="overflow-x-auto pb-1">
-        <div className="grid w-max grid-flow-col grid-rows-7 gap-1" role="grid" aria-label={t("activity.heatmapAria")}>
+        <div
+          className="mx-auto grid w-max grid-flow-col grid-rows-7 gap-1"
+          role="group"
+          aria-label={t("activity.heatmapAria")}
+        >
           {days.map((item) => {
             const label = t("activity.count", {
               date: dayFormatter.format(item.date),
@@ -27,9 +31,8 @@ export function ActivityHeatmap({ days }: { days: ActivityDay[] }) {
             return (
               <button
                 key={item.day}
-                className="group relative size-[13px] rounded-xs border border-line bg-canvas focus-visible:z-10 focus-visible:outline-(length:--focus-ring-width) focus-visible:outline-offset-(--focus-ring-offset) focus-visible:outline-focus data-[level='1']:bg-ink/15 data-[level='2']:bg-ink/35 data-[level='3']:bg-ink/60 data-[level='4']:bg-ink"
+                className="group relative size-6 rounded-xs border border-line bg-canvas focus-visible:z-10 focus-visible:outline-(length:--focus-ring-width) focus-visible:outline-offset-(--focus-ring-offset) focus-visible:outline-focus data-[level='1']:bg-ink/15 data-[level='2']:bg-ink/35 data-[level='3']:bg-ink/60 data-[level='4']:bg-ink"
                 type="button"
-                role="gridcell"
                 data-level={level(item.count)}
                 aria-label={label}
               >
