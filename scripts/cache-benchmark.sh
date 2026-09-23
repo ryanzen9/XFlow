@@ -17,6 +17,7 @@ printf '%s\n' "🧪 Verifying cache benchmark scenarios..." >&2
 bun test scripts/cache-benchmark.test.ts scripts/cache-live-benchmark.test.ts >&2
 
 if [ "$LIVE_TYPESAFE" = "true" ]; then
+  printf '%s\n' "⚠️  Live mode performs 4–10 real TypeSafe requests for 20–50 cold samples." >&2
   if [ -z "${TYPESAFE_API_KEY:-}" ]; then
     if [ ! -t 0 ]; then
       printf '%s\n' "TYPESAFE_API_KEY is required for --live-typesafe when stdin is not interactive." >&2
@@ -35,6 +36,8 @@ if [ "$LIVE_TYPESAFE" = "true" ]; then
     printf '\n' >&2
     export TYPESAFE_API_KEY
   fi
+  printf '%s\n' "📦 Building extension footprint baseline..." >&2
+  bun run build >&2
   printf '\n%s\n' "🌐 Running LIVE TypeSafe SDK benchmark..." >&2
   bun run scripts/cache-live-benchmark.ts "$@"
   exit $?

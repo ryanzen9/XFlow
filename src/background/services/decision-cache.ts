@@ -21,6 +21,12 @@ import {
 
 type CacheKind = "exactCache" | "normalizedCache" | "templateCache" | "semanticCache";
 
+export interface DecisionCacheStorageEstimate {
+  entries: number;
+  payloadBytes: number;
+  stores: Record<CacheKind, { entries: number; payloadBytes: number }>;
+}
+
 interface CacheEntry {
   key: string;
   policyVersion: string;
@@ -205,6 +211,21 @@ class DecisionDatabase {
     this.databasePromise = null;
     this.memory.clear();
     this.hot.clear();
+  }
+
+  estimateMemoryStorage(): DecisionCacheStorageEstimate {
+    const encoder = new TextEncoder();
+    const stores = Object.fromEntries(
+      CACHE_STORES.map((store) => {
+        const values = [...this.memoryStore(store).values()];
+        return [store, { entries: values.length, payloadBytes: encoder.encode(JSON.stringify(values)).byteLength }];
+      }),
+    ) as DecisionCacheStorageEstimate["stores"];
+    return {
+      entries: Object.values(stores).reduce((sum, store) => sum + store.entries, 0),
+      payloadBytes: Object.values(stores).reduce((sum, store) => sum + store.payloadBytes, 0),
+      stores,
+    };
   }
 }
 
@@ -589,4 +610,8 @@ export function resetDecisionCacheForTests(): void {
   cleanupAt = 0;
   userKnowledgeSignature = "";
   templateWriteQueues.clear();
+}
+
+export function estimateDecisionCacheStorageForBenchmark(): DecisionCacheStorageEstimate {
+  return database.estimateMemoryStorage();
 }
