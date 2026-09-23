@@ -1,16 +1,17 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#050508" />
     <meta name="description" content="XFlow 官网与浏览器扩展的数据处理、存储与同步说明。" />
     <title>隐私政策 — XFlow</title>
+    <link rel="stylesheet" href="./assets/tokens.css" />
     <link rel="stylesheet" href="./assets/site.css" />
   </head>
   <body>
+    <canvas class="beams" data-refracted-beams aria-hidden="true"></canvas>
     <main class="policy-page">
-      <canvas class="beams" data-refracted-beams aria-hidden="true"></canvas>
       <article class="policy" aria-labelledby="policy-title">
         <a class="back-link" href="./">← 返回 XFlow</a>
         <h1 id="policy-title">XFlow 隐私政策</h1>
@@ -112,9 +113,12 @@
             Provider Key 和 S3 凭据不会提供给 X 页面上的 Content Script，也不会写入可编辑配置 JSON 或新的 S3
             同步文档。它们在
             <code>chrome.storage.local</code>
-            中没有额外静态加密；能访问该浏览器配置文件的人可能获得这些本机数据。Provider 与正式使用的 S3 Endpoint 使用
-            HTTPS。扩展访问 X / Twitter 页面用于读取待判断内容并显示可揭示的遮罩；S3 主机访问由你在保存 Endpoint
-            时单独授权。<code>storage</code> 用于保存本机数据；<code>alarms</code> 用于启用 S3 后的定时同步。
+            中没有额外静态加密；能访问该浏览器配置文件的人可能获得这些本机数据。Provider 与 S3 Endpoint 使用 HTTPS；S3
+            校验仅允许将 <code>http://localhost</code> 与 <code>http://127.0.0.1</code> 用于本机调试。扩展访问 X /
+            Twitter 页面用于读取待判断内容并显示可揭示的遮罩；S3 主机访问由你在保存 Endpoint 时单独授权。<code
+              >storage</code
+            >
+            用于保存本机数据；<code>alarms</code> 用于启用 S3 后的定时同步。
           </p>
         </section>
 

@@ -1,6 +1,7 @@
 # Dependencies and build artifacts
 node_modules/
 dist/
+site/assets/tokens.css
 coverage/
 output/
 *.lcov

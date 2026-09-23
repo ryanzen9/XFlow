@@ -1,16 +1,17 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#050508" />
     <meta name="description" content="XFlow 使用 Jev 与自定义策略过滤 X 时间线和评论，并以可揭示的模糊遮罩降低干扰。" />
     <title>XFlow — 让 X 时间线按你的规则过滤</title>
+    <link rel="stylesheet" href="./assets/tokens.css" />
     <link rel="stylesheet" href="./assets/site.css" />
   </head>
   <body>
+    <canvas class="beams" data-refracted-beams aria-hidden="true"></canvas>
     <main class="hero">
-      <canvas class="beams" data-refracted-beams aria-hidden="true"></canvas>
       <section class="hero__content" aria-labelledby="page-title">
         <p class="eyebrow">X / 策略过滤扩展</p>
         <h1 id="page-title">让 X 时间线<br />按你的规则过滤。</h1>

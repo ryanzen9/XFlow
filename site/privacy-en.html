@@ -1,16 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#050508" />
     <meta name="description" content="How the XFlow website and browser extension process, store, and sync data." />
     <title>XFlow Privacy Policy</title>
+    <link rel="stylesheet" href="./assets/tokens.css" />
     <link rel="stylesheet" href="./assets/site.css" />
   </head>
   <body>
+    <canvas class="beams" data-refracted-beams aria-hidden="true"></canvas>
     <main class="policy-page">
-      <canvas class="beams" data-refracted-beams aria-hidden="true"></canvas>
       <article class="policy" aria-labelledby="policy-title">
         <a class="back-link" href="./">← Back to XFlow</a>
         <h1 id="policy-title">XFlow Privacy Policy</h1>
@@ -129,10 +130,11 @@
             Provider Keys and S3 credentials are not exposed to Content Scripts on X pages and are not included in
             editable configuration JSON or new S3 sync documents. They receive no additional encryption at rest in
             <code>chrome.storage.local</code>; someone with access to your browser profile may be able to obtain this
-            local data. Provider and S3 connections use HTTPS. X / Twitter page access lets the extension read posts for
-            evaluation and display revealable veils. You grant access to an S3 host separately when saving its Endpoint.
-            The <code>storage</code> permission stores local data; <code>alarms</code> supports scheduled sync after you
-            enable S3.
+            local data. Provider connections and S3 endpoints use HTTPS, except that S3 endpoint validation allows HTTP
+            for <code>localhost</code> and <code>127.0.0.1</code> for local development. X / Twitter page access lets
+            the extension read posts for evaluation and display revealable veils. You grant access to an S3 host
+            separately when saving its Endpoint. The <code>storage</code> permission stores local data;
+            <code>alarms</code> supports scheduled sync after you enable S3.
           </p>
         </section>
 

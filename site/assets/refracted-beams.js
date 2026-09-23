@@ -3,12 +3,11 @@ const context = canvas?.getContext("2d", { alpha: false });
 
 if (canvas instanceof HTMLCanvasElement && context) {
   const rootStyle = getComputedStyle(document.documentElement);
-  const colors = rootStyle
-    .getPropertyValue("--beam-rgb")
-    .trim()
-    .split("|")
-    .map((color) => color.trim());
-  const background = rootStyle.getPropertyValue("--page").trim() || "#050508";
+  const beamChannels = getComputedStyle(canvas)
+    .color.match(/[\d.]+/g)
+    ?.slice(0, 3) ?? ["255", "255", "255"];
+  const beamColor = beamChannels.join(", ");
+  const background = rootStyle.backgroundColor;
   const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
   let width = 1;
   let height = 1;
@@ -28,7 +27,7 @@ if (canvas instanceof HTMLCanvasElement && context) {
       this.headSize = 1.3 + Math.random() * 1.1;
       this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.08;
       this.opacity = 0.28 + Math.random() * 0.28;
-      this.color = colors[Math.floor(Math.random() * colors.length)] || "212,203,229";
+      this.color = beamColor;
 
       if (initial) {
         this.x = Math.random() * width;
@@ -138,7 +137,7 @@ if (canvas instanceof HTMLCanvasElement && context) {
         })
       : undefined;
 
-  observer?.observe(canvas.parentElement || canvas);
+  observer?.observe(canvas);
   window.addEventListener("resize", resize, { passive: true });
   document.addEventListener("visibilitychange", syncAnimation);
   motionPreference.addEventListener("change", syncAnimation);
