@@ -185,13 +185,28 @@ bun run preview:dashboard
 bun run preview:tokens
 ```
 
-缓存基准使用固定的 80/20 合成工作负载，覆盖 Exact、Normalized、Template、Semantic 与 Miss 五类路径；本地查询耗时来自 Bun 高精度计时器，Jev 调用减少率来自真实缓存命中结果。端到端耗时对比属于单条顺序请求模型，默认假设每次 Jev 调用为 600ms，可通过 `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800` 调整；使用 `--json` 可输出机器可读结果。该脚本不会读取真实凭据或发起网络请求。
+缓存基准的样本与探针集中在 `scripts/cache-benchmark-dataset.ts`，覆盖 Exact、Normalized、Template、Semantic 与 Miss 五类缓存路径，以及社区通知、交通、旅行、烹饪、户外、园艺、科学和中西文内容。合成工作负载保持固定的 80/20 命中与未命中比例；本地查询耗时来自 Bun 高精度计时器，Jev 调用减少率来自实际缓存命中结果。端到端耗时对比属于单条顺序请求模型，默认假设每次 Jev 调用为 600ms，可通过 `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800` 调整；使用 `--json` 可输出机器可读结果。该脚本不会读取真实凭据或发起网络请求。
 
-真实 TypeSafe 模式通过官方 `@typesafe-ai/sdk` 处理 20–50 条内置脱敏样本，并分别验证 Exact、Normalized、Template 与 Semantic 四类流量。由于生产批次上限为 5，冷阶段会产生 4–10 次真实 Provider 请求，之后使用每轮不同的探针验证缓存是否完全避免远程请求：
+真实 TypeSafe 模式通过官方 `@typesafe-ai/sdk` 处理 20–50 条内置脱敏样本，并分别验证 Exact、Normalized、Template 与 Semantic 四类流量。在交互式 TTY 中，界面会随冷请求、缓存写入和每个 warm 批次刷新，显示进行中的 SDK 请求、整体和分层缓存命中率、缓存占用与耗时；非交互运行仍在结束时输出报告，`--json` 保持纯 JSON 输出。由于生产批次上限为 5，冷阶段会产生 4–10 次真实 Provider 请求，之后使用每轮不同的探针验证缓存是否完全避免远程请求：
 
 ```bash
 sh scripts/cache-benchmark.sh --live-typesafe --samples=24 --warm-runs=3
 ```
+
+#### TypeSafe 实测效果（2026-09-23）
+
+一次 `jev-latest` 实测使用 24 条冷样本和 3 轮 warm 探针，结果如下：
+
+| 指标            |                                                 实测结果 |
+| --------------- | -------------------------------------------------------: |
+| 冷阶段          |                                   5 次 SDK 批次，2.44 秒 |
+| warm 阶段       |                  72/72 本地缓存命中，平均每轮 6.009 毫秒 |
+| 避免的 SDK 调用 |          15/20（75%）；warm 阶段的 15 次预期调用全部避免 |
+| 预期缓存层命中  | Exact、Normalized、Template、Semantic 均为 18/18（100%） |
+| 延迟变化        |                        冷阶段与 warm 单轮相比减少 99.75% |
+| 缓存载荷        |                          增加约 101.20 KiB，共 92 条记录 |
+
+这些数据来自一次实测，用于展示缓存预热后的收益，不代表所有 Provider 延迟。`Traffic-type accuracy` 衡量探针是否命中预期缓存层，不代表模型分类准确率；本轮 `blur` / `allow` 分布和 56.9% 平均概率也没有人工标签作为正确性基准。报告中的 3.5% 是缓存载荷相对 2.86 MiB 运行时扩展文件的比例；缓存字节数为序列化载荷估算，不等同于浏览器实际磁盘占用。
 
 未设置 `TYPESAFE_API_KEY` 时，交互式终端会隐藏输入 Key；CI 可使用环境变量传入。Key 只存在于当前进程内存，不会打印、保存到扩展存储或写入报告。不要使用 `--key=...`，以免密钥进入 Shell 历史或进程列表。报告包含各类型命中率、SDK 调用减少率、真实延迟、构建包逻辑体积，以及缓存 IndexedDB 序列化载荷的前后变化；浏览器文件系统开销会因平台而异。`--posts=20..50` 仍作为 `--samples` 的兼容别名，`--json` 可输出机器可读结果。
 

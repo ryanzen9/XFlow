@@ -3,8 +3,10 @@ import { createTypeSafeProvider } from "../src/background/jev/providers/typesafe
 import {
   buildLiveDataset,
   parseLiveBenchmarkArgs,
+  renderLiveTypeSafeProgress,
   renderLiveTypeSafeBenchmark,
   runLiveTypeSafeBenchmark,
+  type LiveBenchmarkProgress,
 } from "./cache-live-benchmark";
 
 function fixtureProvider(onNetworkCall?: () => void) {
@@ -35,6 +37,10 @@ describe("live TypeSafe cache benchmark", () => {
     expect(new Set(dataset.probes(0).map(({ scenario }) => scenario))).toEqual(
       new Set(["exact-cache", "normalized-cache", "template-cache", "semantic-cache"]),
     );
+    expect(new Set(dataset.probes(0).map(({ contentType }) => contentType)).size).toBeGreaterThanOrEqual(8);
+    expect(new Set(dataset.seeds.map(({ text }) => text)).size).toBe(dataset.seeds.length);
+    expect(dataset.seeds.some(({ text }) => /[\u3400-\u9fff]/u.test(text))).toBe(true);
+    expect(dataset.seeds.some(({ text }) => /\bEl\b|\bAviso\b/u.test(text))).toBe(true);
     expect(maximumDataset.seeds).toHaveLength(50);
     expect(maximumDataset.probes(19)).toHaveLength(50);
     expect(maximumDataset.scenarioCounts).toEqual({
@@ -47,6 +53,7 @@ describe("live TypeSafe cache benchmark", () => {
 
   test("uses the official SDK only for cold batches and attributes every warm cache layer", async () => {
     let networkCalls = 0;
+    const progress: LiveBenchmarkProgress[] = [];
     const result = await runLiveTypeSafeBenchmark({
       apiKey: "fixture-typesafe-key",
       samples: 20,
@@ -55,6 +62,7 @@ describe("live TypeSafe cache benchmark", () => {
         networkCalls += 1;
       }),
       extensionFootprint: { packageBytes: 2_000_000, sourceMapBytes: 8_000_000, files: 12 },
+      onProgress: (snapshot) => progress.push(snapshot),
     });
 
     expect(networkCalls).toBe(4);
@@ -66,6 +74,13 @@ describe("live TypeSafe cache benchmark", () => {
     expect(result.footprint.cacheDeltaBytes).toBeGreaterThan(0);
     expect(result.footprint.cacheAfter.entries).toBeGreaterThanOrEqual(60);
     expect(result.footprint.combinedGrowthRate).toBeGreaterThan(0);
+    expect(progress.map(({ stage }) => stage)).toContain("cold");
+    expect(progress.map(({ stage }) => stage)).toContain("seed");
+    expect(progress.map(({ stage }) => stage)).toContain("warm");
+    expect(progress.at(-1)).toMatchObject({ stage: "complete", warmCompleted: 60, warmHits: 60 });
+    expect(progress.some(({ inFlightSdkCalls }) => inFlightSdkCalls > 0)).toBe(true);
+    expect(progress.filter(({ stage }) => stage === "warm")).toHaveLength(12);
+    expect(renderLiveTypeSafeProgress(progress.at(-1)!, 12_500)).toContain("Warm cache hits: 100.0%");
   });
 
   test("never renders the API key and shows performance, traffic and footprint metrics", async () => {

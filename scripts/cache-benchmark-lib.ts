@@ -1,22 +1,15 @@
-import type { DecisionSource } from "../src/shared";
 import {
   findLocalDecision,
   rememberJevDecision,
   resetDecisionCacheForTests,
 } from "../src/background/services/decision-cache";
+import { buildBenchmarkDataset, type BenchmarkLayer, type BenchmarkQuery } from "./cache-benchmark-dataset";
 
-export type BenchmarkLayer =
-  | Extract<DecisionSource, "exact-cache" | "normalized-cache" | "template-cache" | "semantic-cache">
-  | "miss";
+export type { BenchmarkLayer, BenchmarkQuery } from "./cache-benchmark-dataset";
 
 export interface BenchmarkOptions {
   requests: number;
   providerLatencyMs: number;
-}
-
-export interface BenchmarkQuery {
-  text: string;
-  expected: BenchmarkLayer;
 }
 
 export interface CacheBenchmarkResult {
@@ -58,26 +51,6 @@ const emptyCounts = (): Record<BenchmarkLayer, number> => ({
   miss: 0,
 });
 
-function queryCounts(requests: number): Record<BenchmarkLayer, number> {
-  const counts = emptyCounts();
-  counts["exact-cache"] = Math.floor(requests * 0.35);
-  counts["normalized-cache"] = Math.floor(requests * 0.2);
-  counts["template-cache"] = Math.floor(requests * 0.15);
-  counts["semantic-cache"] = Math.floor(requests * 0.1);
-  counts.miss = requests - Object.values(counts).reduce((sum, count) => sum + count, 0);
-  return counts;
-}
-
-function shuffle<T>(values: T[]): T[] {
-  let state = 0x78666c6f;
-  for (let index = values.length - 1; index > 0; index -= 1) {
-    state = (Math.imul(state, 1_664_525) + 1_013_904_223) >>> 0;
-    const target = state % (index + 1);
-    [values[index], values[target]] = [values[target]!, values[index]!];
-  }
-  return values;
-}
-
 function percentile(values: number[], quantile: number): number {
   if (values.length === 0) return 0;
   const sorted = values.toSorted((left, right) => left - right);
@@ -112,71 +85,8 @@ function installChromeStorageMock(): { restore: () => void } {
   };
 }
 
-function exactText(family: number): string {
-  return `Breaking offer cohort-${family}: guaranteed reward today`;
-}
-
-function normalizedSeed(family: number): string {
-  return `LIMITED   OFFER COHORT ${family}!!!`;
-}
-
-function normalizedQuery(family: number): string {
-  return `limited offer cohort ${family}!`;
-}
-
-function templateText(family: number, ticker: string, bonus: number): string {
-  return `Campaign cohort-${family}: buy $${ticker} now for ${bonus}% bonus`;
-}
-
-function semanticTexts(family: number): [string, string, string, string] {
-  const suffix = `cohort alpha${family}`;
-  return [
-    `urgent crypto promotion claim your guaranteed bonus reward from verified sponsor today ${suffix}`,
-    `urgent crypto campaign claim your guaranteed bonus reward from verified partner today ${suffix}`,
-    `urgent crypto promotion collect your guaranteed bonus reward from verified partner today ${suffix}`,
-    `urgent crypto promotion claim your guaranteed bonus reward from verified partner today ${suffix}`,
-  ];
-}
-
 export function buildBenchmarkQueries(requests: number): BenchmarkQuery[] {
-  const safeRequests = Math.max(20, Math.floor(requests));
-  const families = Math.min(24, Math.max(4, Math.ceil(safeRequests / 50)));
-  const counts = queryCounts(safeRequests);
-  const queries: BenchmarkQuery[] = [];
-  const add = (layer: BenchmarkLayer, count: number, text: (index: number, family: number) => string) => {
-    for (let index = 0; index < count; index += 1) {
-      queries.push({ expected: layer, text: text(index, index % families) });
-    }
-  };
-  add("exact-cache", counts["exact-cache"], (_index, family) => exactText(family));
-  add("normalized-cache", counts["normalized-cache"], (_index, family) => normalizedQuery(family));
-  add("template-cache", counts["template-cache"], (_index, family) => templateText(family, "SOL", 20));
-  add("semantic-cache", counts["semantic-cache"], (_index, family) => semanticTexts(family)[3]);
-  add("miss", counts.miss, (index) => `family hiking journal entry ${index}: mountain photos and picnic notes`);
-  return shuffle(queries);
-}
-
-async function seedBenchmark(requests: number): Promise<number> {
-  const families = Math.min(24, Math.max(4, Math.ceil(requests / 50)));
-  let seeds = 0;
-  for (let family = 0; family < families; family += 1) {
-    const semantic = semanticTexts(family);
-    const samples = [
-      exactText(family),
-      normalizedSeed(family),
-      templateText(family, "DOGE", 100),
-      templateText(family, "PEPE", 50),
-      semantic[0],
-      semantic[1],
-      semantic[2],
-    ];
-    for (const text of samples) {
-      await rememberJevDecision(text, POLICY, "blur", 0.97, "benchmark-strategy", NOW);
-      seeds += 1;
-    }
-  }
-  await Promise.resolve();
-  return seeds;
+  return buildBenchmarkDataset(requests).queries;
 }
 
 export async function runCacheBenchmark(options: BenchmarkOptions): Promise<CacheBenchmarkResult> {
@@ -185,10 +95,14 @@ export async function runCacheBenchmark(options: BenchmarkOptions): Promise<Cach
   const chromeMock = installChromeStorageMock();
   resetDecisionCacheForTests();
   try {
+    const dataset = buildBenchmarkDataset(requests);
     const seedStarted = Bun.nanoseconds();
-    const seedEntries = await seedBenchmark(requests);
+    for (const text of dataset.seeds) {
+      await rememberJevDecision(text, POLICY, "blur", 0.97, "benchmark-strategy", NOW);
+    }
+    const seedEntries = dataset.seeds.length;
     const seedTotalMs = elapsedMs(seedStarted);
-    const queries = buildBenchmarkQueries(requests);
+    const queries = dataset.queries;
     const counts = emptyCounts();
     const expectedCounts = emptyCounts();
     const latencies: number[] = [];

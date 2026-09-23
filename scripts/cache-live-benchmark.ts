@@ -13,15 +13,13 @@ import {
   MAX_BATCH_SIZE,
   normalizeSettings,
   policyVersion,
-  type DecisionSource,
   type ExtensionResponse,
   type PostInput,
   type ProviderSecrets,
   type ReviewResult,
 } from "../src/shared";
+import { buildLiveDataset, type LiveScenario } from "./cache-benchmark-dataset";
 import { percentage, progressBar } from "./cache-benchmark-lib";
-
-type LiveScenario = Extract<DecisionSource, "exact-cache" | "normalized-cache" | "template-cache" | "semantic-cache">;
 
 interface ScenarioMetric {
   requests: number;
@@ -42,6 +40,24 @@ export interface LiveBenchmarkOptions {
   warmRuns: number;
   provider?: JevProvider;
   extensionFootprint?: ExtensionFootprint;
+  onProgress?: (progress: LiveBenchmarkProgress) => void;
+}
+
+export interface LiveBenchmarkProgress {
+  stage: "cold" | "seed" | "warm" | "complete";
+  samples: number;
+  warmRuns: number;
+  coldCompleted: number;
+  seedCompleted: number;
+  warmCompleted: number;
+  warmTotal: number;
+  warmHits: number;
+  warmRequests: number;
+  sdkCalls: number;
+  inFlightSdkCalls: number;
+  message: string;
+  cacheEstimate?: DecisionCacheStorageEstimate;
+  scenarios: Record<LiveScenario, Pick<ScenarioMetric, "requests" | "expectedHits" | "cacheHits">>;
 }
 
 export interface LiveBenchmarkResult {
@@ -84,106 +100,9 @@ interface LiveCliOptions {
   json: boolean;
 }
 
-interface LiveDataset {
-  seeds: PostInput[];
-  probes: (run: number) => Array<PostInput & { scenario: LiveScenario }>;
-  scenarioCounts: Record<LiveScenario, number>;
-}
-
 const LIVE_SCENARIOS: LiveScenario[] = ["exact-cache", "normalized-cache", "template-cache", "semantic-cache"];
 const MIN_SAMPLES = 20;
 const MAX_SAMPLES = 50;
-
-function scenarioCounts(samples: number): Record<LiveScenario, number> {
-  const base = Math.floor(samples / LIVE_SCENARIOS.length);
-  const remainder = samples % LIVE_SCENARIOS.length;
-  return Object.fromEntries(
-    LIVE_SCENARIOS.map((scenario, index) => [scenario, base + Number(index < remainder)]),
-  ) as Record<LiveScenario, number>;
-}
-
-function letters(value: number): string {
-  let remaining = value + 1;
-  let result = "";
-  while (remaining > 0) {
-    remaining -= 1;
-    result = String.fromCharCode(97 + (remaining % 26)) + result;
-    remaining = Math.floor(remaining / 26);
-  }
-  return result;
-}
-
-export function buildLiveDataset(samples: number): LiveDataset {
-  const safeSamples = Math.max(MIN_SAMPLES, Math.min(MAX_SAMPLES, Math.floor(samples)));
-  const counts = scenarioCounts(safeSamples);
-  const seeds: PostInput[] = [];
-  const seedText = new Map<string, string>();
-
-  for (let index = 0; index < counts["exact-cache"]; index += 1) {
-    const id = `seed-exact-${index}`;
-    const text = `Community bulletin ${letters(index)}: the city library extended weekend hours for local residents.`;
-    seeds.push({ id, text });
-    seedText.set(id, text);
-  }
-  for (let index = 0; index < counts["normalized-cache"]; index += 1) {
-    seeds.push({
-      id: `seed-normalized-${index}`,
-      text: `LOCAL COMMUNITY UPDATE ${letters(index)}!!!   Free museum admission this Sunday.`,
-    });
-  }
-  for (let index = 0; index < counts["template-cache"]; index += 1) {
-    seeds.push({
-      id: `seed-template-${index}`,
-      text: `Sponsored campaign: buy $TOKEN${letters(index)} now for ${101 + index}% bonus via @partner${letters(index)} https://example.com/deal/${letters(index)}?utm_source=seed`,
-    });
-  }
-  for (let index = 0; index < counts["semantic-cache"]; index += 1) {
-    seeds.push({
-      id: `seed-semantic-${index}`,
-      text: `Urgent crypto promotion claim your guaranteed bonus reward from verified sponsor today marker${letters(index)}.`,
-    });
-  }
-
-  return {
-    seeds,
-    scenarioCounts: counts,
-    probes(run) {
-      const probes: Array<PostInput & { scenario: LiveScenario }> = [];
-      for (let index = 0; index < counts["exact-cache"]; index += 1) {
-        const seedId = `seed-exact-${index}`;
-        probes.push({
-          id: `probe-exact-${run}-${index}`,
-          text: seedText.get(seedId)!,
-          scenario: "exact-cache",
-        });
-      }
-      for (let index = 0; index < counts["normalized-cache"]; index += 1) {
-        probes.push({
-          id: `probe-normalized-${run}-${index}`,
-          text: `local   community update ${letters(index)}! Free museum admission this Sunday.`,
-          scenario: "normalized-cache",
-        });
-      }
-      for (let index = 0; index < counts["template-cache"]; index += 1) {
-        const marker = letters(run * MAX_SAMPLES + index);
-        probes.push({
-          id: `probe-template-${run}-${index}`,
-          text: `Sponsored campaign: buy $LIVE${marker} now for ${501 + run * MAX_SAMPLES + index}% bonus via @affiliate${marker} https://promo.example/${marker}?ref=benchmark`,
-          scenario: "template-cache",
-        });
-      }
-      for (let index = 0; index < counts["semantic-cache"]; index += 1) {
-        const marker = letters((run + 1) * MAX_SAMPLES + index);
-        probes.push({
-          id: `probe-semantic-${run}-${index}`,
-          text: `Urgent crypto promotion claim your guaranteed bonus reward from verified sponsor today probe${marker}.`,
-          scenario: "semantic-cache",
-        });
-      }
-      return probes;
-    },
-  };
-}
 
 function installChromeStorageMock(): { restore: () => void } {
   const scope = globalThis as typeof globalThis & { chrome?: typeof chrome };
@@ -227,14 +146,26 @@ async function reviewBatches(
   secrets: ProviderSecrets,
   provider: JevProvider,
   phase: string,
+  onBatch?: (batch: PostInput[], results: ReviewResult[]) => void,
 ): Promise<ReviewResult[]> {
   const results: ReviewResult[] = [];
   for (const [index, batch] of chunks(posts, MAX_BATCH_SIZE).entries()) {
-    results.push(
-      ...resultsFrom(await requestPostReviews(batch, settings, "timeline", secrets, provider), `${phase} ${index + 1}`),
+    const batchResults = resultsFrom(
+      await requestPostReviews(batch, settings, "timeline", secrets, provider),
+      `${phase} ${index + 1}`,
     );
+    results.push(...batchResults);
+    onBatch?.(batch, batchResults);
   }
   return results;
+}
+
+export { buildLiveDataset } from "./cache-benchmark-dataset";
+
+function emptyScenarioProgress(): LiveBenchmarkProgress["scenarios"] {
+  return Object.fromEntries(
+    LIVE_SCENARIOS.map((scenario) => [scenario, { requests: 0, expectedHits: 0, cacheHits: 0 }]),
+  ) as LiveBenchmarkProgress["scenarios"];
 }
 
 async function measureExtensionFootprint(directory = "dist"): Promise<ExtensionFootprint> {
@@ -307,11 +238,44 @@ export async function runLiveTypeSafeBenchmark(options: LiveBenchmarkOptions): P
   const dataset = buildLiveDataset(samples);
   const baseProvider = options.provider ?? createTypeSafeProvider();
   let sdkCalls = 0;
+  const progress: LiveBenchmarkProgress = {
+    stage: "cold",
+    samples,
+    warmRuns,
+    coldCompleted: 0,
+    seedCompleted: 0,
+    warmCompleted: 0,
+    warmTotal: samples * warmRuns,
+    warmHits: 0,
+    warmRequests: 0,
+    sdkCalls: 0,
+    inFlightSdkCalls: 0,
+    message: "Preparing benchmark workload",
+    scenarios: emptyScenarioProgress(),
+  };
+  const publishProgress = (message?: string) => {
+    if (message) progress.message = message;
+    progress.sdkCalls = sdkCalls;
+    options.onProgress?.({
+      ...progress,
+      cacheEstimate: progress.cacheEstimate,
+      scenarios: Object.fromEntries(
+        LIVE_SCENARIOS.map((scenario) => [scenario, { ...progress.scenarios[scenario] }]),
+      ) as LiveBenchmarkProgress["scenarios"],
+    });
+  };
   const provider: JevProvider = {
     ...baseProvider,
     async evaluate(request, key) {
       sdkCalls += 1;
-      return baseProvider.evaluate(request, key);
+      progress.inFlightSdkCalls += 1;
+      publishProgress(`Sending TypeSafe request ${sdkCalls}...`);
+      try {
+        return await baseProvider.evaluate(request, key);
+      } finally {
+        progress.inFlightSdkCalls -= 1;
+        publishProgress("TypeSafe request received");
+      }
     },
   };
   const settings = normalizeSettings({
@@ -338,15 +302,22 @@ export async function runLiveTypeSafeBenchmark(options: LiveBenchmarkOptions): P
   const chromeMock = installChromeStorageMock();
   resetDecisionCacheForTests();
   try {
+    publishProgress("Measuring extension footprint");
     const extension = options.extensionFootprint ?? (await measureExtensionFootprint());
     const cacheBefore = estimateDecisionCacheStorageForBenchmark();
+    progress.cacheEstimate = cacheBefore;
+    publishProgress("Starting cold provider requests");
     const coldStarted = Bun.nanoseconds();
     const coldResults: ReviewResult[] = [];
-    for (const [index, batch] of chunks(dataset.seeds, MAX_BATCH_SIZE).entries()) {
+    const coldBatches = chunks(dataset.seeds, MAX_BATCH_SIZE);
+    for (const [index, batch] of coldBatches.entries()) {
       resetDecisionCacheForTests();
+      publishProgress(`Evaluating cold batch ${index + 1}/${coldBatches.length}`);
       coldResults.push(
         ...resultsFrom(await requestPostReviews(batch, settings, "timeline", secrets, provider), `cold ${index + 1}`),
       );
+      progress.coldCompleted += batch.length;
+      publishProgress(`Cold samples ${progress.coldCompleted}/${samples}`);
     }
     const coldElapsedMs = (Bun.nanoseconds() - coldStarted) / 1_000_000;
     const coldSdkCalls = sdkCalls;
@@ -354,19 +325,26 @@ export async function runLiveTypeSafeBenchmark(options: LiveBenchmarkOptions): P
     const currentPolicy = await policyVersion(settings, "timeline");
     const coldById = new Map(coldResults.map((result) => [result.id, result]));
     const seedStarted = Bun.nanoseconds();
-    await Promise.all(
-      dataset.seeds.map((post) => {
-        const result = coldById.get(post.id);
-        if (!result) throw new Error(`TypeSafe cold request omitted ${post.id}.`);
-        return rememberJevDecision(
-          post.text,
-          currentPolicy,
-          result.decision,
-          result.probability,
-          result.details?.strategy.id,
-        );
-      }),
-    );
+    progress.stage = "seed";
+    const seedBatches = chunks(dataset.seeds, MAX_BATCH_SIZE);
+    for (const [index, batch] of seedBatches.entries()) {
+      await Promise.all(
+        batch.map((post) => {
+          const result = coldById.get(post.id);
+          if (!result) throw new Error(`TypeSafe cold request omitted ${post.id}.`);
+          return rememberJevDecision(
+            post.text,
+            currentPolicy,
+            result.decision,
+            result.probability,
+            result.details?.strategy.id,
+          );
+        }),
+      );
+      progress.seedCompleted += batch.length;
+      progress.cacheEstimate = estimateDecisionCacheStorageForBenchmark();
+      publishProgress(`Seeding local decision cache ${index + 1}/${seedBatches.length}`);
+    }
     const seedElapsedMs = (Bun.nanoseconds() - seedStarted) / 1_000_000;
 
     const metrics = Object.fromEntries(
@@ -374,23 +352,39 @@ export async function runLiveTypeSafeBenchmark(options: LiveBenchmarkOptions): P
     ) as Record<LiveScenario, ScenarioMetric>;
     const warmElapsedMs: number[] = [];
     let warmHits = 0;
+    progress.stage = "warm";
     for (let run = 0; run < warmRuns; run += 1) {
       const probes = dataset.probes(run);
       const expectedById = new Map(probes.map(({ id, scenario }) => [id, scenario]));
+      const posts = probes.map(({ id, text }) => ({ id, text }));
       const warmStarted = Bun.nanoseconds();
-      const warmResults = await reviewBatches(probes, settings, secrets, provider, `warm ${run + 1}`);
-      warmElapsedMs.push((Bun.nanoseconds() - warmStarted) / 1_000_000);
-      for (const result of warmResults) {
-        const expected = expectedById.get(result.id);
-        if (!expected) continue;
-        const metric = metrics[expected];
-        metric.requests += 1;
-        if (result.source !== "jev") {
-          metric.cacheHits += 1;
-          warmHits += 1;
+      const warmBatchCount = Math.ceil(posts.length / MAX_BATCH_SIZE);
+      let completedRunBatches = 0;
+      await reviewBatches(posts, settings, secrets, provider, `warm ${run + 1}`, (_batch, batchResults) => {
+        for (const result of batchResults) {
+          const expected = expectedById.get(result.id);
+          if (!expected) continue;
+          const metric = metrics[expected];
+          metric.requests += 1;
+          progress.scenarios[expected].requests += 1;
+          if (result.source !== "jev") {
+            metric.cacheHits += 1;
+            progress.scenarios[expected].cacheHits += 1;
+            warmHits += 1;
+            progress.warmHits += 1;
+          }
+          if (result.source === expected) {
+            metric.expectedHits += 1;
+            progress.scenarios[expected].expectedHits += 1;
+          }
+          progress.warmRequests += 1;
+          progress.warmCompleted += 1;
         }
-        if (result.source === expected) metric.expectedHits += 1;
-      }
+        completedRunBatches += 1;
+        progress.cacheEstimate = estimateDecisionCacheStorageForBenchmark();
+        publishProgress(`Warm round ${run + 1}/${warmRuns} · batch ${completedRunBatches}/${warmBatchCount}`);
+      });
+      warmElapsedMs.push((Bun.nanoseconds() - warmStarted) / 1_000_000);
     }
     for (const metric of Object.values(metrics)) {
       metric.hitRate = metric.requests > 0 ? metric.expectedHits / metric.requests : 0;
@@ -401,6 +395,9 @@ export async function runLiveTypeSafeBenchmark(options: LiveBenchmarkOptions): P
     const baselineCalls = Math.ceil(samples / MAX_BATCH_SIZE) * (warmRuns + 1);
     const sdkCallsAvoided = Math.max(0, baselineCalls - sdkCalls);
     const cacheAfter = estimateDecisionCacheStorageForBenchmark();
+    progress.stage = "complete";
+    progress.cacheEstimate = cacheAfter;
+    publishProgress("Benchmark complete");
     const cacheDeltaBytes = Math.max(0, cacheAfter.payloadBytes - cacheBefore.payloadBytes);
     return {
       mode: "live-typesafe",
@@ -484,10 +481,91 @@ export function renderLiveTypeSafeBenchmark(result: LiveBenchmarkResult): string
   ].join("\n");
 }
 
+export function renderLiveTypeSafeProgress(progress: LiveBenchmarkProgress, elapsedMs: number, frame = 0): string {
+  const phase =
+    progress.stage === "cold"
+      ? { label: "Cold TypeSafe requests", completed: progress.coldCompleted, total: progress.samples }
+      : progress.stage === "seed"
+        ? { label: "Local cache seed", completed: progress.seedCompleted, total: progress.samples }
+        : progress.stage === "warm"
+          ? { label: "Warm cache probes", completed: progress.warmCompleted, total: progress.warmTotal }
+          : { label: "Benchmark", completed: 1, total: 1 };
+  const phaseRate = phase.total > 0 ? phase.completed / phase.total : 0;
+  const hitRate = progress.warmRequests > 0 ? progress.warmHits / progress.warmRequests : 0;
+  const cache = progress.cacheEstimate;
+  const cacheRows: Array<[string, LiveScenario]> = [
+    ["Exact", "exact-cache"],
+    ["Normalized", "normalized-cache"],
+    ["Template", "template-cache"],
+    ["Semantic", "semantic-cache"],
+  ];
+  const spinner = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"][frame % 10];
+  return [
+    "XFlow live TypeSafe cache benchmark",
+    "🔴 LIVE · real TypeSafe requests · API key remains in memory",
+    "",
+    `${spinner} ${phase.label} ${phase.completed}/${phase.total} ${progressBar(phaseRate)}`,
+    `Status: ${progress.message}`,
+    `Elapsed: ${duration(elapsedMs)} · SDK calls: ${progress.sdkCalls} · in flight: ${progress.inFlightSdkCalls}`,
+    `Cold results: ${progress.coldCompleted}/${progress.samples} · cache seeded: ${progress.seedCompleted}/${progress.samples}`,
+    `Warm cache hits: ${percentage(hitRate)} ${progressBar(hitRate)} ${progress.warmHits}/${progress.warmRequests}`,
+    "",
+    "Cache application by traffic type",
+    ...cacheRows.map(([label, scenario]) => {
+      const metric = progress.scenarios[scenario];
+      const rate = metric.requests > 0 ? metric.expectedHits / metric.requests : 0;
+      return `${label.padEnd(12)} ${percentage(rate).padStart(6)} ${progressBar(rate, 16)} ${metric.expectedHits}/${metric.requests} expected · ${metric.cacheHits} cache hits`;
+    }),
+    "",
+    cache
+      ? `Cache payload: ${bytes(cache.payloadBytes)} · ${cache.entries} records · exact ${cache.stores.exactCache.entries}, normalized ${cache.stores.normalizedCache.entries}, template ${cache.stores.templateCache.entries}, semantic ${cache.stores.semanticCache.entries}`
+      : "Cache payload: measuring baseline",
+    `Workload: ${progress.samples} differentiated samples · ${progress.warmRuns} warm rounds`,
+  ].join("\n");
+}
+
+function createTerminalProgressUI() {
+  const started = Bun.nanoseconds();
+  let snapshot: LiveBenchmarkProgress | undefined;
+  let frame = 0;
+  let stopped = false;
+  const redraw = () => {
+    if (!snapshot || stopped) return;
+    frame += 1;
+    const elapsed = (Bun.nanoseconds() - started) / 1_000_000;
+    process.stdout.write(`\u001b[H\u001b[J${renderLiveTypeSafeProgress(snapshot, elapsed, frame)}\n`);
+  };
+  process.stdout.write("\u001b[?25l\u001b[2J");
+  const timer = setInterval(redraw, 150);
+  return {
+    update(progress: LiveBenchmarkProgress) {
+      snapshot = progress;
+      redraw();
+    },
+    stop() {
+      if (stopped) return;
+      stopped = true;
+      clearInterval(timer);
+      process.stdout.write("\u001b[?25h\u001b[H\u001b[J");
+    },
+  };
+}
+
 if (import.meta.main) {
   const cli = parseLiveBenchmarkArgs(Bun.argv.slice(2));
   const apiKey = process.env.TYPESAFE_API_KEY ?? "";
-  const result = await runLiveTypeSafeBenchmark({ apiKey, samples: cli.samples, warmRuns: cli.warmRuns });
+  const tui = !cli.json && process.stdout.isTTY && process.env.TERM !== "dumb" ? createTerminalProgressUI() : undefined;
+  let result: LiveBenchmarkResult;
+  try {
+    result = await runLiveTypeSafeBenchmark({
+      apiKey,
+      samples: cli.samples,
+      warmRuns: cli.warmRuns,
+      onProgress: tui?.update,
+    });
+  } finally {
+    tui?.stop();
+  }
   console.log(cli.json ? JSON.stringify(result, null, 2) : renderLiveTypeSafeBenchmark(result));
   const allExpectedLayersHit = Object.values(result.warm.scenarios).every(({ hitRate }) => hitRate === 1);
   if (result.warm.sdkCalls !== 0 || result.warm.hitRate !== 1 || !allExpectedLayersHit) process.exitCode = 1;

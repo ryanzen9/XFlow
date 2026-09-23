@@ -6,6 +6,7 @@ import {
   renderCacheBenchmark,
   runCacheBenchmark,
 } from "./cache-benchmark-lib";
+import { buildBenchmarkDataset } from "./cache-benchmark-dataset";
 import { parseCacheBenchmarkArgs } from "./cache-benchmark";
 
 describe("cache benchmark report", () => {
@@ -17,7 +18,16 @@ describe("cache benchmark report", () => {
     expect(queries.filter(({ expected }) => expected === "template-cache")).toHaveLength(15);
     expect(queries.filter(({ expected }) => expected === "semantic-cache")).toHaveLength(10);
     expect(queries.filter(({ expected }) => expected === "miss")).toHaveLength(20);
+    expect(new Set(queries.map(({ contentType }) => contentType)).size).toBeGreaterThanOrEqual(8);
     expect(buildBenchmarkQueries(100)).toEqual(queries);
+  });
+
+  test("keeps diversified seed and probe data in the standalone dataset", () => {
+    const dataset = buildBenchmarkDataset(100);
+    expect(dataset.queries).toHaveLength(100);
+    expect(dataset.seeds.length).toBeGreaterThan(50);
+    expect(dataset.queries.some(({ text }) => /[\u3400-\u9fff]/u.test(text))).toBe(true);
+    expect(dataset.queries.some(({ text }) => /\bEl\b|\bAviso\b/u.test(text))).toBe(true);
   });
 
   test("measures every intended cache layer without making network requests", async () => {
