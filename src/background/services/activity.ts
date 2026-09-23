@@ -194,11 +194,26 @@ export function getActivitySnapshot(
 
 export function clearActivity(now = Date.now()): Promise<ActivityData> {
   return enqueue(async () => {
-    const activity = normalizeActivityData({ schemaVersion: 1, clearedAt: now, archivedByDevice: {}, events: [] });
+    const activity = normalizeActivityData({
+      schemaVersion: 1,
+      clearedAt: now,
+      historyClearedAt: now,
+      archivedByDevice: {},
+      events: [],
+    });
     await writeActivity(activity);
     const state = await readPageState();
     await Promise.all(Object.keys(state).map((tabId) => setBadge(Number(tabId), 0)));
     await chrome.storage.session.set({ [PAGE_ACTIVITY_KEY]: {} });
+    return activity;
+  });
+}
+
+export function clearActivityHistory(now = Date.now()): Promise<ActivityData> {
+  return enqueue(async () => {
+    const current = await readActivity(now);
+    const activity = normalizeActivityData({ ...current, historyClearedAt: now });
+    await writeActivity(activity);
     return activity;
   });
 }

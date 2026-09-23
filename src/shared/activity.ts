@@ -30,6 +30,7 @@ export interface ActivityEvent {
 export interface ActivityData {
   schemaVersion: 1;
   clearedAt: number;
+  historyClearedAt: number;
   archivedByDevice: Record<string, number>;
   events: ActivityEvent[];
 }
@@ -54,7 +55,13 @@ export interface WeeklyActivity {
   mostActive?: ActivityDay;
 }
 
-export const EMPTY_ACTIVITY_DATA: ActivityData = { schemaVersion: 1, clearedAt: 0, archivedByDevice: {}, events: [] };
+export const EMPTY_ACTIVITY_DATA: ActivityData = {
+  schemaVersion: 1,
+  clearedAt: 0,
+  historyClearedAt: 0,
+  archivedByDevice: {},
+  events: [],
+};
 
 function finiteTimestamp(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : null;
@@ -169,16 +176,30 @@ function mergeEvent(left: ActivityEvent, right: ActivityEvent): ActivityEvent {
 export function normalizeActivityData(value: unknown): ActivityData {
   const input = value && typeof value === "object" && !Array.isArray(value) ? (value as Partial<ActivityData>) : {};
   const clearedAt = finiteTimestamp(input.clearedAt) ?? 0;
+  const historyClearedAt = Math.max(clearedAt, finiteTimestamp(input.historyClearedAt) ?? 0);
   const byId = new Map<string, ActivityEvent>();
   for (const raw of Array.isArray(input.events) ? input.events : []) {
-    const event = normalizeActivityEvent(raw);
+    let event = normalizeActivityEvent(raw);
     if (!event || event.filteredAt <= clearedAt) continue;
+    if (event.filteredAt <= historyClearedAt) {
+      event = {
+        id: event.id,
+        contentId: event.contentId,
+        day: event.day,
+        filteredAt: event.filteredAt,
+        updatedAt: Math.max(event.updatedAt, historyClearedAt),
+        deviceId: event.deviceId,
+        surface: event.surface,
+        status: event.status,
+      };
+    }
     const previous = byId.get(event.id);
     byId.set(event.id, previous ? mergeEvent(previous, event) : event);
   }
   return {
     schemaVersion: 1,
     clearedAt,
+    historyClearedAt,
     archivedByDevice: normalizeArchive(input.archivedByDevice),
     events: [...byId.values()].toSorted(
       (left, right) => right.filteredAt - left.filteredAt || left.id.localeCompare(right.id),
@@ -190,6 +211,7 @@ export function mergeActivityData(left: ActivityData, right: ActivityData, now =
   const normalizedLeft = normalizeActivityData(left);
   const normalizedRight = normalizeActivityData(right);
   const clearedAt = Math.max(normalizedLeft.clearedAt, normalizedRight.clearedAt);
+  const historyClearedAt = Math.max(normalizedLeft.historyClearedAt, normalizedRight.historyClearedAt);
   const archivedByDevice = mergeArchives(
     normalizedLeft.clearedAt === clearedAt ? normalizedLeft.archivedByDevice : {},
     normalizedRight.clearedAt === clearedAt ? normalizedRight.archivedByDevice : {},
@@ -198,6 +220,7 @@ export function mergeActivityData(left: ActivityData, right: ActivityData, now =
     normalizeActivityData({
       schemaVersion: 1,
       clearedAt,
+      historyClearedAt,
       archivedByDevice,
       events: [...normalizedLeft.events, ...normalizedRight.events],
     }),
@@ -234,6 +257,7 @@ export function compactActivityData(data: ActivityData, now = Date.now()): Activ
   return normalizeActivityData({
     schemaVersion: 1,
     clearedAt: normalized.clearedAt,
+    historyClearedAt: normalized.historyClearedAt,
     archivedByDevice,
     events,
   });

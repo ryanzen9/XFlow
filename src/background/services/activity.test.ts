@@ -1,7 +1,8 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { activitySummary, type ActivityData } from "../../shared";
+import { activityHistory, activitySummary, type ActivityData } from "../../shared";
 import {
   clearActivity,
+  clearActivityHistory,
   getActivitySnapshot,
   markActivityStatus,
   recordFilterEvent,
@@ -155,5 +156,26 @@ describe("activity service", () => {
     const cleared = await clearActivity(100);
     expect(activitySummary(cleared, 101)).toEqual({ today: 0, allTime: 0 });
     expect((local.activityData as ActivityData).clearedAt).toBe(100);
+  });
+
+  test("clears log details while preserving activity totals", async () => {
+    const recordedAt = Date.UTC(2026, 8, 22, 10);
+    await recordFilterEvent(
+      {
+        post: { id: "11", text: "Private preview", author: "@person", url: "https://x.com/person/status/11" },
+        surface: "timeline",
+        pageToken: "a",
+        tabId: 1,
+        policyName: "Noise",
+      },
+      recordedAt,
+    );
+
+    const cleared = await clearActivityHistory(recordedAt + 1);
+
+    expect(activitySummary(cleared, recordedAt + 1).allTime).toBe(1);
+    expect(activityHistory(cleared, recordedAt + 1)).toEqual([]);
+    expect(cleared.historyClearedAt).toBe(recordedAt + 1);
+    expect(cleared.events[0]).not.toHaveProperty("preview");
   });
 });

@@ -74,6 +74,7 @@ ConfigurationDocument
 ├── config
 └── activity
     ├── clearedAt
+    ├── historyClearedAt
     └── events[]
 ```
 
@@ -81,7 +82,7 @@ Popup 与 Dashboard 的界面语言使用独立的本机键 `xflow.uiLocale`。�
 
 语言切换只重新渲染界面文案，不触发配置或 S3 的重新读取，因此 Data 页面中的未保存草稿保持原样。共享校验器和后台服务可以保留内部错误语义，但 UI 必须通过已知错误映射或 locale-neutral code 选择当前语言的用户文案；不得直接显示后台返回的中文错误字符串。
 
-Activity 事件 ID 来自稳定 X 内容 ID；没有稳定 ID 时优先使用移除查询参数与锚点后的 canonical URL，最后才使用作者与文本的 SHA-256。Today、Heatmap 和 Trend 从近期去重事件派生，因此刷新、DOM 重建、路由切换和重复同步不会增加累计值。详情字段在 30 天后压缩；事件身份在 12 周后折叠为按设备单调合并的紧凑计数，避免本地存储无限增长，同时维持 All Time。`clearedAt` 墓碑防止多设备同步恢复已清除事件。
+Activity 事件 ID 来自稳定 X 内容 ID；没有稳定 ID 时优先使用移除查询参数与锚点后的 canonical URL，最后才使用作者与文本的 SHA-256。Today、Heatmap 和 Trend 从近期去重事件派生，因此刷新、DOM 重建、路由切换和重复同步不会增加累计值。详情字段在 30 天后压缩；事件身份在 12 周后折叠为按设备单调合并的紧凑计数，避免本地存储无限增长，同时维持 All Time。日志页可以单独清除作者、摘要、原文链接与命中策略而保留统计；`historyClearedAt` 墓碑确保旧的同步副本不会恢复这些详情，`clearedAt` 墓碑则防止多设备同步恢复已完全清除的事件。
 
 Toolbar Badge 与全局统计分离。后台在 `chrome.storage.session` 中按 Tab 保存页面 token 与本页已见事件 ID；新页面或刷新创建新 token 并清零，Tab 间计数互不影响，0 使用空 Badge。
 

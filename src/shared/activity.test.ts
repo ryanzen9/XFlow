@@ -82,6 +82,29 @@ describe("activity data", () => {
     expect(activitySummary(merged, at(20)).allTime).toBe(1);
   });
 
+  test("uses the newest history clear marker without removing daily statistics", () => {
+    const local = normalizeActivityData({
+      historyClearedAt: at(19),
+      events: [event("x:old", 18), event("x:new", 20)],
+    });
+    const remote = normalizeActivityData({
+      events: [
+        event("x:old", 18, { deviceId: "device-b", status: "incorrect" }),
+        event("x:remote-new", 20, { deviceId: "device-b" }),
+      ],
+    });
+
+    const merged = mergeActivityData(local, remote, at(20));
+
+    expect(activitySummary(merged, at(20))).toEqual({ today: 2, allTime: 3 });
+    expect(
+      activityHistory(merged, at(20))
+        .map(({ id }) => id)
+        .toSorted(),
+    ).toEqual(["x:new", "x:remote-new"]);
+    expect(merged.events.find(({ id }) => id === "x:old")?.preview).toBeUndefined();
+  });
+
   test("keeps all-time aggregates when 30-day history details expire", () => {
     const now = at(22);
     const old = event("x:old", 1, { filteredAt: new Date(2026, 6, 1).getTime(), day: "2026-07-01" });

@@ -44,6 +44,7 @@ export type ExtensionRequest =
   | { type: "MARK_ACTIVITY_STATUS"; eventId: string; status: Exclude<ActivityStatus, "filtered"> }
   | { type: "GET_ACTIVITY_DATA" }
   | { type: "CLEAR_ACTIVITY_DATA" }
+  | { type: "CLEAR_ACTIVITY_HISTORY" }
   | { type: "GET_PROVIDER_SUMMARIES" }
   | { type: "SAVE_PROVIDER_KEY"; providerId: ProviderId; apiKey: string }
   | { type: "CLEAR_PROVIDER_KEY"; providerId: ProviderId };

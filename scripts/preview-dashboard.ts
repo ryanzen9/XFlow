@@ -5,11 +5,18 @@ const storageMock = `(() => {
   globalThis.chrome = {
     storage: {
       local: {
+        QUOTA_BYTES: 10 * 1024 * 1024,
         get: async (keys) => {
           const data = read();
           if (keys === null) return data;
           if (Array.isArray(keys)) return Object.fromEntries(keys.map(key => [key, data[key]]));
           return { ...keys, ...data };
+        },
+        getBytesInUse: async (keys) => {
+          const data = read();
+          const names = keys === null ? Object.keys(data) : Array.isArray(keys) ? keys : [keys];
+          const selected = Object.fromEntries(names.filter(key => key in data).map(key => [key, data[key]]));
+          return new TextEncoder().encode(JSON.stringify(selected)).byteLength;
         },
         set: async (patch) => {
           const previous = read();
@@ -52,7 +59,25 @@ const storageMock = `(() => {
           };
         }
         if (message.type === 'CLEAR_ACTIVITY_DATA') {
-          await globalThis.chrome.storage.local.set({ activityData: { schemaVersion: 1, clearedAt: Date.now(), events: [] } });
+          const now = Date.now();
+          await globalThis.chrome.storage.local.set({ activityData: { schemaVersion: 1, clearedAt: now, historyClearedAt: now, archivedByDevice: {}, events: [] } });
+          return { ok: true, cleared: true };
+        }
+        if (message.type === 'CLEAR_ACTIVITY_HISTORY') {
+          const now = Date.now();
+          const activity = data.activityData || { schemaVersion: 1, clearedAt: 0, historyClearedAt: 0, archivedByDevice: {}, events: [] };
+          activity.historyClearedAt = now;
+          activity.events = activity.events.map(event => event.filteredAt <= now ? {
+            id: event.id,
+            contentId: event.contentId,
+            day: event.day,
+            filteredAt: event.filteredAt,
+            updatedAt: Math.max(event.updatedAt, now),
+            deviceId: event.deviceId,
+            surface: event.surface,
+            status: event.status
+          } : event);
+          await globalThis.chrome.storage.local.set({ activityData: activity });
           return { ok: true, cleared: true };
         }
         if (message.type === 'MARK_ACTIVITY_STATUS') {

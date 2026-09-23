@@ -13,14 +13,21 @@ export function useActivity() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [now, setNow] = useState(() => Date.now());
+  const [bytesInUse, setBytesInUse] = useState(0);
+  const storageLimit =
+    typeof chrome === "undefined" ? 10 * 1024 * 1024 : (chrome.storage.local.QUOTA_BYTES ?? 10 * 1024 * 1024);
 
   useEffect(() => {
     let live = true;
     void (async () => {
       try {
-        const stored = await chrome.storage.local.get([ACTIVITY_DATA_KEY]);
+        const [stored, usage] = await Promise.all([
+          chrome.storage.local.get([ACTIVITY_DATA_KEY]),
+          chrome.storage.local.getBytesInUse(ACTIVITY_DATA_KEY).catch(() => 0),
+        ]);
         if (!live) return;
         setData(normalizeActivityData(stored[ACTIVITY_DATA_KEY]));
+        setBytesInUse(usage);
         setLoading(false);
       } catch {
         if (!live) return;
@@ -31,6 +38,10 @@ export function useActivity() {
     const onChange = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
       if (areaName === "local" && changes[ACTIVITY_DATA_KEY]) {
         setData(normalizeActivityData(changes[ACTIVITY_DATA_KEY].newValue));
+        void chrome.storage.local
+          .getBytesInUse(ACTIVITY_DATA_KEY)
+          .then(setBytesInUse)
+          .catch(() => undefined);
       }
     };
     chrome.storage.onChanged.addListener(onChange);
@@ -69,5 +80,19 @@ export function useActivity() {
     }
   };
 
-  return { data, loading, busy, error, now, markIncorrect, clear };
+  const clearHistory = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const response = await send({ type: "CLEAR_ACTIVITY_HISTORY" });
+      if (!response.ok) throw new Error(response.code);
+    } catch (reason) {
+      setError(t("history.clearError"));
+      throw reason;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return { data, loading, busy, error, now, bytesInUse, storageLimit, markIncorrect, clear, clearHistory };
 }
