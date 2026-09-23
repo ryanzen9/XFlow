@@ -1,20 +1,27 @@
-import { createElement } from "react";
-import { renderToString } from "react-dom/server";
 import { copyFile, mkdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 import SiteApp, { type SitePage } from "../site/src/app";
 
 const repositoryRoot = resolve(import.meta.dir, "..");
 const outputRoot = resolve(repositoryRoot, "site-dist");
 const assetsRoot = resolve(outputRoot, "assets");
 
-const pages: Array<{ page: SitePage; file: string; lang: string; title: string; description: string }> = [
+const pages: Array<{
+  page: SitePage;
+  file: string;
+  lang: string;
+  title: string;
+  description: string;
+}> = [
   {
     page: "home",
     file: "index.html",
     lang: "zh-CN",
-    title: "XFlow — 让噪声退场，把选择留给你",
-    description: "XFlow 使用 Jev 按你的规则过滤 X 帖子与评论。命中内容仍可揭示，Provider 凭据保存在本机。",
+    title: "XFlow — 让噪声退场",
+    description:
+      "XFlow 基于 Jev 自定义策略规则过滤 X 帖子与评论。数据本地存储，高缓存优化，多渠道配置。",
   },
   {
     page: "privacy-zh",
@@ -28,11 +35,17 @@ const pages: Array<{ page: SitePage; file: string; lang: string; title: string; 
     file: "privacy-en.html",
     lang: "en",
     title: "XFlow Privacy Policy",
-    description: "How the XFlow website and browser extension process, store, and sync data.",
+    description:
+      "How the XFlow website and browser extension process, store, and sync data.",
   },
 ];
 
-function htmlDocument({ page, lang, title, description }: (typeof pages)[number]) {
+function htmlDocument({
+  page,
+  lang,
+  title,
+  description,
+}: (typeof pages)[number]) {
   const markup = renderToString(createElement(SiteApp, { page }));
 
   return `<!doctype html>
@@ -61,8 +74,14 @@ for (const page of pages) {
 }
 
 await Promise.all([
-  copyFile(resolve(repositoryRoot, "src/styles/token.css"), resolve(assetsRoot, "tokens.css")),
-  copyFile(resolve(repositoryRoot, "site/src/site.css"), resolve(assetsRoot, "site.css")),
+  copyFile(
+    resolve(repositoryRoot, "src/styles/token.css"),
+    resolve(assetsRoot, "tokens.css"),
+  ),
+  copyFile(
+    resolve(repositoryRoot, "site/src/site.css"),
+    resolve(assetsRoot, "site.css"),
+  ),
   Bun.write(resolve(outputRoot, ".nojekyll"), ""),
 ]);
 

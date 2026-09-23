@@ -1,16 +1,20 @@
-import { ArrowRight } from "lucide-react";
 import { MotionConfig } from "framer-motion";
-import { PrivacyPolicy } from "./pages/PrivacyPolicy";
+import { ArrowRight } from "lucide-react";
 import { RefractedBeams } from "./components/RefractedBeams";
 import { ShimmerButton } from "./components/ShimmerButton";
 import { SplitTextReveal } from "./components/SplitTextReveal";
+import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 
 export type SitePage = "home" | "privacy-zh" | "privacy-en";
 
 export default function SiteApp({ page }: { page: SitePage }) {
   return (
     <MotionConfig reducedMotion="user">
-      {page === "home" ? <HomePage /> : <PolicyPage language={page === "privacy-zh" ? "zh" : "en"} />}
+      {page === "home" ? (
+        <HomePage />
+      ) : (
+        <PolicyPage language={page === "privacy-zh" ? "zh" : "en"} />
+      )}
     </MotionConfig>
   );
 }
@@ -20,7 +24,11 @@ function PolicyPage({ language }: { language: "zh" | "en" }) {
     <div className="site-shell site-shell--policy">
       <RefractedBeams />
       <header className="site-header site-header--policy">
-        <a className="wordmark" href="./" aria-label={language === "zh" ? "XFlow 首页" : "XFlow home"}>
+        <a
+          className="wordmark"
+          href="./"
+          aria-label={language === "zh" ? "XFlow 首页" : "XFlow home"}
+        >
           XFLOW<span className="wordmark__separator">/</span>
           <span className="wordmark__descriptor">JEV FILTERING</span>
         </a>
@@ -45,20 +53,29 @@ function HomePage() {
         <section className="hero-copy" aria-labelledby="page-title">
           <p className="eyebrow">X / 策略过滤扩展</p>
           <h1 id="page-title">
-            <SplitTextReveal text="让噪声退场，" />
+            <SplitTextReveal text="XFlow" />
             <br />
-            <SplitTextReveal text="把选择留给你。" />
+            <SplitTextReveal text="让噪声退场。" />
           </h1>
           <p className="hero-summary">
-            XFlow 使用 Jev 按你的规则过滤 X 帖子与评论。命中内容仍留在页面中，以可揭示的遮罩呈现；Provider
-            凭据保存在本机。
+            XFlow 基于 Jev 与自定义规则过滤 X
+            帖子与评论。数据本地存储，高缓存优化，多渠道配置。
           </p>
           <div className="hero-actions">
-            <ShimmerButton href="https://github.com/ryanzen9/XFlow" target="_blank" rel="noreferrer">
+            <ShimmerButton
+              href="https://github.com/ryanzen9/XFlow"
+              target="_blank"
+              rel="noreferrer"
+            >
               查看 GitHub 源码
             </ShimmerButton>
             <a className="policy-action" href="./privacy.html">
-              隐私政策 <ArrowRight className="policy-action__icon" aria-hidden="true" focusable="false" />
+              隐私政策{" "}
+              <ArrowRight
+                className="policy-action__icon"
+                aria-hidden="true"
+                focusable="false"
+              />
             </a>
           </div>
         </section>
