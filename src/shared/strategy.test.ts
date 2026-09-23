@@ -1,12 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { compileHoverCss } from "./hover-css";
+import { compileHoverCss, HOVER_STYLE_PRESETS } from "./hover-css";
 import {
   defaultStrategy,
   normalizeSettings,
   normalizeStrategy,
+  parseHitRateInput,
   renderHoverText,
   reindexStrategies,
+  sensitivityForHitRate,
   strategiesFor,
+  strategyHitRate,
   strategyThreshold,
   validateTemplate,
 } from "./strategy";
@@ -63,6 +66,25 @@ describe("strategy configuration", () => {
     expect(normalizeSettings({ theme: "system", strategies: [] }).theme).toBe("light");
   });
 
+  test("maps Hit Rate controls to the persisted sensitivity without changing match thresholds", () => {
+    for (const hitRate of [80, 70, 50, 63, 0, 100]) {
+      const strategy = normalizeStrategy({ sensitivity: sensitivityForHitRate(hitRate) }, "timeline");
+      expect(strategyHitRate(strategy)).toBe(hitRate);
+      expect(strategyThreshold(strategy)).toBe(hitRate / 100);
+    }
+    expect(sensitivityForHitRate(120)).toBe(0);
+    expect(sensitivityForHitRate(-10)).toBe(100);
+  });
+
+  test("accepts complete Hit Rate input while leaving temporary edits uncommitted", () => {
+    expect(parseHitRateInput("0")).toBe(0);
+    expect(parseHitRateInput("50")).toBe(50);
+    expect(parseHitRateInput("100")).toBe(100);
+    for (const value of ["", "-", "63.5", "-1", "101", "abc"]) {
+      expect(parseHitRateInput(value)).toBeNull();
+    }
+  });
+
   test("renders final match data while rejecting unknown variables", () => {
     const strategy = {
       ...defaultStrategy("comments"),
@@ -80,6 +102,12 @@ describe("strategy configuration", () => {
 });
 
 describe("scoped hover CSS", () => {
+  test("offers three valid styles including the unchanged default", () => {
+    expect(HOVER_STYLE_PRESETS.map(({ id }) => id)).toEqual(["default", "outline", "contrast"]);
+    for (const preset of HOVER_STYLE_PRESETS) {
+      expect(compileHoverCss(preset.css, "#preview").error).toBeNull();
+    }
+  });
   test("supports visual rules and numerical variables with a unique scope", () => {
     const result = compileHoverCss(
       ".label { color: #0a7776; font-size: calc(12px + var(--hitrate) * 4px); } .veil { background: rgba(10, 119, 118, 0.2); }",

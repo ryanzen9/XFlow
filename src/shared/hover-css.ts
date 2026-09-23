@@ -26,6 +26,18 @@ const properties = new Set([
 
 const fail = (error: string) => ({ css: "", error });
 
+export const HOVER_STYLE_PRESETS = [
+  { id: "default", css: "" },
+  {
+    id: "outline",
+    css: ".veil { background: rgba(255, 255, 255, 0.82); }\n.label { color: #0f1419; font-weight: 700; text-decoration: underline; }\n.action { color: #0f1419; }",
+  },
+  {
+    id: "contrast",
+    css: ".veil { background: rgba(15, 20, 25, 0.88); }\n.label { color: #ffffff; font-weight: 700; }\n.action { color: #ffffff; }",
+  },
+] as const;
+
 export function compileHoverCss(source: string, scope: string): { css: string; error: string | null } {
   const clean = source.replace(/\/\*[\s\S]*?\*\//g, "").trim();
   if (!clean) return { css: "", error: null };

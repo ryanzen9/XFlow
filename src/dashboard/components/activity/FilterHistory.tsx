@@ -1,5 +1,14 @@
+import { useState } from "react";
 import { addLocalDays, localDayKey, startOfLocalDay, type ActivityEvent, type ActivityStatus } from "../../../shared";
 import { useI18n } from "../../../ui/i18n";
+import { focusRing } from "../../../ui/styles";
+
+export const HISTORY_PAGE_SIZE = 10;
+
+export function stepHistoryPage(requestedPage: number, totalPages: number, offset: -1 | 1): number {
+  const page = Math.min(requestedPage, totalPages);
+  return Math.max(1, Math.min(totalPages, page + offset));
+}
 
 function HistoryItem({ item, busy, onIncorrect }: { item: ActivityEvent; busy: boolean; onIncorrect: () => void }) {
   const { locale, t } = useI18n();
@@ -75,10 +84,15 @@ export function FilterHistory({
 }) {
   const { locale, t } = useI18n();
   const number = new Intl.NumberFormat(locale);
+  const [requestedPage, setRequestedPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(history.length / HISTORY_PAGE_SIZE));
+  const page = Math.min(requestedPage, totalPages);
+  const pageStart = (page - 1) * HISTORY_PAGE_SIZE;
+  const visibleHistory = history.slice(pageStart, pageStart + HISTORY_PAGE_SIZE);
   const today = localDayKey(now);
   const yesterday = localDayKey(addLocalDays(startOfLocalDay(now), -1));
   const groups = new Map<string, ActivityEvent[]>();
-  for (const item of history) groups.set(item.day, [...(groups.get(item.day) ?? []), item]);
+  for (const item of visibleHistory) groups.set(item.day, [...(groups.get(item.day) ?? []), item]);
   const groupLabel = (day: string) =>
     day === today
       ? t("history.today")
@@ -102,14 +116,50 @@ export function FilterHistory({
       {history.length === 0 ? (
         <p className="border-t border-line py-6 text-center text-xs text-muted">{t("history.empty")}</p>
       ) : (
-        [...groups].map(([day, items]) => (
-          <div key={day} className="mt-4 first:mt-2">
-            <h3 className="font-mono text-caption font-semibold text-muted">{groupLabel(day)}</h3>
-            {items.map((item) => (
-              <HistoryItem key={item.id} item={item} busy={busy} onIncorrect={() => onIncorrect(item.id)} />
+        <>
+          <div>
+            {[...groups].map(([day, items]) => (
+              <div key={day} className="mt-4 first:mt-2">
+                <h3 className="font-mono text-caption font-semibold text-muted">{groupLabel(day)}</h3>
+                {items.map((item) => (
+                  <HistoryItem key={item.id} item={item} busy={busy} onIncorrect={() => onIncorrect(item.id)} />
+                ))}
+              </div>
             ))}
           </div>
-        ))
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+            <p className="font-mono text-caption text-muted" aria-live="polite">
+              {t("history.range", {
+                start: number.format(pageStart + 1),
+                end: number.format(Math.min(pageStart + HISTORY_PAGE_SIZE, history.length)),
+                total: number.format(history.length),
+              })}
+            </p>
+            {totalPages > 1 && (
+              <nav className="flex items-center gap-2" aria-label={t("history.pagination")}>
+                <button
+                  className={`${focusRing} min-h-(--control-height) rounded-md border border-line-strong bg-surface px-3 text-label text-ink transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-55`}
+                  type="button"
+                  disabled={page === 1}
+                  onClick={() => setRequestedPage((current) => stepHistoryPage(current, totalPages, -1))}
+                >
+                  {t("history.previous")}
+                </button>
+                <span className="min-w-20 text-center font-mono text-caption text-muted">
+                  {t("history.page", { current: number.format(page), total: number.format(totalPages) })}
+                </span>
+                <button
+                  className={`${focusRing} min-h-(--control-height) rounded-md border border-line-strong bg-surface px-3 text-label text-ink transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-55`}
+                  type="button"
+                  disabled={page === totalPages}
+                  onClick={() => setRequestedPage((current) => stepHistoryPage(current, totalPages, 1))}
+                >
+                  {t("history.next")}
+                </button>
+              </nav>
+            )}
+          </div>
+        </>
       )}
     </section>
   );

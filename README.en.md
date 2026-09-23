@@ -45,7 +45,7 @@ The screenshots come from an isolated Dashboard mock store. They contain no real
 
 |      | Capability                | Current behavior                                                                                                               |
 | ---- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `01` | Policy engine             | Configure separate policy queues, prompts, sensitivity levels, and P1 → Pn priorities for timelines and replies.               |
+| `01` | Policy engine             | Configure separate policy queues, prompts, Hit Rate thresholds, and P1 → Pn priorities for timelines and replies.              |
 | `02` | Blur Veil                 | Preserve the original post geometry while using a progressive veil, hover context, and click or keyboard reveal.               |
 | `03` | Multi-provider Jev        | Explicitly select OpenRouter, Vercel AI Gateway, or TypeSafe, with no silent provider fallback.                                |
 | `04` | Local-first activity      | Track deduplicated filter events locally with today/all-time counts, a heatmap, trend, weekly review, history, and page badge. |
@@ -114,9 +114,10 @@ The active provider is always an explicit user choice. XFlow does not silently f
 
 - Timelines and replies have independent policy queues, each ordered from P1.
 - The first policy whose probability reaches its own threshold wins; lower-priority results are considered only after higher-priority misses.
-- Higher sensitivity means a lower match threshold. A sensitivity of 70, for example, maps to a 30% threshold.
+- Dashboard Hit Rate is the minimum match probability needed to veil a post. Adjust it with a number, slider, or Low (80%), Medium (70%), and Strict (50%) presets. Existing settings remain compatible with the legacy `sensitivity` field.
 - Saving a policy first reveals existing veils smoothly, then re-evaluates affected content with the new configuration. This may create new API requests.
 - Hover templates can reference the policy name, hit rate, threshold, model nickname, model ID, and surface.
+- Switch Hover styles between Default, Text emphasis, and High contrast, or keep editing custom CSS.
 - Custom CSS is restricted to documented veil selectors and visual properties; arbitrary page CSS is never injected into X.
 
 See the [Blur Veil design specification](docs/blur-veil-design.md) for interaction and motion constraints.
