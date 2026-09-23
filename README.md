@@ -19,6 +19,10 @@
   一个面向 X / Twitter 的策略驱动内容过滤扩展。
 </p>
 
+<p align="center">
+  <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> · <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a>
+</p>
+
 > 当前版本尚未发布到 Chrome Web Store，请通过开发者模式安装。
 
 ## 界面预览
@@ -183,6 +187,7 @@ bun run build           # 生成 dist/
 bun run check           # 完整质量门禁
 bun run benchmark:cache # 测试并展示分层缓存命中率与性能影响
 bun run preview:dashboard
+bun run preview:site
 bun run preview:tokens
 ```
 
@@ -212,6 +217,8 @@ sh scripts/cache-benchmark.sh --live-typesafe --samples=24 --warm-runs=3
 未设置 `TYPESAFE_API_KEY` 时，交互式终端会隐藏输入 Key；CI 可使用环境变量传入。Key 只存在于当前进程内存，不会打印、保存到扩展存储或写入报告。不要使用 `--key=...`，以免密钥进入 Shell 历史或进程列表。报告包含各类型命中率、SDK 调用减少率、真实延迟、构建包逻辑体积，以及缓存 IndexedDB 序列化载荷的前后变化；浏览器文件系统开销会因平台而异。`--posts=20..50` 仍作为 `--samples` 的兼容别名，`--json` 可输出机器可读结果。
 
 Dashboard 预览使用隔离的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。设计 token 索引页位于 `http://127.0.0.1:43993/`，可切换 Light / Dark 并查看解析值。
+
+项目官网预览与 GitHub Pages 发布方式见[官网说明](docs/project-page.md)。
 
 ## Roadmap
 

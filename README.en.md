@@ -20,6 +20,10 @@
   XFlow does not remove posts or shift the feed. It quietly veils matched content and leaves reveal control with the reader.
 </p>
 
+<p align="center">
+  <a href="https://ryanzen9.github.io/XFlow/">Project website</a> · <a href="https://ryanzen9.github.io/XFlow/privacy-en.html">Privacy policy</a>
+</p>
+
 > The current version is not yet available in the Chrome Web Store. Install it in developer mode.
 
 ## Preview
@@ -172,6 +176,7 @@ bun run build           # generate dist/
 bun run check           # complete quality gate
 bun run benchmark:cache # test and display cache hit-rate and performance metrics
 bun run preview:dashboard
+bun run preview:site
 bun run preview:tokens
 ```
 
@@ -201,6 +206,8 @@ These figures come from one run and demonstrate the benefit after cache seeding;
 An interactive terminal prompts for the key with hidden input when `TYPESAFE_API_KEY` is unset; CI may supply that environment variable. The key stays in process memory and is never printed, persisted, or written to reports. Do not use a `--key=...` argument, which could leak through shell history or process listings. The report includes per-traffic hit rates, avoided SDK calls, measured latency, logical build-package size, and the before/after serialized IndexedDB cache payload estimate; browser filesystem overhead varies by platform. `--posts=20..50` remains a compatibility alias for `--samples`, and `--json` is supported.
 
 The Dashboard preview uses an isolated localStorage mock. It does not read installed extension data or call a model. The token index is served at `http://127.0.0.1:43993/` and exposes resolved values in both Light and Dark themes.
+
+See the [project website guide](docs/project-page.md) for local preview and GitHub Pages deployment details.
 
 ## Roadmap
 

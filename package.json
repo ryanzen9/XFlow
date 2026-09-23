@@ -12,6 +12,8 @@
     "lint": "bunx oxlint . --deny-warnings",
     "lint:fix": "bunx oxlint . --fix",
     "preview:dashboard": "bun run build && bun run scripts/preview-dashboard.ts",
+    "build:site": "bun run scripts/build-site.ts",
+    "preview:site": "bun run build:site && bun run scripts/preview-site.ts",
     "preview:tokens": "bun run scripts/preview-tokens.ts",
     "typecheck": "bunx tsc --noEmit",
     "test": "bun test",
@@ -22,6 +24,8 @@
     "@typesafe-ai/sdk": "^0.6.0",
     "ai": "^7.0.107",
     "clsx": "^2.1.1",
+    "framer-motion": "^13.4.1",
+    "lucide-react": "^1.47.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tailwind-merge": "^3.7.0"
