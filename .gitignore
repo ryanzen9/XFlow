@@ -26,3 +26,6 @@ report.*.json
 .idea/
 .vscode/
 .DS_Store
+
+# Agent Work Directories
+workspace/
