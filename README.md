@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml"><img src="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <img src="https://img.shields.io/badge/version-0.1.0-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.0" />
   <img src="https://img.shields.io/badge/Manifest-V3-525252?style=flat-square&labelColor=0a0a0a" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/React-19-525252?style=flat-square&labelColor=0a0a0a" alt="React 19" />
@@ -172,6 +173,7 @@ bun run build:dev       # 生成 dist/，额外注入 localhost 调试来源
 bun run check           # 完整质量门禁
 bun run release:check   # 完整质量门禁 + 打包校验，产出可上传 ZIP
 bun run release:package # 只做生产构建与打包校验
+bun run release:verify  # 连续打包两次并逐字节比较
 bun run preview:dashboard
 bun run preview:tokens
 ```
@@ -183,9 +185,10 @@ Dashboard 预览使用隔离的 localStorage Mock，不读取已安装扩展的�
 ```bash
 bun run release:check     # 质量门禁 + 打包校验，产出可上传 ZIP
 bun run release:package   # 仅生产构建 + 打包校验
+bun run release:verify    # 连续打包两次并逐字节比较，验证可复现
 ```
 
-两者都会先清空 `dist/` 与 `output/release/`，再以 `--release` 重新构建（不生成 source map），然后：
+`release:check` 与 `release:package` 都会先清空 `dist/` 与 `output/release/`，再以 `--release` 重新构建（不生成 source map），然后：
 
 - 断言权限、manifest / package 版本一致性、本地化键与图标尺寸，并确认包内文件恰好是 manifest 与扩展页面引用到的那些。
 - 扫描产物中的 `eval(`、`new Function(`、`importScripts(`、`sourceMappingURL`、远程页面资源与 localhost 来源。
@@ -193,6 +196,18 @@ bun run release:package   # 仅生产构建 + 打包校验
 - 用内置 ZIP 校验加系统 `unzip -t` / `unzip -Z1` 交叉验证，输出 SHA-256 与逐文件清单。
 
 ZIP 内记录的时间戳固定为 2020-01-01，条目按路径排序，且只依赖 Bun 与 `node:zlib`，因此同一份提交在任何机器上都会生成完全相同的字节。`output/`、`*.zip`、`*.crx`、`*.pem` 均被 Git 忽略。
+
+## 持续集成与发布自动化
+
+| 工作流                                                           | 触发                              | 作用                                                                                       |
+| ---------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------ |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml)           | 推送到 `main`、Pull Request、手动 | 质量门禁（格式、Lint、类型、测试、生产构建）；另一个并行任务打包并证明归档可复现           |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | 推送 `v*` 标签、手动              | 校验标签与版本一致，跑完整发布门禁，再次验证可复现，上传 ZIP 并创建**草稿** GitHub Release |
+
+- 两个工作流都只用 Bun：`oven-sh/setup-bun` 从 `package.json` 的 `packageManager` 读取版本，依赖用 `bun install --frozen-lockfile` 安装。
+- 所有 Action 固定到提交 SHA，并在行尾注释标注对应版本，避免可变标签被改写。
+- 打包任务连续打包两次并逐字节比较，任何引入时间戳或随机标识的依赖都会让 CI 失败。
+- 推送 `v0.1.0` 这类标签后会自动创建草稿 Release，附带 ZIP、`.sha256` 与 `.files.txt`；公开发布仍需人工确认。手动触发只构建与校验，不会创建 Release。
 
 ## Roadmap
 

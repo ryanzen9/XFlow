@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml"><img src="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <img src="https://img.shields.io/badge/version-0.1.0-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.0" />
   <img src="https://img.shields.io/badge/Manifest-V3-525252?style=flat-square&labelColor=0a0a0a" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/React-19-525252?style=flat-square&labelColor=0a0a0a" alt="React 19" />
@@ -173,6 +174,7 @@ bun run build:dev       # generate dist/ with localhost debug origins
 bun run check           # complete quality gate
 bun run release:check   # quality gate plus packaging checks, writes the upload ZIP
 bun run release:package # production build and packaging checks only
+bun run release:verify  # package twice and compare the bytes
 bun run preview:dashboard
 bun run preview:tokens
 ```
@@ -184,9 +186,10 @@ The Dashboard preview uses an isolated localStorage mock. It does not read insta
 ```bash
 bun run release:check     # quality gate plus packaging, writes the upload ZIP
 bun run release:package   # production build and packaging only
+bun run release:verify    # package twice and compare the bytes, proving reproducibility
 ```
 
-Both commands clear `dist/` and `output/release/`, rebuild with `--release` (no source maps), and then:
+`release:check` and `release:package` clear `dist/` and `output/release/`, rebuild with `--release` (no source maps), and then:
 
 - Assert permissions, manifest/package version parity, locale keys and icon sizes, and prove the packaged files are exactly the ones the manifest and extension pages reference.
 - Scan the output for `eval(`, `new Function(`, `importScripts(`, `sourceMappingURL`, remote page assets, and localhost origins.
@@ -194,6 +197,18 @@ Both commands clear `dist/` and `output/release/`, rebuild with `--release` (no 
 - Verify the archive with the built-in reader plus the system `unzip -t` / `unzip -Z1`, and print the SHA-256 and per-file listing.
 
 Entry timestamps are pinned to 2020-01-01, entries are sorted by path, and the writer depends only on Bun and `node:zlib`, so the same commit produces byte-identical archives on every machine. `output/`, `*.zip`, `*.crx`, and `*.pem` are git-ignored.
+
+## Continuous integration and release automation
+
+| Workflow                                                         | Trigger                              | What it does                                                                                                                                            |
+| ---------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml)           | push to `main`, pull request, manual | Quality gate (format, lint, type checks, tests, production build); a parallel job packages and proves reproducibility                                   |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | `v*` tag push, manual                | Checks the tag against the packaged version, reruns the release gate, re-verifies reproducibility, uploads the ZIP and opens a **draft** GitHub Release |
+
+- Both workflows use Bun only: `oven-sh/setup-bun` reads the version from `packageManager` in `package.json`, and dependencies are installed with `bun install --frozen-lockfile`.
+- Every action is pinned to a commit SHA with the matching version in a trailing comment, so a moved tag cannot change what runs.
+- The packaging job builds the archive twice and compares the bytes, so a dependency that embeds a timestamp or a random identifier fails CI instead of silently breaking reproducibility.
+- Pushing a tag such as `v0.1.0` opens a draft release with the ZIP, its `.sha256`, and its `.files.txt`; publishing stays a manual decision. A manual run only builds and verifies.
 
 ## Roadmap
 

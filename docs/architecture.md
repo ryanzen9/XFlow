@@ -136,3 +136,14 @@ Idle → Classifying ─┬→ Visible
 4. 产物为 `output/release/xflow-<version>.zip` 及其 `.sha256` 与 `.files.txt`；`output/`、`*.zip`、`*.crx`、`*.pem` 均被 Git 忽略。
 
 `bun run release:check` 先运行完整质量门禁，只有全部通过才会打包，因此被上传的产物一定是通过检查的那一份。
+
+`bun run release:verify` 连续调用两次 `packageRelease()`（每次都清空并重建），再逐字节比较 `output/release/` 下的全部产物，把“同一提交生成同一归档”从人工约定变成可执行断言。
+
+## CI and release automation
+
+| Workflow                        | 触发                            | 作用                                                                                            |
+| ------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `.github/workflows/ci.yml`      | `main` 推送、Pull Request、手动 | 质量门禁任务执行 `bun run check`；并行的打包任务执行 `bun run release:verify`                   |
+| `.github/workflows/release.yml` | `v*` 标签、手动                 | 校验标签与 `package.json` 版本一致，执行 `release:check` 与 `release:verify` 后创建草稿 Release |
+
+两个工作流都不需要仓库密钥：版本来自 `package.json` 的 `packageManager`，Release 只用 `GITHUB_TOKEN`（`contents: write`）。所有 Action 固定到提交 SHA。手动触发 `release.yml` 不会创建 Release，可用于演练打包流程。
