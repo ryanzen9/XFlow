@@ -1,16 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "XFlow",
+  "default_locale": "en",
+  "name": "__MSG_appName__",
   "version": "0.1.0",
-  "description": "Jev For X, Use Jev to automate content filtering on X, creating a customized, comfortable, and clean browsing experience.",
+  "description": "__MSG_appDescription__",
+  "minimum_chrome_version": "123",
   "permissions": ["storage", "alarms"],
-  "optional_host_permissions": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*"],
+  "optional_host_permissions": ["https://*/*"],
   "options_ui": { "page": "dashboard.html", "open_in_tab": true },
   "icons": {
-    "16": "logo-dark.png",
-    "32": "logo-dark.png",
-    "48": "logo-dark.png",
-    "128": "logo-dark.png"
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
   },
   "host_permissions": ["https://openrouter.ai/*", "https://ai-gateway.vercel.sh/*", "https://api.typesafe.ai/*"],
   "background": {
@@ -18,13 +20,13 @@
     "type": "module"
   },
   "action": {
-    "default_title": "XFlow Settings",
+    "default_title": "__MSG_actionTitle__",
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "logo-dark.png",
-      "32": "logo-dark.png",
-      "48": "logo-dark.png",
-      "128": "logo-dark.png"
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
     }
   },
   "content_scripts": [

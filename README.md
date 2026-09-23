@@ -132,7 +132,7 @@ bun run check
 
 ## S3 同步
 
-S3 使用 path-style URL：`{endpoint}/{bucket}/{objectKey}`。首次保存 Endpoint 时扩展会请求可选主机权限；启用后会在配置写入、浏览器启动和每 15 分钟定时检查时同步。
+S3 使用 path-style URL：`{endpoint}/{bucket}/{objectKey}`。首次保存 Endpoint 时扩展会请求可选主机权限；启用后会在配置写入、浏览器启动和每 15 分钟定时检查时同步。生产清单只声明 `https://*/*`，因此使用 `http://localhost` 或 `http://127.0.0.1` 的本地 S3 需要先执行 `bun run build:dev`。
 
 - 本地配置版本更新或远程对象不存在：推送本地配置。
 - 远程配置版本更新：拉取并应用远程配置。
@@ -150,6 +150,9 @@ Bucket 需要允许扩展来源执行 GET、PUT 和 CORS 预检。
 - 配置 JSON 和远程 S3 文档不包含 Provider API Key 或 S3 凭据。
 - Activity 保存内容 ID、短文本预览、作者、对应 X 帖子 URL、过滤时间、命中策略和必要状态；不保存 HTML、DOM、Cookie、Session、媒体文件或完整浏览路径。
 - 固定主机权限仅包含 X / Twitter 与三个 Provider；S3 Endpoint 通过用户操作授予可选权限。
+- 生产 `manifest.json` 不声明任何 localhost / 127.0.0.1 来源；本地 http 调试来源只由 `bun run build:dev` 注入。
+
+生产清单要求 Chrome 123 或更高版本：界面配色通过 `light-dark()` 解析。扩展名称、描述与工具栏提示来自 `_locales/en` 与 `_locales/zh_CN`，图标为 `icons/` 下四个独立尺寸的 PNG。
 
 加载扩展前，请自行审阅 [`manifest.json`](manifest.json) 与所选 Provider 的数据政策。不要在 Issue、日志、测试或截图中提交真实凭据。
 
@@ -165,6 +168,7 @@ bun run lint:fix        # 修复可自动处理的规则
 bun run typecheck       # TypeScript 静态检查
 bun test                # Bun 单元测试
 bun run build           # 生成 dist/
+bun run build:dev       # 生成 dist/，额外注入 localhost 调试来源
 bun run check           # 完整质量门禁
 bun run preview:dashboard
 bun run preview:tokens
