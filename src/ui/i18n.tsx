@@ -91,7 +91,7 @@ const zh = {
   "general.homeDescription": "识别首页中的推广与干扰内容。",
   "general.comments": "评论区",
   "general.commentsDescription": "处理详情页中的评论，保留当前根博文。",
-  "general.pauseHelp": "暂停时，遮罩会平滑退出。重新启用后，命中的内容会重新进入遮蔽状态。",
+  "general.pauseHelp": "暂停时，遮罩会平滑退出。重新启用后，命中的内容会重新进入隐藏状态。",
   "general.modelDisplay": "模型显示",
   "general.modelDisplayDescription": "为 Hover 信息设置熟悉的模型昵称。",
   "general.modelNickname": "模型昵称",
