@@ -128,6 +128,7 @@ See the [Blur Veil design specification](docs/blur-veil-design.md) for interacti
 - The Dashboard provides a 12-week heatmap, seven-day trend, current calendar-week review, and 30 days of filter history.
 - An event is marked incorrect only after **Not supposed to be filtered** is explicitly selected. A temporary reveal is not automatically treated as a mistake.
 - Detailed history is compacted after 30 days. Event identity is folded into compact per-device counts after 12 weeks, retaining all-time totals while bounding storage.
+- The Log page can clear authors, content previews, original links, and matched strategies while retaining daily statistics and all-time totals.
 - Clearing activity writes a `clearedAt` tombstone so an older device or remote object cannot restore deleted records.
 
 ## S3 synchronization
@@ -142,7 +143,7 @@ The bucket must allow GET, PUT, and CORS preflight requests from the extension o
 
 ## Privacy and permissions
 
-See the full [XFlow Privacy Policy](docs/privacy-policy.en.md) ([简体中文](docs/privacy-policy.md)).
+See the full [XFlow Privacy Policy](https://ryanzen9.github.io/XFlow/privacy-policy/) ([简体中文](https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/); [source](docs/privacy-policy.en.md)).
 
 - Only text extracted from enabled X surfaces is sent to the currently selected provider.
 - Provider API keys and S3 credentials live in `chrome.storage.local` without additional encryption.

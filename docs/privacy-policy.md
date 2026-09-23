@@ -1,8 +1,16 @@
+---
+layout: default
+title: XFlow 隐私政策
+permalink: /privacy-policy/zh-CN/
+---
+
 # XFlow 隐私政策
 
 **生效日期：2026 年 9 月 23 日**  
 **适用范围：XFlow 浏览器扩展 0.1.0**  
-[English version](privacy-policy.en.md)
+**发布者：Ryan Zeng**
+
+[English version](https://ryanzen9.github.io/XFlow/privacy-policy/)
 
 XFlow 帮助你在 X / Twitter 的时间线和评论区，按自己设定的策略判断并遮蔽内容。本政策说明扩展处理哪些数据、数据流向何处，以及如何删除这些数据。XFlow 项目没有用于接收帖子内容、过滤记录或凭据的开发者服务器；扩展会按你的设置直接连接所选第三方服务。
 
@@ -30,6 +38,7 @@ XFlow 不读取 X 登录 Cookie 或 Session，不保存页面 HTML、DOM、媒�
 ## 保存期限与删除
 
 - 过滤活动详情保留约 30 天；之后移除正文预览、作者、URL 和策略详情。去重所需的内容身份最多保留约 12 周，之后折叠为按设备汇总的累计计数。期限由扩展在读取或更新活动数据时执行，不代表第三方服务中的数据会同时删除。
+- 在 Dashboard 的日志页选择“清理日志”，可立即移除作者、正文预览、原文链接和命中策略；内容标识、每日统计和累计数量仍会保留。若 S3 同步已启用，扩展会尝试同步这一清理状态。
 - 在 Dashboard 的通用页选择“清除活动数据”，可清除本机活动详情和累计计数。若 S3 同步已启用，扩展会尝试把清除状态同步到远程文档，以防旧记录在后续同步中恢复；远程更新需要连接成功。
 - 在 API Keys 页可逐个清除本机 Provider Key。清除 Key 不会撤销 Provider 账户中的密钥，你也可在对应 Provider 控制台撤销。
 - 在数据页可停用自动 S3 同步。停用不会删除本机的 S3 连接配置，也不会删除已写入 S3 的对象；如需删除远程副本，请在自己的 S3 服务中删除对象，并检查该服务的版本与备份。
@@ -49,4 +58,4 @@ XFlow 对从浏览器和 Chrome 扩展 API 获得的信息的使用遵守 [Chrom
 
 如数据处理方式有重大变化，项目会更新本政策并在扩展界面或发布说明中提示。政策版本以本页顶部的生效日期为准。
 
-关于隐私、数据删除或本政策的问题，请通过 [XFlow GitHub Issues](https://github.com/ryanzen9/XFlow/issues) 联系项目维护者，并避免在公开 Issue 中发送密钥或敏感内容。
+关于隐私、数据删除或本政策的问题，请发送邮件至 [ry4nzeng@gmail.com](mailto:ry4nzeng@gmail.com)，也可通过 [XFlow GitHub Issues](https://github.com/ryanzen9/XFlow/issues) 联系项目维护者。请勿在公开 Issue 中发送密钥或敏感内容。

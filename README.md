@@ -127,6 +127,7 @@ bun run check
 - Dashboard 提供过去 12 周 Heatmap、最近 7 天趋势、当前自然周回顾和最近 30 天筛选历史。
 - 只有明确选择 **Not supposed to be filtered** 才会标记错误；临时 Reveal 不会自动视为误判。
 - 详细历史在 30 天后压缩；事件身份在 12 周后折叠为按设备合并的紧凑计数，以维持累计值并限制存储增长。
+- 日志页可单独清理作者、内容预览、原文链接和命中策略，保留每日统计与累计数量。
 - 全部清除会写入 `clearedAt` 墓碑，避免旧设备或远程对象恢复已清除记录。
 
 ## S3 同步
@@ -141,7 +142,7 @@ Bucket 需要允许扩展来源执行 GET、PUT 和 CORS 预检。
 
 ## 隐私与权限
 
-完整说明见 [XFlow 隐私政策](docs/privacy-policy.md)（[English](docs/privacy-policy.en.md)）。
+完整说明见 [XFlow 隐私政策](https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/)（[English](https://ryanzen9.github.io/XFlow/privacy-policy/)；[仓库源文件](docs/privacy-policy.md)）。
 
 - 只有已启用范围内、从 X 页面提取的文本会发送到当前选中的 Provider。
 - Provider API Key 与 S3 凭据保存在 `chrome.storage.local`，目前没有额外加密。

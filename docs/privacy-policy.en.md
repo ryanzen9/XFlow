@@ -1,8 +1,16 @@
+---
+layout: default
+title: XFlow Privacy Policy
+permalink: /privacy-policy/
+---
+
 # XFlow Privacy Policy
 
 **Effective date: September 23, 2026**  
 **Applies to: XFlow browser extension 0.1.0**  
-[简体中文版](privacy-policy.md)
+**Publisher: Ryan Zeng**
+
+[简体中文版](https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/)
 
 XFlow helps you evaluate and veil content in X / Twitter timelines and replies using rules you create. This policy explains what the extension processes, where data goes, and how to delete it. The XFlow project does not operate a developer server that receives post content, filter activity, or credentials. The extension connects directly to the third-party services you choose.
 
@@ -30,6 +38,7 @@ Apart from these necessary transfers, the XFlow project does not sell this data,
 ## Retention and deletion
 
 - Activity details are kept for about 30 days; then text previews, authors, URLs, and strategy details are removed. Content identities used for deduplication remain for up to about 12 weeks before being folded into per-device lifetime counts. The extension applies these limits when activity data is read or updated. They do not delete data held by third parties.
+- Use **Clear logs** on the Dashboard's Log page to remove authors, text previews, original links, and matched strategies immediately. Content identifiers, daily statistics, and all-time totals remain. If S3 sync is enabled, the extension attempts to sync this cleared state.
 - Use **Clear Activity Data** on the Dashboard's General page to remove local activity details and totals. If S3 sync is enabled, the extension attempts to propagate the cleared state to the remote document so older records do not return on a later sync. Updating the remote copy requires a successful connection.
 - Clear each local Provider Key on the API Keys page. Clearing a key locally does not revoke it at the Provider; you can revoke it in that Provider's console.
 - Disable automatic S3 sync on the Data page. Disabling sync does not erase local S3 connection settings or an object already written to S3. To remove the remote copy, delete the object in your S3 service and check its versions and backups.
@@ -49,4 +58,4 @@ XFlow's use of information obtained from the browser and Chrome extension APIs c
 
 If data practices change materially, the project will update this policy and notify users in the extension interface or release notes. The effective date at the top identifies this version.
 
-For privacy, deletion, or policy questions, contact the project maintainers through [XFlow GitHub Issues](https://github.com/ryanzen9/XFlow/issues). Do not post keys or sensitive content in public issues.
+For privacy, deletion, or policy questions, email [ry4nzeng@gmail.com](mailto:ry4nzeng@gmail.com) or contact the project maintainers through [XFlow GitHub Issues](https://github.com/ryanzen9/XFlow/issues). Do not post keys or sensitive content in public issues.
