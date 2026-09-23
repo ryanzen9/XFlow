@@ -5,6 +5,7 @@ import {
   defaultStrategy,
   HOVER_VARIABLES,
   HOVER_STYLE_PRESETS,
+  parseHitRateInput,
   sensitivityForHitRate,
   strategyHitRate,
   validateTemplate,
@@ -63,9 +64,18 @@ export function StrategyPanel({
   const { locale, t } = useI18n();
   const update = (patch: Partial<FilterStrategy>) => onChange({ ...strategy, ...patch });
   const hitRate = strategyHitRate(strategy);
-  const [hitRateEdit, setHitRateEdit] = useState<{ id: string; base: number; value: string } | null>(null);
+  const [hitRateEdit, setHitRateEdit] = useState<{
+    id: string;
+    expectedHitRate: number;
+    value: string;
+  } | null>(null);
   const hitRateInput =
-    hitRateEdit?.id === strategy.id && hitRateEdit.base === hitRate ? hitRateEdit.value : String(hitRate);
+    hitRateEdit?.id === strategy.id && hitRateEdit.expectedHitRate === hitRate ? hitRateEdit.value : String(hitRate);
+  const changeHitRateInput = (value: string) => {
+    const parsed = parseHitRateInput(value);
+    setHitRateEdit({ id: strategy.id, expectedHitRate: parsed ?? hitRate, value });
+    if (parsed !== null) update({ sensitivity: sensitivityForHitRate(parsed) });
+  };
   const commitHitRate = () => {
     const value = Number(hitRateInput);
     if (hitRateInput.trim() && Number.isFinite(value)) {
@@ -83,6 +93,7 @@ export function StrategyPanel({
   };
   const reset = () => {
     const defaults = defaultStrategy(surface, strategy.priority, strategy.id);
+    setHitRateEdit(null);
     onChange({ ...defaults, enabled: strategy.enabled });
   };
   const surfaceName = t(surface === "timeline" ? "strategy.timeline" : "strategy.comments");
@@ -204,9 +215,7 @@ export function StrategyPanel({
                       step="1"
                       inputMode="numeric"
                       value={hitRateInput}
-                      onChange={(event) =>
-                        setHitRateEdit({ id: strategy.id, base: hitRate, value: event.target.value })
-                      }
+                      onChange={(event) => changeHitRateInput(event.target.value)}
                       onBlur={commitHitRate}
                       onKeyDown={(event) => {
                         if (event.key === "Enter") {
@@ -225,13 +234,19 @@ export function StrategyPanel({
                   min="0"
                   max="100"
                   value={hitRate}
-                  onChange={(event) => update({ sensitivity: sensitivityForHitRate(Number(event.target.value)) })}
+                  onChange={(event) => {
+                    setHitRateEdit(null);
+                    update({ sensitivity: sensitivityForHitRate(Number(event.target.value)) });
+                  }}
                 />
                 <small className={fieldHelp}>{t("strategy.hitRateHelp", { value: hitRate })}</small>
                 <HitRatePresets
                   hitRate={hitRate}
                   name={strategy.name}
-                  onChange={(sensitivity) => update({ sensitivity })}
+                  onChange={(sensitivity) => {
+                    setHitRateEdit(null);
+                    update({ sensitivity });
+                  }}
                 />
               </div>
             </section>

@@ -45,11 +45,11 @@ const zh = {
   "popup.dashboard": "控制台 ↗",
   "popup.decisionModel": "决策模型",
   "popup.timelineEnabling": "正在启用时间线过滤…",
-  "popup.timelineRestoring": "正在恢复被遮蔽的博文…",
+  "popup.timelineRestoring": "正在恢复博文…",
   "popup.timelineEnabled": "时间线过滤已实时启用。",
   "popup.timelinePaused": "时间线过滤已暂停，博文正在恢复可见。",
   "popup.commentsEnabling": "正在启用评论区过滤…",
-  "popup.commentsRestoring": "正在恢复被遮蔽的评论…",
+  "popup.commentsRestoring": "正在恢复评论…",
   "popup.commentsEnabled": "评论区过滤已实时启用。",
   "popup.commentsPaused": "评论区过滤已暂停，评论正在恢复可见。",
   "popup.switchFailed": "切换失败，请重试。",
@@ -301,7 +301,7 @@ const zh = {
   "preview.hit": "已命中 · Hover 查看变量",
   "preview.replay": "重播遮罩 ↻",
   "preview.rate": "模拟 hitrate",
-  "preview.threshold": "当前阈值 {value}。此数值不是模型实际判断。",
+  "preview.threshold": "当前阈值 {value}。",
   "preview.content": "自定义预览内容",
   "preview.help": "将鼠标移到遮罩上查看 Hover，点击或按 Enter 揭示内容。预览不会发送 API 请求。",
 } as const;
@@ -616,7 +616,10 @@ const en: Record<MessageKey, string> = {
     "Hover the veil to inspect it; click or press Enter to reveal content. The preview sends no API requests.",
 };
 
-const catalogs: Record<Locale, Record<MessageKey, string>> = { "zh-CN": zh, en };
+const catalogs: Record<Locale, Record<MessageKey, string>> = {
+  "zh-CN": zh,
+  en,
+};
 let activeLocale: Locale = "zh-CN";
 let storageListenerInstalled = false;
 const listeners = new Set<() => void>();
@@ -645,11 +648,20 @@ export function localizeError(locale: Locale, error: unknown, fallback: MessageK
   const direct = exact[message];
   if (direct) return translate(locale, direct);
   const unknownVariable = message.match(/^未知变量：(.*)$/);
-  if (unknownVariable) return translate(locale, "validation.templateUnknown", { token: unknownVariable[1] ?? "" });
+  if (unknownVariable)
+    return translate(locale, "validation.templateUnknown", {
+      token: unknownVariable[1] ?? "",
+    });
   const cssProperty = message.match(/^不支持的 CSS 属性或空值：(.*)$/);
-  if (cssProperty) return translate(locale, "validation.cssProperty", { detail: cssProperty[1] ?? "" });
+  if (cssProperty)
+    return translate(locale, "validation.cssProperty", {
+      detail: cssProperty[1] ?? "",
+    });
   const cssValue = message.match(/^无法解析 (.*) 的值。$/);
-  if (cssValue) return translate(locale, "validation.cssValue", { property: cssValue[1] ?? "" });
+  if (cssValue)
+    return translate(locale, "validation.cssValue", {
+      property: cssValue[1] ?? "",
+    });
   return translate(locale, fallback);
 }
 

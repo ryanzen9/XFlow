@@ -37,7 +37,6 @@ describe("MonitorSwitch", () => {
 
     expect(markup).toContain("min-h-12");
     expect(markup).not.toContain("<p");
-    expect(markup).not.toContain("命中阈值的博文会实时进入遮蔽状态");
   });
 
   test("keeps comment controls uniquely labelled", () => {

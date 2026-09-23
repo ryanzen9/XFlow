@@ -4,6 +4,7 @@ import {
   defaultStrategy,
   normalizeSettings,
   normalizeStrategy,
+  parseHitRateInput,
   renderHoverText,
   reindexStrategies,
   sensitivityForHitRate,
@@ -73,6 +74,15 @@ describe("strategy configuration", () => {
     }
     expect(sensitivityForHitRate(120)).toBe(0);
     expect(sensitivityForHitRate(-10)).toBe(100);
+  });
+
+  test("accepts complete Hit Rate input while leaving temporary edits uncommitted", () => {
+    expect(parseHitRateInput("0")).toBe(0);
+    expect(parseHitRateInput("50")).toBe(50);
+    expect(parseHitRateInput("100")).toBe(100);
+    for (const value of ["", "-", "63.5", "-1", "101", "abc"]) {
+      expect(parseHitRateInput(value)).toBeNull();
+    }
   });
 
   test("renders final match data while rejecting unknown variables", () => {
