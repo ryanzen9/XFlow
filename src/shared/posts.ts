@@ -27,17 +27,27 @@ export function canonicalPostUrl(value: unknown): string | undefined {
   }
 }
 
-export function sanitizePost(post: PostInput): PostInput | null {
-  const id = String(post.id).trim();
-  const text = String(post.text).replace(/\s+/g, " ").trim().slice(0, MAX_POST_LENGTH);
+export function sanitizePost(post: unknown): PostInput | null {
+  if (!post || typeof post !== "object" || Array.isArray(post)) return null;
+  const input = post as Partial<PostInput>;
+  if (typeof input.id !== "string" || typeof input.text !== "string") return null;
+  const id = input.id.trim().slice(0, 160);
+  const postIdCandidate = typeof input.postId === "string" ? input.postId.trim() : "";
+  const postId = /^\d+$/.test(postIdCandidate) ? postIdCandidate.slice(0, 80) : "";
+  const text = input.text.replace(/\s+/g, " ").trim().slice(0, MAX_POST_LENGTH);
   if (!id || !text) return null;
-  const author = typeof post.author === "string" ? post.author.replace(/\s+/g, " ").trim().slice(0, 80) : "";
-  const url = canonicalPostUrl(post.url);
+  const authorId = typeof input.authorId === "string" ? input.authorId.trim().replace(/^@/, "").slice(0, 80) : "";
+  const author = typeof input.author === "string" ? input.author.replace(/\s+/g, " ").trim().slice(0, 80) : "";
+  const url = canonicalPostUrl(input.url);
   const mediaType =
-    post.mediaType === "image" || post.mediaType === "video" || post.mediaType === "quote" ? post.mediaType : undefined;
+    input.mediaType === "image" || input.mediaType === "video" || input.mediaType === "quote"
+      ? input.mediaType
+      : undefined;
   return {
-    id: id.slice(0, 160),
+    id,
+    ...(postId ? { postId } : {}),
     text,
+    ...(authorId ? { authorId } : {}),
     ...(author ? { author } : {}),
     ...(url ? { url } : {}),
     ...(mediaType ? { mediaType } : {}),

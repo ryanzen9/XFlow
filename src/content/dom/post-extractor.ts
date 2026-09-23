@@ -13,7 +13,9 @@ export function extractPost(article: HTMLElement, fallbackId: string): Extracted
   if (!textElement || !text) return null;
 
   const statusLink = article.querySelector<HTMLAnchorElement>('a[href*="/status/"] time')?.closest("a");
-  const id = statusLink?.href.match(/\/status\/(\d+)/)?.[1] ?? fallbackId;
+  const postId = statusLink?.href.match(/\/status\/(\d+)/)?.[1];
+  const id = postId ?? fallbackId;
+  const authorId = statusLink?.href.match(/(?:x\.com|twitter\.com)\/([^/]+)\/status\//)?.[1];
   let url: string | undefined;
   let author: string | undefined;
   if (statusLink) {
@@ -30,5 +32,15 @@ export function extractPost(article: HTMLElement, fallbackId: string): Extracted
         ? "quote"
         : undefined;
 
-  return { post: { id, text, author, url, mediaType } };
+  return {
+    post: {
+      id,
+      ...(postId ? { postId } : {}),
+      text,
+      ...(authorId ? { authorId } : {}),
+      ...(author ? { author } : {}),
+      ...(url ? { url } : {}),
+      ...(mediaType ? { mediaType } : {}),
+    },
+  };
 }

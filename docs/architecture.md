@@ -8,13 +8,15 @@
 X / Twitter DOM
       │
       ▼
-Content Script ── normalized post text ──► Background Service Worker
-      │                                         │
-      │                                         ├─ Review Service
-      │                                         ├─ Provider Registry
-      │                                         └─ Selected Jev Adapter
+Content Script ── batched post text ──► Background Service Worker
+      │                                      │
+      │                                      ├─ User decisions
+      │                                      ├─ IndexedDB cache layers
+      │                                      ├─ Review Service
+      │                                      ├─ Provider Registry
+      │                                      └─ Selected Jev Adapter (fallback)
       │                                                    │
-      ◄──────── probability + matched strategy ────────────┘
+      ◄──── decision + source + probability + strategy ────┘
       │
       ▼
 Blur Veil state machine
@@ -26,6 +28,30 @@ Activity Service ──► local event store ──► Popup / General / Log
 ```
 
 Content Script 负责发现帖子、提取最小历史元数据和渲染遮罩，不持有 API Key。只有遮罩实际挂载、内容真正进入 Filtered 状态后，才向后台 Activity Service 发送事件。后台负责全局去重、页面 Badge、策略选择、外部请求、配置迁移和自动同步。
+
+## Local-first decision pipeline
+
+```text
+User explicit decision
+        ↓ miss
+Author rule
+        ↓ miss
+User template / semantic rule
+        ↓ miss
+Exact cache
+        ↓ miss
+Normalized cache
+        ↓ miss
+Template cache (at least two consistent samples)
+        ↓ miss
+Semantic cache (high similarity + consistent neighbours)
+        ↓ miss
+Jev → persist reusable local results
+```
+
+文本先经过 Unicode、大小写、空白、重复标点与 URL tracking 参数归一化。模板层另外抽象 URL、Mention、Cashtag 和数字，但保留正负号与百分号，避免把 `+10%` 和 `-10%` 合并。语义层在 Background 中生成固定维度的本地特征哈希向量，以语言和 Policy 预筛候选，再使用余弦相似度、置信度与 Top-K 一致性决定是否复用；不调用远程 Embedding 服务。
+
+Policy 指纹包含 surface、Provider、策略 ID、启用状态、优先级、Prompt 和敏感度。运行缓存以 Policy 指纹分区，配置改变后自然 miss；单条隐藏或允许在 `/status/{id}` 可用时按稳定 Tweet ID 保存并直接更新 UI，只有生成式页面 fallback ID 时仅作用于当前页面，不写入自动缓存或相似内容学习，也不会被新的 Jev 结果覆盖。
 
 ## Source boundaries
 
@@ -64,19 +90,24 @@ Content Script 负责发现帖子、提取最小历史元数据和渲染遮罩�
 
 ## Persistence
 
-应用配置包括总开关、评论区开关、主题、当前渠道、模型昵称和策略集合。所有写入都通过版本化持久层：
+应用配置包括总开关、评论区开关、主题、当前渠道、模型昵称、策略集合和可同步用户知识。所有写入都通过版本化持久层：
 
 ```text
 ConfigurationDocument
 ├── schemaVersion
 ├── configVersion
+├── knowledgeRevision
 ├── updatedAt
 ├── config
+├── knowledge
+    └── userDecisions
 └── activity
     ├── clearedAt
     ├── historyClearedAt
     └── events[]
 ```
+
+运行时以 IndexedDB `xflow-decisions` 为本机判定数据源，包含 `userDecisions`、`exactCache`、`normalizedCache`、`templateCache` 和 `semanticCache`；其前方保留 300 条进程内热数据以减少重复 IndexedDB 查询。`semanticCache` 通过 `[policyVersion, language]` 复合索引预筛候选，不扫描其他 Policy 或语言分区。普通缓存 TTL 为 7 天，并按 LRU 控制总量；只将单条标注、用户模板/语义规则和作者规则镜像到版本化配置文档。启用 S3 同步后，长期知识按 ID 合并，同一对象执行确定性的 Last Write Wins；配置版本和知识修订使用独立时钟，并通过跨扩展上下文锁串行化合并写入；向量在目标设备由同步样本重建，Exact、Template、Semantic 运行缓存不会上传。Endpoint 权限只在用户保存 S3 设置时申请；启动和定时后台同步不会弹出权限请求，S3 不参与逐条内容的实时判定。
 
 Popup 与 Dashboard 的界面语言使用独立的本机键 `xflow.uiLocale`。它只控制静态标签、状态提示、日期与数字格式，不翻译或改写策略名称、提示词、Hover 模板、CSS、模型昵称和配置 JSON 等用户内容。该键不属于 `AppSettings`，因此不会增加 `configVersion`，也不会进入可编辑配置、S3 文档或 Content Script 的安全设置镜像。
 

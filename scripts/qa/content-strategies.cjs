@@ -1,3 +1,4 @@
+// Run with playwright-cli run-code --filename scripts/qa/content-strategies.cjs
 // Uses the production content bundle with mocked extension messages; never calls the API.
 // oxlint-disable-next-line no-unused-vars -- Playwright CLI evaluates this function expression.
 async function run(page) {
@@ -36,6 +37,7 @@ async function run(page) {
     globalThis.qa = {
       settings,
       requests: [],
+      feedback: [],
       patch(patch) {
         const changes = Object.fromEntries(
           Object.entries(patch).map(([key, value]) => [key, { oldValue: settings[key], newValue: value }]),
@@ -50,6 +52,24 @@ async function run(page) {
         sendMessage: async (message) => {
           if (message.type === "GET_STATUS")
             return { ok: true, configured: true, enabled: settings.enabled, commentsEnabled: settings.commentsEnabled };
+          if (message.type === "SAVE_USER_DECISION") {
+            qa.feedback.push(message);
+            const decision =
+              message.action === "allow" || message.action === "allow-author" || message.action === "correct-allow"
+                ? "allow"
+                : message.action === "block-similar" || message.action === "block-author"
+                  ? "block"
+                  : "blur";
+            return {
+              ok: true,
+              result: {
+                id: message.post.id,
+                probability: decision === "allow" ? 0 : 1,
+                decision,
+                source: "user",
+              },
+            };
+          }
           qa.requests.push(message);
           const applicable = settings.strategies
             .filter((strategy) => strategy.enabled && strategy.surfaces.includes(message.surface))
@@ -61,6 +81,8 @@ async function run(page) {
               ? message.posts.map((post) => ({
                   id: post.id,
                   probability: 0.65,
+                  decision: "blur",
+                  source: "jev",
                   details: { strategy: selected, modelNickname: settings.modelNickname, surface: message.surface },
                 }))
               : [],
@@ -80,6 +102,26 @@ async function run(page) {
     });
   });
   await page.goto("https://x.com/home");
+  await page.waitForFunction(() => document.querySelectorAll('article[data-xflow-state="obscured"]').length === 2);
+  assert(
+    await page.evaluate(() =>
+      qa.requests.some(
+        (message) =>
+          message.type === "REVIEW_POSTS" &&
+          message.posts.some((post) => post.authorId === "example" && post.postId === post.id),
+      ),
+    ),
+    "Stable post and author ids were not forwarded to the decision pipeline",
+  );
+  assert((await page.locator(".xflow-feedback-host").count()) === 2, "Feedback entry missing from detected posts");
+  await page.locator("#post-100 .xflow-feedback__trigger").click();
+  assert(await page.getByRole("menu", { name: "XFlow 内容标注" }).isVisible(), "Feedback menu did not open");
+  assert(
+    await page.locator("#post-100").getByRole("menuitem", { name: "屏蔽此作者" }).isVisible(),
+    "Author feedback action missing",
+  );
+  await page.locator("#post-100").getByRole("menuitem", { name: "屏蔽此作者" }).click();
+  await page.waitForFunction(() => qa.feedback.some((message) => message.action === "block-author"));
   await page.waitForFunction(() => document.querySelectorAll('article[data-xflow-state="obscured"]').length === 2);
   await page.locator("#post-100 .xflow-veil").hover();
   await page.waitForTimeout(180);
@@ -117,6 +159,7 @@ async function run(page) {
   await page.goto("https://x.com/example/status/100");
   await page.waitForFunction(() => document.querySelector("#post-200")?.dataset.xflowState === "obscured");
   assert((await page.locator("#post-100 .xflow-veil").count()) === 0, "Root post incorrectly filtered as comment");
+  assert((await page.locator("#post-100 .xflow-feedback-host").count()) === 1, "Root post feedback entry missing");
   assert(
     await page.evaluate(() =>
       qa.requests.every(
@@ -149,6 +192,7 @@ async function run(page) {
       "priority fallback",
       "priority winner update",
       "metadata and CSS",
+      "feedback and author action",
       "animated toggles",
       "comment root exclusion",
       "independent switches",

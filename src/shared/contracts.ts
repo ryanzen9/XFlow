@@ -1,10 +1,13 @@
 import type { VeilDetails } from "./strategy";
 import type { ProviderId, ProviderSummary } from "./providers";
+import type { ContentDecision, DecisionSource, UserDecisionAction } from "./content-decision";
 import type { ActivityData, ActivityMediaType, ActivityStatus, ActivitySummary } from "./activity";
 
 export interface PostInput {
   id: string;
+  postId?: string;
   text: string;
+  authorId?: string;
   author?: string;
   url?: string;
   mediaType?: ActivityMediaType;
@@ -13,6 +16,8 @@ export interface PostInput {
 export interface ReviewResult {
   id: string;
   probability: number;
+  decision: ContentDecision;
+  source: DecisionSource;
   details?: VeilDetails;
 }
 
@@ -32,6 +37,7 @@ export type ExtensionErrorCode = "CONFIG_REQUIRED" | "DISABLED" | "API_ERROR" | 
 export type ExtensionRequest =
   | { type: "GET_STATUS" }
   | { type: "REVIEW_POSTS"; surface: FilterSurface; posts: PostInput[] }
+  | { type: "SAVE_USER_DECISION"; surface: FilterSurface; post: PostInput; action: UserDecisionAction }
   | {
       type: "RECORD_FILTER_EVENT";
       pageToken: string;
@@ -52,6 +58,7 @@ export type ExtensionRequest =
 export type ExtensionResponse =
   | ({ ok: true } & ExtensionStatus)
   | { ok: true; results: ReviewResult[] }
+  | { ok: true; result: ReviewResult }
   | { ok: true; activity: ActivityData; summary: ActivitySummary }
   | { ok: true; eventId: string; added: boolean; pageCount: number }
   | { ok: true; cleared: true }

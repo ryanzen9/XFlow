@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, expect, test } from "bun:test";
-import { initializeStorageAccess } from "./public-settings";
+import { initializeStorageAccess, publishPublicSettings } from "./public-settings";
 
 const originalChrome = globalThis.chrome;
 let localAccess = "";
@@ -19,6 +19,24 @@ beforeEach(() => {
     commentsEnabled: false,
     modelNickname: "Jev",
     strategies: [],
+    knowledgeRevision: 9,
+    userKnowledge: {
+      userDecisions: [
+        {
+          id: "timeline:content:hash",
+          scope: "content",
+          surface: "timeline",
+          policyId: "timeline",
+          contentHash: "hash",
+          normalizedContent: "private post text",
+          semanticTokens: ["private", "post"],
+          decision: "blur",
+          createdAt: 1,
+          updatedAt: 7,
+          deviceId: "device",
+        },
+      ],
+    },
   };
   globalThis.chrome = {
     storage: {
@@ -51,7 +69,17 @@ test("keeps local secrets trusted-only and exposes only a safe session mirror", 
   await initializeStorageAccess();
   expect(localAccess).toBe("TRUSTED_CONTEXTS");
   expect(sessionAccess).toBe("TRUSTED_AND_UNTRUSTED_CONTEXTS");
-  expect(session).toMatchObject({ activeProvider: "typesafe", providerConfigured: true, strategies: [] });
+  expect(session).toMatchObject({
+    activeProvider: "typesafe",
+    providerConfigured: true,
+    strategies: [],
+    decisionKnowledgeRevision: "9",
+  });
   expect(JSON.stringify(session)).not.toContain("private-key");
   expect(session).not.toHaveProperty("providerSecrets");
+  expect(JSON.stringify(session)).not.toContain("private post text");
+
+  local.knowledgeRevision = 10;
+  await publishPublicSettings();
+  expect(session.decisionKnowledgeRevision).toBe("10");
 });
