@@ -306,7 +306,7 @@ const zh = {
   "preview.hit": "已命中 · Hover 查看变量",
   "preview.replay": "重播遮罩 ↻",
   "preview.rate": "模拟 hitrate",
-  "preview.threshold": "当前阈值 {value}。此数值不是模型实际判断。",
+  "preview.threshold": "当前阈值 {value}。",
   "preview.content": "自定义预览内容",
   "preview.help":
     "将鼠标移到遮罩上查看 Hover，点击或按 Enter 揭示内容。预览不会发送 API 请求。",

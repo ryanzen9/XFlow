@@ -27,3 +27,9 @@
 ## Skills
 
 please read `./.agents/skills` for the list of available skills.
+
+## Workflow
+
+- 当用户要求在子工作区进行开发时，请在 workspace 下的子文件夹拉取最新的 main 分支，始终保持在该文件夹下进行工作。
+- 提交代码前，请确保运行 `bun run check` 并通过所有检查。
+- 功能开发完成后，创建对应的功能分支与对应的 Pull Request 进行跟踪。
