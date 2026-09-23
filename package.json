@@ -23,6 +23,8 @@
     "@typesafe-ai/sdk": "^0.6.0",
     "ai": "^7.0.107",
     "clsx": "^2.1.1",
+    "framer-motion": "^13.4.1",
+    "lucide-react": "^1.47.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tailwind-merge": "^3.7.0"

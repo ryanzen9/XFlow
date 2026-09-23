@@ -1,6 +1,6 @@
 import { resolve, sep } from "node:path";
 
-const siteRoot = resolve(import.meta.dir, "../site");
+const siteRoot = resolve(import.meta.dir, "../site-dist");
 const port = Number(Bun.env.SITE_PREVIEW_PORT || 43995);
 
 const server = Bun.serve({

@@ -1,6 +1,6 @@
 # Project page
 
-The static project website introduces XFlow, links to the repository and privacy policy, and includes a lightweight Refracted Beams demonstration.
+The project website is authored in React and TypeScript under `site/src/`. Bun server-renders the landing page and Chinese and English privacy policies into standalone HTML, then bundles the small client entry for page interactions. GitHub Pages publishes the generated `site-dist/` directory.
 
 ## Preview
 
@@ -10,16 +10,18 @@ Run the Bun preview server from the repository root:
 bun run preview:site
 ```
 
-Then open the local URL printed by Bun. The server reads directly from `site/`; no install, build, API key, or provider request is needed.
+The script builds the website before starting the local preview server. No API key or provider request is needed.
 
-## Files
+## Source and build
 
-- `site/index.html` is the five-item landing page: one short label, one headline, one description, and two links.
-- `site/privacy.html` and `site/privacy-en.html` publish the Chinese and English privacy policies. Compatibility pages retain the previous `/privacy-policy/` and `/privacy-policy/zh-CN/` routes.
-- `site/assets/refracted-beams.js` draws the ambient canvas effect without third-party runtime packages. Its sparse diagonal beams follow the visual direction of [RewampUI's Refracted Beams](https://www.rewampui.com/components/refracted-beams), use the shared foreground token, and pause when the document is hidden or reduced motion is enabled.
-- `src/styles/token.css` is copied into the published static artifact as `site/assets/tokens.css`, so the site uses the extension's shared color, type, spacing, radius, and motion roles without maintaining a second palette.
-- The two landing-page links use the high-contrast paired action style shown on the [RewampUI home page](https://www.rewampui.com/), implemented as native anchors.
-- `.github/workflows/deploy-pages.yml` publishes the contents of `site/` to GitHub Pages after a change lands on `main`.
+- `site/src/app.tsx` owns the home page and policy page shell. `site/src/pages/PrivacyPolicy.tsx` contains the full Chinese and English policies as React components.
+- `site/src/components/` contains the React Refracted Beams canvas, Split Text Reveal headline, and Shimmer Button. Motion follows the shared duration and easing tokens, and respects reduced-motion settings.
+- `site/src/site.css` styles the site using the shared design tokens from `src/styles/token.css`; the three lilac beam values follow the RewampUI Refracted Beams reference.
+- `scripts/build-site.ts` renders all three pages with React DOM Server, bundles `site/src/client.tsx` with Bun, copies the shared tokens and stylesheet, and writes the old privacy route aliases.
+- `scripts/preview-site.ts` serves the generated `site-dist/` output.
+- `.github/workflows/deploy-pages.yml` installs the locked Bun dependencies, builds the React site, and uploads `site-dist/` to GitHub Pages.
+
+The landing page keeps five visual groups: the wordmark, the hero copy, the GitHub action, the privacy link, and the ambient beam background. The legal pages retain full policy text and can be read without client-side JavaScript.
 
 ## GitHub Pages
 
@@ -29,4 +31,4 @@ The expected URLs are:
 - Chinese privacy policy: <https://ryanzen9.github.io/XFlow/privacy.html>
 - English privacy policy: <https://ryanzen9.github.io/XFlow/privacy-en.html>
 
-The repository currently publishes its Pages source from the `codex/chrome-web-store-release` branch's `docs/` folder. After this change is merged, switch **Settings → Pages → Build and deployment → Source** to **GitHub Actions** to use the new workflow. Then pushes to `main` that change the site, shared design tokens, site build script, or deployment workflow publish the static files. The build job needs the Pages configuration permission, and the deployment job needs the repository's GitHub Pages environment and Pages / Actions permissions enabled.
+After merging, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The workflow publishes changes to the site, its shared tokens, the build script, locked dependencies, or deployment workflow. The build job needs the Pages configuration permission, and the deployment job needs the repository's GitHub Pages environment and Pages / Actions permissions enabled.
