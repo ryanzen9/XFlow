@@ -12,7 +12,9 @@ describe("MonitorSwitch", () => {
   };
 
   test("exposes the enabled state with native switch semantics", () => {
-    const markup = renderToStaticMarkup(<MonitorSwitch {...baseProps} checked />);
+    const markup = renderToStaticMarkup(
+      <MonitorSwitch {...baseProps} checked />,
+    );
 
     expect(markup).toContain('data-state="on"');
     expect(markup).toContain('role="switch"');
@@ -23,7 +25,9 @@ describe("MonitorSwitch", () => {
   });
 
   test("communicates and locks the pending state", () => {
-    const markup = renderToStaticMarkup(<MonitorSwitch {...baseProps} checked={false} disabled pending />);
+    const markup = renderToStaticMarkup(
+      <MonitorSwitch {...baseProps} checked={false} disabled pending />,
+    );
 
     expect(markup).toContain('data-state="pending"');
     expect(markup).toContain('aria-busy="true"');
@@ -33,11 +37,12 @@ describe("MonitorSwitch", () => {
   });
 
   test("renders one compact row without the long-form explanation", () => {
-    const markup = renderToStaticMarkup(<MonitorSwitch {...baseProps} checked />);
+    const markup = renderToStaticMarkup(
+      <MonitorSwitch {...baseProps} checked />,
+    );
 
     expect(markup).toContain("min-h-12");
     expect(markup).not.toContain("<p");
-    expect(markup).not.toContain("命中阈值的博文会实时进入遮蔽状态");
   });
 
   test("keeps comment controls uniquely labelled", () => {

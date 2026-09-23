@@ -45,11 +45,11 @@ const zh = {
   "popup.dashboard": "控制台 ↗",
   "popup.decisionModel": "决策模型",
   "popup.timelineEnabling": "正在启用时间线过滤…",
-  "popup.timelineRestoring": "正在恢复被遮蔽的博文…",
+  "popup.timelineRestoring": "正在恢复博文…",
   "popup.timelineEnabled": "时间线过滤已实时启用。",
   "popup.timelinePaused": "时间线过滤已暂停，博文正在恢复可见。",
   "popup.commentsEnabling": "正在启用评论区过滤…",
-  "popup.commentsRestoring": "正在恢复被遮蔽的评论…",
+  "popup.commentsRestoring": "正在恢复评论…",
   "popup.commentsEnabled": "评论区过滤已实时启用。",
   "popup.commentsPaused": "评论区过滤已暂停，评论正在恢复可见。",
   "popup.switchFailed": "切换失败，请重试。",
@@ -91,11 +91,13 @@ const zh = {
   "general.homeDescription": "识别首页中的推广与干扰内容。",
   "general.comments": "评论区",
   "general.commentsDescription": "处理详情页中的评论，保留当前根博文。",
-  "general.pauseHelp": "暂停时，遮罩会平滑退出。重新启用后，命中的内容会重新进入遮蔽状态。",
+  "general.pauseHelp":
+    "暂停时，遮罩会平滑退出。重新启用后，命中的内容会重新进入遮蔽状态。",
   "general.modelDisplay": "模型显示",
   "general.modelDisplayDescription": "为 Hover 信息设置熟悉的模型昵称。",
   "general.modelNickname": "模型昵称",
-  "general.modelNicknameHelp": "在 Hover 信息中以 {{model.nickname}} 引用，不改变实际调用模型。",
+  "general.modelNicknameHelp":
+    "在 Hover 信息中以 {{model.nickname}} 引用，不改变实际调用模型。",
   "general.currentModel": "当前模型",
   "general.save": "保存通用设置",
   "general.nicknameRequired": "请填写模型昵称。",
@@ -148,7 +150,8 @@ const zh = {
   "api.oneProvider": "一次仅使用一个渠道",
   "api.configured": "已配置密钥",
   "api.needsKey": "需要 API Key",
-  "api.description": "配置该渠道访问 Jev 所需的本地凭据。切换左侧渠道后，此处会显示对应配置。",
+  "api.description":
+    "配置该渠道访问 Jev 所需的本地凭据。切换左侧渠道后，此处会显示对应配置。",
   "api.providerChanged": "已切换到 {provider}。",
   "api.notConfigured": "未配置",
   "api.configuredHint": "已配置 {hint}",
@@ -177,10 +180,12 @@ const zh = {
   "api.placeholder.typesafe": "输入 TypeSafe API Key",
   "data.loading": "正在读取配置…",
   "data.configTitle": "配置 JSON",
-  "data.configDescription": "直接编辑扩展配置。同步所需的系统字段由后台维护，不会出现在编辑区。",
+  "data.configDescription":
+    "直接编辑扩展配置。同步所需的系统字段由后台维护，不会出现在编辑区。",
   "data.characters": "{count} 个字符",
   "data.note": "说明：",
-  "data.keySeparated": "API Key 与此配置分开保存在本机，不会出现在 JSON 或上传到 S3。",
+  "data.keySeparated":
+    "API Key 与此配置分开保存在本机，不会出现在 JSON 或上传到 S3。",
   "data.format": "格式化 JSON",
   "data.discard": "放弃修改并重载",
   "data.writing": "写入中…",
@@ -206,7 +211,8 @@ const zh = {
   "data.syncStartFailed": "S3 自动同步启用失败。",
   "data.syncStopped": "S3 自动同步已停用，连接配置仍保存在本机。",
   "data.s3SaveFailed": "S3 配置保存失败。",
-  "data.s3Required": "请填写 Endpoint、Region、Bucket、Object Key、Access Key ID 和 Secret Access Key。",
+  "data.s3Required":
+    "请填写 Endpoint、Region、Bucket、Object Key、Access Key ID 和 Secret Access Key。",
   "data.s3Https": "S3 Endpoint 必须使用 HTTPS；仅本机调试允许 HTTP。",
   "data.s3InvalidUrl": "S3 Endpoint 不是有效 URL。",
   "data.s3NoQuery": "S3 Endpoint 不能包含查询参数或锚点。",
@@ -214,10 +220,12 @@ const zh = {
   "strategy.comments": "评论区",
   "strategy.tabs": "策略场景",
   "strategy.title": "{surface}策略",
-  "strategy.libraryHelp": "此处的优先级只作用于{surface}。系统从 P1 开始采用第一条达到自身阈值的策略。",
+  "strategy.libraryHelp":
+    "此处的优先级只作用于{surface}。系统从 P1 开始采用第一条达到自身阈值的策略。",
   "strategy.createSurface": "新建{surface}策略 ＋",
   "strategy.empty": "还没有{surface}策略",
-  "strategy.emptyHelp": "新建第一条策略后，可以配置提示词、敏感度和 Hover 样式。",
+  "strategy.emptyHelp":
+    "新建第一条策略后，可以配置提示词、敏感度和 Hover 样式。",
   "strategy.create": "新建策略",
   "strategy.priority": "优先级",
   "strategy.name": "策略名称",
@@ -233,7 +241,8 @@ const zh = {
   "strategy.enable": "启用 {name}",
   "strategy.details": "详情 →",
   "strategy.delete": "删除",
-  "strategy.orderHelp": "{surface}独立排序。调整顺序、启停或删除后，点击保存才会应用到页面。",
+  "strategy.orderHelp":
+    "{surface}独立排序。调整顺序、启停或删除后，点击保存才会应用到页面。",
   "strategy.saveSurface": "保存{surface}策略",
   "strategy.back": "← 返回{surface}表格",
   "strategy.define": "定义过滤策略",
@@ -244,34 +253,40 @@ const zh = {
   "strategy.enableStrategy": "启用策略",
   "strategy.keepConfig": "停用后仍保留配置",
   "strategy.prompt": "策略提示词",
-  "strategy.promptHelp": "每条适用内容都会分别评估此策略；优先级最高且达到阈值的策略成为最终命中。",
+  "strategy.promptHelp":
+    "每条适用内容都会分别评估此策略；优先级最高且达到阈值的策略成为最终命中。",
   "strategy.looser": "更宽松",
   "strategy.threshold": "命中概率 ≥ {value} 时通过此策略",
   "strategy.sensitive": "更敏感",
   "strategy.hoverTitle": "Hover 的表达方式",
   "strategy.hoverDescription": "展示最终命中的策略及其判断数据。",
   "strategy.hoverTemplate": "Hover 文案",
-  "strategy.templateHelp": "点击变量插入文案。hitrate 是当前内容对最终命中策略的概率。",
+  "strategy.templateHelp":
+    "点击变量插入文案。hitrate 是当前内容对最终命中策略的概率。",
   "strategy.insert": "插入 {variable}",
   "strategy.customCss": "自定义 Hover CSS",
   "strategy.fillExample": "填入示例",
   "strategy.cssHelp": "留空使用默认样式。样式仅在 Hover / 键盘聚焦时生效。",
   "strategy.cssDetails": "支持的选择器、属性与变量",
-  "strategy.cssSelectors": ".veil 遮罩背景，.label 变量文案，.action 揭示按钮。",
+  "strategy.cssSelectors":
+    ".veil 遮罩背景，.label 变量文案，.action 揭示按钮。",
   "strategy.cssProperties":
     "支持 color、background、background-color、border、border-color、border-width、border-style、border-radius、box-shadow、text-shadow、font-size、font-weight、font-style、letter-spacing、line-height、text-decoration、padding。",
-  "strategy.cssVariables": "var(--hitrate) 与 var(--threshold) 为 0–1 数值，可在 calc() 或颜色函数中使用。",
+  "strategy.cssVariables":
+    "var(--hitrate) 与 var(--threshold) 为 0–1 数值，可在 calc() 或颜色函数中使用。",
   "strategy.reset": "恢复默认草稿",
   "strategy.previewUpdates": "预览即刻更新，保存后应用并重新判断",
   "strategy.save": "保存策略",
   "strategy.required": "请填写策略名称、提示词和 Hover 文案。",
   "strategy.surfaceRequired": "请至少选择一个应用范围。",
   "strategy.saved": "策略「{name}」已保存，适用页面将按优先级重新判断。",
-  "strategy.librarySaved": "策略顺序与启用状态已保存，当前页面将按新优先级重新判断。",
+  "strategy.librarySaved":
+    "策略顺序与启用状态已保存，当前页面将按新优先级重新判断。",
   "strategy.validationFailed": "策略验证失败，请检查 Hover 文案与 CSS。",
   "validation.templateUnknown": "未知变量：{token}",
   "validation.templateMalformed": "变量请使用完整的 {{变量名}} 格式。",
-  "validation.cssExternal": "CSS 不支持外部资源、@规则、转义字符或 !important。",
+  "validation.cssExternal":
+    "CSS 不支持外部资源、@规则、转义字符或 !important。",
   "validation.cssFormat": "请使用 .veil { 属性: 值; } 格式。",
   "validation.cssSelector": "仅支持 .veil、.label 和 .action 选择器。",
   "validation.cssProperty": "不支持的 CSS 属性或空值：{detail}",
@@ -291,9 +306,10 @@ const zh = {
   "preview.hit": "已命中 · Hover 查看变量",
   "preview.replay": "重播遮罩 ↻",
   "preview.rate": "模拟 hitrate",
-  "preview.threshold": "当前阈值 {value}。此数值不是模型实际判断。",
+  "preview.threshold": "当前阈值 {value}。",
   "preview.content": "自定义预览内容",
-  "preview.help": "将鼠标移到遮罩上查看 Hover，点击或按 Enter 揭示内容。预览不会发送 API 请求。",
+  "preview.help":
+    "将鼠标移到遮罩上查看 Hover，点击或按 Enter 揭示内容。预览不会发送 API 请求。",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -338,11 +354,13 @@ const en: Record<MessageKey, string> = {
   "popup.timelineEnabling": "Enabling timeline filtering…",
   "popup.timelineRestoring": "Restoring hidden posts…",
   "popup.timelineEnabled": "Timeline filtering is now active.",
-  "popup.timelinePaused": "Timeline filtering is paused and posts are being restored.",
+  "popup.timelinePaused":
+    "Timeline filtering is paused and posts are being restored.",
   "popup.commentsEnabling": "Enabling reply filtering…",
   "popup.commentsRestoring": "Restoring hidden replies…",
   "popup.commentsEnabled": "Reply filtering is now active.",
-  "popup.commentsPaused": "Reply filtering is paused and replies are being restored.",
+  "popup.commentsPaused":
+    "Reply filtering is paused and replies are being restored.",
   "popup.switchFailed": "Could not update the setting. Try again.",
   "popup.themeChanged": "Switched to the {theme} theme.",
   "popup.themeFailed": "Could not switch themes. Try again.",
@@ -354,12 +372,15 @@ const en: Record<MessageKey, string> = {
   "nav.log": "Log",
   "page.general.title": "General settings",
   "page.general.description": "Core project settings.",
-  "page.apiKeys.description": "Configure and manage API Keys stored on this device.",
+  "page.apiKeys.description":
+    "Configure and manage API Keys stored on this device.",
   "page.strategies.title": "Strategy management",
   "page.strategies.edit": "Edit strategy",
-  "page.strategies.description": "Manage filtering strategies for each surface.",
+  "page.strategies.description":
+    "Manage filtering strategies for each surface.",
   "page.data.title": "Data & sync",
-  "page.data.description": "Edit browser configuration and optionally enable automatic S3 sync.",
+  "page.data.description":
+    "Edit browser configuration and optionally enable automatic S3 sync.",
   "page.log.description": "Filtering records from the last 30 days.",
   "status.saving": "Saving…",
   "status.unsaved": "Unsaved changes",
@@ -367,26 +388,34 @@ const en: Record<MessageKey, string> = {
   "status.loadFailed": "Unable to load settings.",
   "status.loadingSettings": "Loading local settings…",
   "status.saved": "Settings saved and applied.",
-  "status.saveFailed": "Save failed. Your draft is preserved; please try again.",
+  "status.saveFailed":
+    "Save failed. Your draft is preserved; please try again.",
   "status.themeChanged": "Switched to the {theme} theme.",
   "status.filterChanged": "{surface} filtering is {state}; syncing page state.",
   "status.filterEnabled": "enabled",
   "status.filterPaused": "paused",
   "general.activity": "Activity",
-  "general.activityPrivacy": "Filtering activity stays on your device and syncs only when you enable S3.",
+  "general.activityPrivacy":
+    "Filtering activity stays on your device and syncs only when you enable S3.",
   "general.localFirst": "Local first",
   "general.scope": "Filtering scope",
-  "general.scopeDescription": "Choose where the quieter reading experience is active.",
+  "general.scopeDescription":
+    "Choose where the quieter reading experience is active.",
   "general.live": "Live",
   "general.homeTimeline": "Home timeline",
-  "general.homeDescription": "Detect promotions and distractions in the Home timeline.",
+  "general.homeDescription":
+    "Detect promotions and distractions in the Home timeline.",
   "general.comments": "Replies",
-  "general.commentsDescription": "Process replies on detail pages while preserving the root post.",
-  "general.pauseHelp": "When paused, veils exit smoothly. Matching content is veiled again after re-enabling.",
+  "general.commentsDescription":
+    "Process replies on detail pages while preserving the root post.",
+  "general.pauseHelp":
+    "When paused, veils exit smoothly. Matching content is veiled again after re-enabling.",
   "general.modelDisplay": "Model display",
-  "general.modelDisplayDescription": "Set a familiar model nickname for Hover details.",
+  "general.modelDisplayDescription":
+    "Set a familiar model nickname for Hover details.",
   "general.modelNickname": "Model nickname",
-  "general.modelNicknameHelp": "Reference it as {{model.nickname}} in Hover details without changing the actual model.",
+  "general.modelNicknameHelp":
+    "Reference it as {{model.nickname}} in Hover details without changing the actual model.",
   "general.currentModel": "Current model",
   "general.save": "Save general settings",
   "general.nicknameRequired": "Enter a model nickname.",
@@ -451,7 +480,8 @@ const en: Record<MessageKey, string> = {
   "api.getKey": "Get API Key ↗",
   "api.replacePlaceholder": "Saved {hint}; enter a new Key to replace it",
   "api.toggleKey": "{action} {provider} API Key",
-  "api.localOnly": "The key stays in local browser storage and is excluded from configuration JSON and S3 sync.",
+  "api.localOnly":
+    "The key stays in local browser storage and is excluded from configuration JSON and S3 sync.",
   "api.clearLocal": "Clear local key",
   "api.replace": "Replace API Key",
   "api.save": "Save API Key",
@@ -473,17 +503,21 @@ const en: Record<MessageKey, string> = {
     "Edit the extension configuration directly. System fields required for sync are maintained in the background and omitted here.",
   "data.characters": "{count} characters",
   "data.note": "Note:",
-  "data.keySeparated": "API Keys are stored separately on this device and never appear in JSON or uploads to S3.",
+  "data.keySeparated":
+    "API Keys are stored separately on this device and never appear in JSON or uploads to S3.",
   "data.format": "Format JSON",
   "data.discard": "Discard changes and reload",
   "data.writing": "Writing…",
   "data.apply": "Apply to browser storage",
   "data.s3Title": "S3 configuration sync",
-  "data.s3Description": "After the first save, the extension compares and syncs configuration automatically.",
+  "data.s3Description":
+    "After the first save, the extension compares and syncs configuration automatically.",
   "data.syncEnabled": "Automatic sync enabled",
   "data.syncDisabled": "Automatic sync not enabled",
-  "data.syncEnabledHelp": "Runs after configuration changes, browser startup and scheduled checks",
-  "data.syncDisabledHelp": "Save the connection and authorize the Endpoint to enable it",
+  "data.syncEnabledHelp":
+    "Runs after configuration changes, browser startup and scheduled checks",
+  "data.syncDisabledHelp":
+    "Save the connection and authorize the Endpoint to enable it",
   "data.bucketHelp":
     "The Bucket must allow GET, PUT and CORS preflight requests from the extension origin. First-time setup requests access to the Endpoint; credentials stay on this device.",
   "data.disableSync": "Disable automatic sync",
@@ -493,16 +527,22 @@ const en: Record<MessageKey, string> = {
   "data.storageReadError": "Unable to read browser storage.",
   "data.jsonValid": "JSON is valid and has not been written to the browser.",
   "data.jsonSyntax": "Invalid JSON syntax.",
-  "data.applied": "Configuration was written to the browser. Background sync will handle it if enabled.",
+  "data.applied":
+    "Configuration was written to the browser. Background sync will handle it if enabled.",
   "data.applyFailed": "Could not write the configuration.",
-  "data.syncStarted": "Automatic S3 sync is enabled; comparison and transfer will run in the background.",
+  "data.syncStarted":
+    "Automatic S3 sync is enabled; comparison and transfer will run in the background.",
   "data.syncStartFailed": "Could not enable automatic S3 sync.",
-  "data.syncStopped": "Automatic S3 sync is disabled. Connection settings remain on this device.",
+  "data.syncStopped":
+    "Automatic S3 sync is disabled. Connection settings remain on this device.",
   "data.s3SaveFailed": "Could not save the S3 configuration.",
-  "data.s3Required": "Enter the Endpoint, Region, Bucket, Object Key, Access Key ID, and Secret Access Key.",
-  "data.s3Https": "The S3 Endpoint must use HTTPS; HTTP is allowed only for local development.",
+  "data.s3Required":
+    "Enter the Endpoint, Region, Bucket, Object Key, Access Key ID, and Secret Access Key.",
+  "data.s3Https":
+    "The S3 Endpoint must use HTTPS; HTTP is allowed only for local development.",
   "data.s3InvalidUrl": "The S3 Endpoint is not a valid URL.",
-  "data.s3NoQuery": "The S3 Endpoint cannot contain a query string or fragment.",
+  "data.s3NoQuery":
+    "The S3 Endpoint cannot contain a query string or fragment.",
   "strategy.timeline": "Timeline posts",
   "strategy.comments": "Replies",
   "strategy.tabs": "Strategy surfaces",
@@ -511,7 +551,8 @@ const en: Record<MessageKey, string> = {
     "Priorities here apply only to {surface}. Starting at P1, the first strategy that reaches its threshold is used.",
   "strategy.createSurface": "New {surface} strategy ＋",
   "strategy.empty": "No {surface} strategies yet",
-  "strategy.emptyHelp": "Create the first strategy to configure its prompt, sensitivity and Hover style.",
+  "strategy.emptyHelp":
+    "Create the first strategy to configure its prompt, sensitivity and Hover style.",
   "strategy.create": "New strategy",
   "strategy.priority": "Priority",
   "strategy.name": "Strategy name",
@@ -532,7 +573,8 @@ const en: Record<MessageKey, string> = {
   "strategy.saveSurface": "Save {surface} strategies",
   "strategy.back": "← Back to {surface} table",
   "strategy.define": "Define filtering strategy",
-  "strategy.defineDescription": "Set the matching goal, surface and queue order.",
+  "strategy.defineDescription":
+    "Set the matching goal, surface and queue order.",
   "strategy.highest": " · Highest",
   "strategy.table": "Strategy table",
   "strategy.tablePriority": "Priority applies only within this table",
@@ -545,37 +587,46 @@ const en: Record<MessageKey, string> = {
   "strategy.threshold": "Passes at a match probability ≥ {value}",
   "strategy.sensitive": "More sensitive",
   "strategy.hoverTitle": "Hover presentation",
-  "strategy.hoverDescription": "Show the final matched strategy and its decision data.",
+  "strategy.hoverDescription":
+    "Show the final matched strategy and its decision data.",
   "strategy.hoverTemplate": "Hover copy",
   "strategy.templateHelp":
     "Select a variable to insert it. hitrate is the current content probability for the final matched strategy.",
   "strategy.insert": "Insert {variable}",
   "strategy.customCss": "Custom Hover CSS",
   "strategy.fillExample": "Use example",
-  "strategy.cssHelp": "Leave empty for the default style. Styles apply only on Hover or keyboard focus.",
+  "strategy.cssHelp":
+    "Leave empty for the default style. Styles apply only on Hover or keyboard focus.",
   "strategy.cssDetails": "Supported selectors, properties and variables",
   "strategy.cssSelectors":
     ".veil is the veil background, .label is the variable copy, and .action is the reveal button.",
   "strategy.cssProperties":
     "Supported: color, background, background-color, border, border-color, border-width, border-style, border-radius, box-shadow, text-shadow, font-size, font-weight, font-style, letter-spacing, line-height, text-decoration and padding.",
-  "strategy.cssVariables": "var(--hitrate) and var(--threshold) are 0–1 values usable in calc() or color functions.",
+  "strategy.cssVariables":
+    "var(--hitrate) and var(--threshold) are 0–1 values usable in calc() or color functions.",
   "strategy.reset": "Restore default draft",
-  "strategy.previewUpdates": "Preview updates immediately; saving applies and re-evaluates",
+  "strategy.previewUpdates":
+    "Preview updates immediately; saving applies and re-evaluates",
   "strategy.save": "Save strategy",
   "strategy.required": "Enter a strategy name, prompt and Hover copy.",
   "strategy.surfaceRequired": "Select at least one surface.",
-  "strategy.saved": "Strategy “{name}” was saved; applicable pages will re-evaluate by priority.",
+  "strategy.saved":
+    "Strategy “{name}” was saved; applicable pages will re-evaluate by priority.",
   "strategy.librarySaved":
     "Strategy order and enabled states were saved; this page will re-evaluate with the new priorities.",
-  "strategy.validationFailed": "Strategy validation failed. Check the Hover copy and CSS.",
+  "strategy.validationFailed":
+    "Strategy validation failed. Check the Hover copy and CSS.",
   "validation.templateUnknown": "Unknown variable: {token}",
   "validation.templateMalformed": "Use the complete {{variable}} format.",
-  "validation.cssExternal": "CSS cannot use external resources, at-rules, escapes, or !important.",
+  "validation.cssExternal":
+    "CSS cannot use external resources, at-rules, escapes, or !important.",
   "validation.cssFormat": "Use the .veil { property: value; } format.",
-  "validation.cssSelector": "Only the .veil, .label, and .action selectors are supported.",
+  "validation.cssSelector":
+    "Only the .veil, .label, and .action selectors are supported.",
   "validation.cssProperty": "Unsupported CSS property or empty value: {detail}",
   "validation.cssValue": "Could not parse the value for {property}.",
-  "validation.cssVariable": "Only the --hitrate and --threshold CSS variables are supported.",
+  "validation.cssVariable":
+    "Only the --hitrate and --threshold CSS variables are supported.",
   "preview.aria": "Strategy preview",
   "preview.live": "Live preview",
   "preview.title": "See how it appears",
@@ -590,13 +641,17 @@ const en: Record<MessageKey, string> = {
   "preview.hit": "Matched · Hover to inspect variables",
   "preview.replay": "Replay veil ↻",
   "preview.rate": "Simulated hitrate",
-  "preview.threshold": "Current threshold {value}. This is not a real model decision.",
+  "preview.threshold":
+    "Current threshold {value}. This is not a real model decision.",
   "preview.content": "Custom preview content",
   "preview.help":
     "Hover the veil to inspect it; click or press Enter to reveal content. The preview sends no API requests.",
 };
 
-const catalogs: Record<Locale, Record<MessageKey, string>> = { "zh-CN": zh, en };
+const catalogs: Record<Locale, Record<MessageKey, string>> = {
+  "zh-CN": zh,
+  en,
+};
 let activeLocale: Locale = "zh-CN";
 let storageListenerInstalled = false;
 const listeners = new Set<() => void>();
@@ -605,19 +660,36 @@ export function normalizeLocale(value: unknown): Locale {
   return value === "en" ? "en" : "zh-CN";
 }
 
-export function translate(locale: Locale, key: MessageKey, values: Record<string, string | number> = {}): string {
-  return catalogs[locale][key].replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? `{${name}}`));
+export function translate(
+  locale: Locale,
+  key: MessageKey,
+  values: Record<string, string | number> = {},
+): string {
+  return catalogs[locale][key].replace(/\{(\w+)\}/g, (_, name: string) =>
+    String(values[name] ?? `{${name}}`),
+  );
 }
 
-export function localizeError(locale: Locale, error: unknown, fallback: MessageKey): string {
-  const message = error instanceof Error ? error.message : typeof error === "string" ? error : "";
+export function localizeError(
+  locale: Locale,
+  error: unknown,
+  fallback: MessageKey,
+): string {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
   const exact: Record<string, MessageKey> = {
     "变量请使用完整的 {{变量名}} 格式。": "validation.templateMalformed",
-    "CSS 不支持外部资源、@规则、转义字符或 !important。": "validation.cssExternal",
+    "CSS 不支持外部资源、@规则、转义字符或 !important。":
+      "validation.cssExternal",
     "请使用 .veil { 属性: 值; } 格式。": "validation.cssFormat",
     "仅支持 .veil、.label 和 .action 选择器。": "validation.cssSelector",
     "CSS 变量仅支持 --hitrate 和 --threshold。": "validation.cssVariable",
-    "请填写 Endpoint、Region、Bucket、Object Key、Access Key ID 和 Secret Access Key。": "data.s3Required",
+    "请填写 Endpoint、Region、Bucket、Object Key、Access Key ID 和 Secret Access Key。":
+      "data.s3Required",
     "S3 Endpoint 必须使用 HTTPS；仅本机调试允许 HTTP。": "data.s3Https",
     "S3 Endpoint 不是有效 URL。": "data.s3InvalidUrl",
     "S3 Endpoint 不能包含查询参数或锚点。": "data.s3NoQuery",
@@ -625,11 +697,20 @@ export function localizeError(locale: Locale, error: unknown, fallback: MessageK
   const direct = exact[message];
   if (direct) return translate(locale, direct);
   const unknownVariable = message.match(/^未知变量：(.*)$/);
-  if (unknownVariable) return translate(locale, "validation.templateUnknown", { token: unknownVariable[1] ?? "" });
+  if (unknownVariable)
+    return translate(locale, "validation.templateUnknown", {
+      token: unknownVariable[1] ?? "",
+    });
   const cssProperty = message.match(/^不支持的 CSS 属性或空值：(.*)$/);
-  if (cssProperty) return translate(locale, "validation.cssProperty", { detail: cssProperty[1] ?? "" });
+  if (cssProperty)
+    return translate(locale, "validation.cssProperty", {
+      detail: cssProperty[1] ?? "",
+    });
   const cssValue = message.match(/^无法解析 (.*) 的值。$/);
-  if (cssValue) return translate(locale, "validation.cssValue", { property: cssValue[1] ?? "" });
+  if (cssValue)
+    return translate(locale, "validation.cssValue", {
+      property: cssValue[1] ?? "",
+    });
   return translate(locale, fallback);
 }
 
@@ -679,7 +760,8 @@ export function useI18n() {
     () => "zh-CN" as Locale,
   );
   const t = useCallback(
-    (key: MessageKey, values?: Record<string, string | number>) => translate(locale, key, values),
+    (key: MessageKey, values?: Record<string, string | number>) =>
+      translate(locale, key, values),
     [locale],
   );
   return {
@@ -703,7 +785,11 @@ export interface LanguageToggleProps {
   dense?: boolean;
 }
 
-export function LanguageToggle({ disabled, compact = false, dense = false }: LanguageToggleProps) {
+export function LanguageToggle({
+  disabled,
+  compact = false,
+  dense = false,
+}: LanguageToggleProps) {
   const { locale, t, setLocale: changeLocale } = useI18n();
   const next = locale === "zh-CN" ? "en" : "zh-CN";
   const iconOnly = compact || dense;

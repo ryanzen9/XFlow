@@ -31,12 +31,12 @@ export function App() {
   const form = useDashboard();
   const { draft, saved } = form;
   const theme = draft?.theme;
-  const menuItems: { id: MenuPage; label: string; caption: string; icon: string }[] = [
-    { id: "general", label: t("nav.general"), caption: "General", icon: "⊞" },
-    { id: "api-keys", label: t("nav.apiKeys"), caption: "Providers", icon: "⌘" },
-    { id: "strategies", label: t("nav.strategies"), caption: "Strategies", icon: "≋" },
-    { id: "data", label: t("nav.data"), caption: "Data", icon: "⌁" },
-    { id: "log", label: t("nav.log"), caption: "Log", icon: "≡" },
+  const menuItems: { id: MenuPage; label: string; icon: string }[] = [
+    { id: "general", label: t("nav.general"), icon: "⊞" },
+    { id: "api-keys", label: t("nav.apiKeys"), icon: "⌘" },
+    { id: "strategies", label: t("nav.strategies"), icon: "≋" },
+    { id: "data", label: t("nav.data"), icon: "⌁" },
+    { id: "log", label: t("nav.log"), icon: "≡" },
   ];
   const strategyError = (strategy: FilterStrategy): string | null => {
     if (!strategy.name.trim() || !strategy.prompt.trim() || !strategy.hoverTemplate.trim()) {
@@ -200,15 +200,13 @@ export function App() {
             <button
               key={item.id}
               className={navItem}
-              aria-label={`${item.label} ${item.caption}`}
               aria-current={menu === item.id ? "page" : undefined}
               onClick={() => setMenuPage(item.id)}
             >
               <span className="w-[18px] text-xl leading-none xl:w-6 xl:text-2xl" aria-hidden="true">
                 {item.icon}
               </span>
-              {item.label}
-              <small className="ml-auto hidden font-mono text-caption font-normal xl:block">{item.caption}</small>
+              <span className="text-ui">{item.label}</span>
             </button>
           ))}
         </nav>
