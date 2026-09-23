@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { PROVIDERS, PROVIDER_IDS, type AppSettings, type ProviderId, type ProviderSummary } from "../../shared";
 import { cn } from "../../ui/cn";
 import { providerLabel, translate, useI18n, type Locale, type MessageKey } from "../../ui/i18n";
+import { privacyPolicyUrl } from "../../ui/privacy";
 import { control, field, fieldHelp, fieldLabel, primaryButton, secondaryButton, tag } from "../../ui/styles";
 import {
   clearProviderCredential,
@@ -199,6 +200,18 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
             </dd>
           </div>
         </dl>
+
+        <p className="mt-6 border-l-[3px] border-line-strong bg-inset px-[13px] py-[11px] text-meta leading-[1.7] text-ink">
+          {t("api.privacyNotice")}{" "}
+          <a
+            className="underline decoration-fg-4 underline-offset-[3px] hover:decoration-fg-2"
+            href={privacyPolicyUrl(locale)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("privacy.policyLink")}
+          </a>
+        </p>
 
         <form
           className="mt-7"

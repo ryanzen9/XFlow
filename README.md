@@ -140,11 +140,13 @@ Bucket 需要允许扩展来源执行 GET、PUT 和 CORS 预检。
 
 ## 隐私与权限
 
+完整说明见 [XFlow 隐私政策](docs/privacy-policy.md)（[English](docs/privacy-policy.en.md)）。
+
 - 只有已启用范围内、从 X 页面提取的文本会发送到当前选中的 Provider。
 - Provider API Key 与 S3 凭据保存在 `chrome.storage.local`，目前没有额外加密。
 - Content Script 只能读取不含密钥的 `chrome.storage.session` 设置镜像。
 - 配置 JSON 和远程 S3 文档不包含 Provider API Key 或 S3 凭据。
-- Activity 只保存内容 ID、短文本预览、作者、过滤时间、命中策略和必要状态；不保存 HTML、DOM、Cookie、Session、媒体文件或浏览路径。
+- Activity 保存内容 ID、短文本预览、作者、对应 X 帖子 URL、过滤时间、命中策略和必要状态；不保存 HTML、DOM、Cookie、Session、媒体文件或完整浏览路径。
 - 固定主机权限仅包含 X / Twitter 与三个 Provider；S3 Endpoint 通过用户操作授予可选权限。
 
 加载扩展前，请自行审阅 [`manifest.json`](manifest.json) 与所选 Provider 的数据政策。不要在 Issue、日志、测试或截图中提交真实凭据。

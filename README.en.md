@@ -141,11 +141,13 @@ The bucket must allow GET, PUT, and CORS preflight requests from the extension o
 
 ## Privacy and permissions
 
+See the full [XFlow Privacy Policy](docs/privacy-policy.en.md) ([简体中文](docs/privacy-policy.md)).
+
 - Only text extracted from enabled X surfaces is sent to the currently selected provider.
 - Provider API keys and S3 credentials live in `chrome.storage.local` without additional encryption.
 - Content Scripts can only read a secret-free settings mirror in `chrome.storage.session`.
 - Editable configuration and remote S3 documents never include provider API keys or S3 credentials.
-- Activity stores only a content ID, short text preview, author, filter time, matched policy, and required state. It does not store HTML, DOM, cookies, sessions, media files, or browsing paths.
+- Activity stores a content ID, short text preview, author, corresponding X post URL, filter time, matched policy, and required state. It does not store HTML, DOM, cookies, sessions, media files, or a complete browsing path.
 - Fixed host permissions cover only X / Twitter and the three providers. An S3 endpoint receives optional access through an explicit user action.
 
 Review [`manifest.json`](manifest.json) and your selected provider's data policy before installing. Never submit real credentials in issues, logs, tests, or screenshots.
