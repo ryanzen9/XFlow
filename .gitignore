@@ -6,6 +6,11 @@ output/
 *.lcov
 *.tgz
 
+# Release artifacts and temporary packaging output
+*.zip
+*.crx
+*.pem
+
 # Local tools and caches
 .playwright-cli/
 .cache/

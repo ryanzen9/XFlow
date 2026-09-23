@@ -125,3 +125,14 @@ Idle → Classifying ─┬→ Visible
 - `dashboard.js` / `dashboard.css`：扩展选项页。
 
 `manifest.json` 经 `scripts/manifest.ts` 校验后写入 `dist/`，`icons/` 与 `_locales/` 一并复制；`popup.html`、`dashboard.html`、`logo.png` 和 `logo-dark.png` 直接复制。`dist/` 是可重建产物，不纳入版本控制。
+
+## Release packaging
+
+`bun run release:package` 清空 `dist/` 与 `output/release/` 后以 `--release` 重建（`sourcemap: "none"`），再交给 `scripts/release.ts`：
+
+1. `planRelease()` 只读取即将打包的字节，断言权限、版本一致性、本地化键与图标尺寸，并要求包内文件集合与 manifest + 扩展页面引用集合完全相等——多一个文件或少一个文件都会失败。
+2. 同一批字节再按扩展名执行禁用模式扫描，`eval(`、`new Function(`、`importScripts(`、`sourceMappingURL`、远程页面资源与 localhost 来源都会阻断发布。规则表见 `FORBIDDEN_ARCHIVE_RULES` 与 `FORBIDDEN_PATTERNS`。
+3. `scripts/archive.ts` 用 `node:zlib` 生成 ZIP：条目按路径排序、`manifest.json` 固定在首位、时间戳固定为 2020-01-01，因此同一份 `dist/` 产生完全相同的字节。写入前会用内置读取器逐条回读并校验 CRC-32，写入后由系统 `unzip -t` / `unzip -Z1` 独立确认。
+4. 产物为 `output/release/xflow-<version>.zip` 及其 `.sha256` 与 `.files.txt`；`output/`、`*.zip`、`*.crx`、`*.pem` 均被 Git 忽略。
+
+`bun run release:check` 先运行完整质量门禁，只有全部通过才会打包，因此被上传的产物一定是通过检查的那一份。

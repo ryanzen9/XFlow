@@ -171,11 +171,29 @@ bun test                # Bun unit tests
 bun run build           # generate dist/
 bun run build:dev       # generate dist/ with localhost debug origins
 bun run check           # complete quality gate
+bun run release:check   # quality gate plus packaging checks, writes the upload ZIP
+bun run release:package # production build and packaging checks only
 bun run preview:dashboard
 bun run preview:tokens
 ```
 
 The Dashboard preview uses an isolated localStorage mock. It does not read installed extension data or call a model. The token index is served at `http://127.0.0.1:43993/` and exposes resolved values in both Light and Dark themes.
+
+## Release packaging
+
+```bash
+bun run release:check     # quality gate plus packaging, writes the upload ZIP
+bun run release:package   # production build and packaging only
+```
+
+Both commands clear `dist/` and `output/release/`, rebuild with `--release` (no source maps), and then:
+
+- Assert permissions, manifest/package version parity, locale keys and icon sizes, and prove the packaged files are exactly the ones the manifest and extension pages reference.
+- Scan the output for `eval(`, `new Function(`, `importScripts(`, `sourceMappingURL`, remote page assets, and localhost origins.
+- Write `output/release/xflow-<version>.zip` with `manifest.json` directly at the ZIP root and no `dist/` wrapper.
+- Verify the archive with the built-in reader plus the system `unzip -t` / `unzip -Z1`, and print the SHA-256 and per-file listing.
+
+Entry timestamps are pinned to 2020-01-01, entries are sorted by path, and the writer depends only on Bun and `node:zlib`, so the same commit produces byte-identical archives on every machine. `output/`, `*.zip`, `*.crx`, and `*.pem` are git-ignored.
 
 ## Roadmap
 

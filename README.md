@@ -170,11 +170,29 @@ bun test                # Bun 单元测试
 bun run build           # 生成 dist/
 bun run build:dev       # 生成 dist/，额外注入 localhost 调试来源
 bun run check           # 完整质量门禁
+bun run release:check   # 完整质量门禁 + 打包校验，产出可上传 ZIP
+bun run release:package # 只做生产构建与打包校验
 bun run preview:dashboard
 bun run preview:tokens
 ```
 
 Dashboard 预览使用隔离的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。设计 token 索引页位于 `http://127.0.0.1:43993/`，可切换 Light / Dark 并查看解析值。
+
+## 发布打包
+
+```bash
+bun run release:check     # 质量门禁 + 打包校验，产出可上传 ZIP
+bun run release:package   # 仅生产构建 + 打包校验
+```
+
+两者都会先清空 `dist/` 与 `output/release/`，再以 `--release` 重新构建（不生成 source map），然后：
+
+- 断言权限、manifest / package 版本一致性、本地化键与图标尺寸，并确认包内文件恰好是 manifest 与扩展页面引用到的那些。
+- 扫描产物中的 `eval(`、`new Function(`、`importScripts(`、`sourceMappingURL`、远程页面资源与 localhost 来源。
+- 生成 `output/release/xflow-<version>.zip`，ZIP 根目录直接包含 `manifest.json`，不包含 `dist/` 外层目录。
+- 用内置 ZIP 校验加系统 `unzip -t` / `unzip -Z1` 交叉验证，输出 SHA-256 与逐文件清单。
+
+ZIP 内记录的时间戳固定为 2020-01-01，条目按路径排序，且只依赖 Bun 与 `node:zlib`，因此同一份提交在任何机器上都会生成完全相同的字节。`output/`、`*.zip`、`*.crx`、`*.pem` 均被 Git 忽略。
 
 ## Roadmap
 

@@ -30,7 +30,8 @@ export interface LocaleCatalog {
   [key: string]: { message: string; description?: string };
 }
 
-export interface ManifestIssue {
+/** Shared shape for every manifest, archive and bundle check in `scripts/`. */
+export interface ValidationIssue {
   code: string;
   detail: string;
 }
@@ -148,8 +149,8 @@ function sortedEquals(left: readonly string[], right: readonly string[]): boolea
  * about to be shipped. Pure: filesystem checks (icon pixels, locale parity)
  * live in `scripts/manifest.test.ts`.
  */
-export function validateManifest(manifest: ExtensionManifest, defaultCatalog: LocaleCatalog): ManifestIssue[] {
-  const issues: ManifestIssue[] = [];
+export function validateManifest(manifest: ExtensionManifest, defaultCatalog: LocaleCatalog): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
   const report = (code: string, detail: string) => issues.push({ code, detail });
 
   if (manifest.manifest_version !== 3) report("manifest-version", `expected 3, received ${manifest.manifest_version}`);
