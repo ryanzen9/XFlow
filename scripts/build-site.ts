@@ -20,8 +20,7 @@ const pages: Array<{
     file: "index.html",
     lang: "zh-CN",
     title: "XFlow — 让噪声退场",
-    description:
-      "XFlow 基于 Jev 自定义策略规则过滤 X 帖子与评论。数据本地存储，高缓存优化，多渠道配置。",
+    description: "XFlow 基于 Jev 自定义策略规则过滤 X 帖子与评论。数据本地存储，高缓存优化，多渠道配置。",
   },
   {
     page: "privacy-zh",
@@ -35,17 +34,11 @@ const pages: Array<{
     file: "privacy-en.html",
     lang: "en",
     title: "XFlow Privacy Policy",
-    description:
-      "How the XFlow website and browser extension process, store, and sync data.",
+    description: "How the XFlow website and browser extension process, store, and sync data.",
   },
 ];
 
-function htmlDocument({
-  page,
-  lang,
-  title,
-  description,
-}: (typeof pages)[number]) {
+function htmlDocument({ page, lang, title, description }: (typeof pages)[number]) {
   const markup = renderToString(createElement(SiteApp, { page }));
 
   return `<!doctype html>
@@ -74,14 +67,8 @@ for (const page of pages) {
 }
 
 await Promise.all([
-  copyFile(
-    resolve(repositoryRoot, "src/styles/token.css"),
-    resolve(assetsRoot, "tokens.css"),
-  ),
-  copyFile(
-    resolve(repositoryRoot, "site/src/site.css"),
-    resolve(assetsRoot, "site.css"),
-  ),
+  copyFile(resolve(repositoryRoot, "src/styles/token.css"), resolve(assetsRoot, "tokens.css")),
+  copyFile(resolve(repositoryRoot, "site/src/site.css"), resolve(assetsRoot, "site.css")),
   Bun.write(resolve(outputRoot, ".nojekyll"), ""),
 ]);
 
