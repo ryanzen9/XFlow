@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { activityHistory, activitySummary, type ActivityData } from "../../shared";
+import { activityHistory, activitySummary, mergeActivityData, type ActivityData } from "../../shared";
 import {
   clearActivity,
   clearActivityHistory,
@@ -177,5 +177,54 @@ describe("activity service", () => {
     expect(activityHistory(cleared, recordedAt + 1)).toEqual([]);
     expect(cleared.historyClearedAt).toBe(recordedAt + 1);
     expect(cleared.events[0]).not.toHaveProperty("preview");
+  });
+
+  test("clears details for an existing event from a faster clock without hiding new events", async () => {
+    const now = Date.UTC(2026, 8, 22, 10);
+    const future = now + 60_000;
+    await recordFilterEvent(
+      {
+        post: { id: "future", text: "Private preview", author: "@person" },
+        surface: "timeline",
+        pageToken: "a",
+        tabId: 1,
+      },
+      future,
+    );
+    const stored = local.activityData as ActivityData;
+    const remote: ActivityData = {
+      ...stored,
+      events: stored.events.map((event) => ({ ...event, status: "incorrect", updatedAt: future + 1 })),
+    };
+
+    const cleared = await clearActivityHistory(now);
+    expect(activityHistory(cleared, now)).toEqual([]);
+    expect(cleared.events[0]).toMatchObject({ detailsCleared: true });
+    expect(cleared.events[0]).not.toHaveProperty("preview");
+
+    const merged = mergeActivityData(cleared, remote, now);
+    expect(activityHistory(merged, now)).toEqual([]);
+    expect(merged.events[0]?.status).toBe("incorrect");
+    expect(merged.events[0]).not.toHaveProperty("author");
+    expect(activitySummary(merged, now).allTime).toBe(1);
+
+    await recordFilterEvent(
+      { post: { id: "12", text: "New preview" }, surface: "timeline", pageToken: "b", tabId: 1 },
+      now + 120_000,
+    );
+    expect(
+      activityHistory((await getActivitySnapshot(now + 120_000)).activity, now + 120_000).map(({ id }) => id),
+    ).toEqual(["x:12"]);
+  });
+
+  test("keeps existing clear markers when the local clock moves backward", async () => {
+    local.activityData = { schemaVersion: 1, clearedAt: 100, historyClearedAt: 200, archivedByDevice: {}, events: [] };
+
+    const historyCleared = await clearActivityHistory(50);
+    expect(historyCleared.historyClearedAt).toBe(200);
+
+    const fullyCleared = await clearActivity(150);
+    expect(fullyCleared.clearedAt).toBe(150);
+    expect(fullyCleared.historyClearedAt).toBe(200);
   });
 });

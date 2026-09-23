@@ -5,6 +5,11 @@ import { focusRing } from "../../../ui/styles";
 
 export const HISTORY_PAGE_SIZE = 10;
 
+export function stepHistoryPage(requestedPage: number, totalPages: number, offset: -1 | 1): number {
+  const page = Math.min(requestedPage, totalPages);
+  return Math.max(1, Math.min(totalPages, page + offset));
+}
+
 function HistoryItem({ item, busy, onIncorrect }: { item: ActivityEvent; busy: boolean; onIncorrect: () => void }) {
   const { locale, t } = useI18n();
   const timeFormatter = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" });
@@ -136,7 +141,7 @@ export function FilterHistory({
                   className={`${focusRing} min-h-(--control-height) rounded-md border border-line-strong bg-surface px-3 text-label text-ink transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-55`}
                   type="button"
                   disabled={page === 1}
-                  onClick={() => setRequestedPage((current) => Math.max(1, current - 1))}
+                  onClick={() => setRequestedPage((current) => stepHistoryPage(current, totalPages, -1))}
                 >
                   {t("history.previous")}
                 </button>
@@ -147,7 +152,7 @@ export function FilterHistory({
                   className={`${focusRing} min-h-(--control-height) rounded-md border border-line-strong bg-surface px-3 text-label text-ink transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-55`}
                   type="button"
                   disabled={page === totalPages}
-                  onClick={() => setRequestedPage((current) => Math.min(totalPages, current + 1))}
+                  onClick={() => setRequestedPage((current) => stepHistoryPage(current, totalPages, 1))}
                 >
                   {t("history.next")}
                 </button>

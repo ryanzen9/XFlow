@@ -60,23 +60,26 @@ const storageMock = `(() => {
         }
         if (message.type === 'CLEAR_ACTIVITY_DATA') {
           const now = Date.now();
-          await globalThis.chrome.storage.local.set({ activityData: { schemaVersion: 1, clearedAt: now, historyClearedAt: now, archivedByDevice: {}, events: [] } });
+          const current = data.activityData || { clearedAt: 0, historyClearedAt: 0 };
+          const clearedAt = Math.max(now, current.clearedAt || 0);
+          await globalThis.chrome.storage.local.set({ activityData: { schemaVersion: 1, clearedAt, historyClearedAt: Math.max(clearedAt, current.historyClearedAt || 0), archivedByDevice: {}, events: [] } });
           return { ok: true, cleared: true };
         }
         if (message.type === 'CLEAR_ACTIVITY_HISTORY') {
           const now = Date.now();
           const activity = data.activityData || { schemaVersion: 1, clearedAt: 0, historyClearedAt: 0, archivedByDevice: {}, events: [] };
-          activity.historyClearedAt = now;
-          activity.events = activity.events.map(event => event.filteredAt <= now ? {
+          activity.historyClearedAt = Math.max(now, activity.historyClearedAt || 0);
+          activity.events = activity.events.map(event => ({
             id: event.id,
             contentId: event.contentId,
             day: event.day,
             filteredAt: event.filteredAt,
-            updatedAt: Math.max(event.updatedAt, now),
+            updatedAt: Math.max(event.updatedAt, activity.historyClearedAt),
             deviceId: event.deviceId,
             surface: event.surface,
-            status: event.status
-          } : event);
+            status: event.status,
+            detailsCleared: true
+          }));
           await globalThis.chrome.storage.local.set({ activityData: activity });
           return { ok: true, cleared: true };
         }

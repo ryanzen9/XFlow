@@ -1,7 +1,12 @@
 import { expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { localDayKey, type ActivityEvent } from "../../../shared";
-import { FilterHistory } from "./FilterHistory";
+import { FilterHistory, stepHistoryPage } from "./FilterHistory";
+
+test("steps from the visible page when history shrinks", () => {
+  expect(stepHistoryPage(6, 2, -1)).toBe(1);
+  expect(stepHistoryPage(6, 2, 1)).toBe(2);
+});
 
 test("paginates a busy day in ten-record pages", () => {
   const now = new Date(2026, 8, 22, 12).getTime();

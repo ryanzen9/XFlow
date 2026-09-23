@@ -105,6 +105,22 @@ describe("activity data", () => {
     expect(merged.events.find(({ id }) => id === "x:old")?.preview).toBeUndefined();
   });
 
+  test("keeps per-event detail clearing after compaction and a stale sync", () => {
+    const now = at(22);
+    const future = event("x:future", 23);
+    const cleared = normalizeActivityData({
+      historyClearedAt: now,
+      events: [{ ...future, detailsCleared: true }],
+    });
+    const compacted = compactActivityData(cleared, at(55));
+    expect(compacted.events[0]?.detailsCleared).toBe(true);
+    const merged = mergeActivityData(compacted, normalizeActivityData({ events: [future] }), at(30));
+
+    expect(merged.events[0]).toMatchObject({ detailsCleared: true });
+    expect(merged.events[0]).not.toHaveProperty("preview");
+    expect(activityHistory(merged, at(30))).toEqual([]);
+  });
+
   test("keeps all-time aggregates when 30-day history details expire", () => {
     const now = at(22);
     const old = event("x:old", 1, { filteredAt: new Date(2026, 6, 1).getTime(), day: "2026-07-01" });

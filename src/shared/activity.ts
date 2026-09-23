@@ -19,6 +19,7 @@ export interface ActivityEvent {
   deviceId: string;
   surface: FilterSurface;
   status: ActivityStatus;
+  detailsCleared?: true;
   author?: string;
   preview?: string;
   url?: string;
@@ -126,6 +127,7 @@ export function normalizeActivityEvent(value: unknown): ActivityEvent | null {
     deviceId,
     surface: input.surface,
     status: isStatus(input.status) ? input.status : "filtered",
+    detailsCleared: input.detailsCleared === true ? true : undefined,
     author: text(input.author, 80),
     preview: text(input.preview, 500),
     url: canonicalPostUrl(input.url),
@@ -165,11 +167,26 @@ function mergeEvent(left: ActivityEvent, right: ActivityEvent): ActivityEvent {
   const winner = compareEventVersion(left, right) >= 0 ? left : right;
   const other = winner === left ? right : left;
   const first = left.filteredAt <= right.filteredAt ? left : right;
-  return {
+  const merged = {
     ...other,
     ...winner,
     filteredAt: first.filteredAt,
     day: first.day,
+  };
+  return left.detailsCleared || right.detailsCleared ? clearActivityEventDetails(merged) : merged;
+}
+
+export function clearActivityEventDetails(event: ActivityEvent, clearedAt = event.updatedAt): ActivityEvent {
+  return {
+    id: event.id,
+    contentId: event.contentId,
+    day: event.day,
+    filteredAt: event.filteredAt,
+    updatedAt: Math.max(event.updatedAt, clearedAt),
+    deviceId: event.deviceId,
+    surface: event.surface,
+    status: event.status,
+    detailsCleared: true,
   };
 }
 
@@ -181,18 +198,8 @@ export function normalizeActivityData(value: unknown): ActivityData {
   for (const raw of Array.isArray(input.events) ? input.events : []) {
     let event = normalizeActivityEvent(raw);
     if (!event || event.filteredAt <= clearedAt) continue;
-    if (event.filteredAt <= historyClearedAt) {
-      event = {
-        id: event.id,
-        contentId: event.contentId,
-        day: event.day,
-        filteredAt: event.filteredAt,
-        updatedAt: Math.max(event.updatedAt, historyClearedAt),
-        deviceId: event.deviceId,
-        surface: event.surface,
-        status: event.status,
-      };
-    }
+    if (event.detailsCleared || event.filteredAt <= historyClearedAt)
+      event = clearActivityEventDetails(event, historyClearedAt);
     const previous = byId.get(event.id);
     byId.set(event.id, previous ? mergeEvent(previous, event) : event);
   }
@@ -251,6 +258,7 @@ export function compactActivityData(data: ActivityData, now = Date.now()): Activ
             deviceId: event.deviceId,
             surface: event.surface,
             status: event.status,
+            detailsCleared: event.detailsCleared,
           },
     );
   }
