@@ -1,7 +1,8 @@
-import { formatProbability, strategyThreshold, type FilterStrategy, type FilterSurface } from "../../shared";
+import { strategyHitRate, type FilterStrategy, type FilterSurface } from "../../shared";
 import { cn } from "../../ui/cn";
 import { eyebrow, primaryButton } from "../../ui/styles";
 import { useI18n } from "../../ui/i18n";
+import { HitRatePresets } from "./HitRatePresets";
 
 interface Props {
   surface: FilterSurface;
@@ -56,17 +57,17 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
           </button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-line bg-surface max-[600px]:overflow-visible max-[600px]:border-0 max-[600px]:bg-transparent max-[600px]:shadow-none">
-          <table className="strategy-table w-full table-fixed border-collapse max-[600px]:block">
+        <div className="overflow-x-auto rounded-lg border border-line bg-surface max-[600px]:overflow-visible max-[600px]:border-0 max-[600px]:bg-transparent max-[600px]:shadow-none">
+          <table className="strategy-table w-full min-w-[800px] table-fixed border-collapse max-[600px]:block max-[600px]:min-w-0">
             <thead className="max-[600px]:hidden">
               <tr>
-                {[t("strategy.priority"), t("strategy.name"), t("strategy.condition"), t("strategy.state"), ""].map(
+                {[t("strategy.priority"), t("strategy.name"), t("strategy.hitRate"), t("strategy.state"), ""].map(
                   (heading, index) => (
                     <th
                       className={cn(
                         "h-[42px] border-b border-line bg-canvas/55 px-4 text-left font-mono text-caption font-semibold text-muted",
                         index === 0 && "w-[148px]",
-                        index === 2 && "w-[120px]",
+                        index === 2 && "w-[220px]",
                         index === 3 && "w-[128px]",
                         index === 4 && "w-[142px]",
                       )}
@@ -136,16 +137,19 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
                   </td>
                   <td
                     className="h-[82px] border-b border-line px-4 py-3 align-middle before:mr-3 before:hidden before:font-mono before:text-caption before:text-muted before:content-[attr(data-label)] max-[600px]:flex max-[600px]:h-auto max-[600px]:min-h-12 max-[600px]:items-center max-[600px]:justify-between max-[600px]:px-3 max-[600px]:py-2.5 max-[600px]:before:block"
-                    data-label={t("strategy.condition")}
+                    data-label={t("strategy.hitRate")}
                   >
-                    <span>
-                      <strong className="threshold-value block font-mono text-xs font-semibold text-ink">
-                        ≥ {formatProbability(strategyThreshold(strategy))}
+                    <div className="grid gap-1.5 max-[600px]:justify-items-end">
+                      <strong className="font-mono text-xs font-semibold text-ink">
+                        ≥ {strategyHitRate(strategy)}%
                       </strong>
-                      <span className="mt-1 block text-caption text-muted">
-                        {t("strategy.sensitivity", { value: strategy.sensitivity })}
-                      </span>
-                    </span>
+                      <HitRatePresets
+                        hitRate={strategyHitRate(strategy)}
+                        name={strategy.name}
+                        disabled={busy}
+                        onChange={(sensitivity) => update(strategy.id, { sensitivity })}
+                      />
+                    </div>
                   </td>
                   <td
                     className="h-[82px] border-b border-line px-4 py-3 align-middle before:mr-3 before:hidden before:font-mono before:text-caption before:text-muted before:content-[attr(data-label)] max-[600px]:flex max-[600px]:h-auto max-[600px]:min-h-12 max-[600px]:items-center max-[600px]:justify-between max-[600px]:border-b-0 max-[600px]:px-3 max-[600px]:py-2.5 max-[600px]:before:block"
