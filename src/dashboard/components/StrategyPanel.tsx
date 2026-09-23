@@ -1,16 +1,18 @@
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import {
   compileHoverCss,
   DEFAULT_HOVER_CSS,
   defaultStrategy,
-  formatProbability,
   HOVER_VARIABLES,
-  strategyThreshold,
+  HOVER_STYLE_PRESETS,
+  sensitivityForHitRate,
+  strategyHitRate,
   validateTemplate,
   type FilterStrategy,
   type FilterSurface,
 } from "../../shared";
 import { StrategyPreview } from "./StrategyPreview";
+import { HitRatePresets } from "./HitRatePresets";
 import { cn } from "../../ui/cn";
 import { localizeError, useI18n } from "../../ui/i18n";
 import {
@@ -19,6 +21,7 @@ import {
   field,
   fieldHelp,
   fieldLabel,
+  focusRing,
   primaryButton,
   secondaryButton,
   sectionDescription,
@@ -59,6 +62,17 @@ export function StrategyPanel({
 }: Props) {
   const { locale, t } = useI18n();
   const update = (patch: Partial<FilterStrategy>) => onChange({ ...strategy, ...patch });
+  const hitRate = strategyHitRate(strategy);
+  const [hitRateEdit, setHitRateEdit] = useState<{ id: string; base: number; value: string } | null>(null);
+  const hitRateInput =
+    hitRateEdit?.id === strategy.id && hitRateEdit.base === hitRate ? hitRateEdit.value : String(hitRate);
+  const commitHitRate = () => {
+    const value = Number(hitRateInput);
+    if (hitRateInput.trim() && Number.isFinite(value)) {
+      update({ sensitivity: sensitivityForHitRate(value) });
+    }
+    setHitRateEdit(null);
+  };
   const rawCssError = compileHoverCss(strategy.hoverCss, "#preview").error;
   const rawTemplateError = validateTemplate(strategy.hoverTemplate);
   const cssError = rawCssError ? localizeError(locale, rawCssError, "strategy.validationFailed") : null;
@@ -171,31 +185,55 @@ export function StrategyPanel({
                 />
                 <small className={fieldHelp}>{t("strategy.promptHelp")}</small>
               </label>
-              <label className={`${field} border-t border-line pt-[18px]`} htmlFor="strategy-sensitivity">
-                <span className={fieldLabel}>
-                  {t("strategy.sensitivity", { value: "" }).trim()}{" "}
-                  <output className="font-mono text-xl text-ink">
-                    {strategy.sensitivity}
-                    <small className={fieldHelp}> / 100</small>
-                  </output>
-                </span>
+              <div className={`${field} border-t border-line pt-[18px]`}>
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <label className={fieldLabel} htmlFor="strategy-hit-rate">
+                    {t("strategy.hitRate")}
+                  </label>
+                  <label
+                    className="flex items-center gap-1 font-mono text-xl text-ink"
+                    htmlFor="strategy-hit-rate-input"
+                  >
+                    <span className="sr-only">{t("strategy.hitRateInput")}</span>
+                    <input
+                      className={`${control} w-20 text-right font-mono text-base`}
+                      id="strategy-hit-rate-input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      inputMode="numeric"
+                      value={hitRateInput}
+                      onChange={(event) =>
+                        setHitRateEdit({ id: strategy.id, base: hitRate, value: event.target.value })
+                      }
+                      onBlur={commitHitRate}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          commitHitRate();
+                        }
+                      }}
+                    />
+                    %
+                  </label>
+                </div>
                 <input
                   className="my-[3px] h-6 w-full cursor-pointer accent-ink"
-                  id="strategy-sensitivity"
+                  id="strategy-hit-rate"
                   type="range"
                   min="0"
                   max="100"
-                  value={strategy.sensitivity}
-                  onChange={(event) => update({ sensitivity: Number(event.target.value) })}
+                  value={hitRate}
+                  onChange={(event) => update({ sensitivity: sensitivityForHitRate(Number(event.target.value)) })}
                 />
-                <span className="flex justify-between gap-2 text-meta">
-                  <small className={fieldHelp}>{t("strategy.looser")}</small>
-                  <strong className="text-center text-xs font-medium text-ink">
-                    {t("strategy.threshold", { value: formatProbability(strategyThreshold(strategy)) })}
-                  </strong>
-                  <small className={fieldHelp}>{t("strategy.sensitive")}</small>
-                </span>
-              </label>
+                <small className={fieldHelp}>{t("strategy.hitRateHelp", { value: hitRate })}</small>
+                <HitRatePresets
+                  hitRate={hitRate}
+                  name={strategy.name}
+                  onChange={(sensitivity) => update({ sensitivity })}
+                />
+              </div>
             </section>
             <section className={card}>
               <div className={sectionTitle}>
@@ -240,6 +278,27 @@ export function StrategyPanel({
                     <code>{`{{${variable}}}`}</code>
                   </button>
                 ))}
+              </div>
+              <div className="grid gap-2 border-t border-line pt-4">
+                <span className={fieldLabel}>{t("strategy.hoverStyle")}</span>
+                <div className="grid gap-2 sm:grid-cols-3" role="group" aria-label={t("strategy.hoverStyle")}>
+                  {HOVER_STYLE_PRESETS.map(({ id, css }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={cn(
+                        focusRing,
+                        "min-h-16 rounded-md border border-line-strong bg-surface px-3 py-2 text-left transition-colors hover:bg-hover",
+                        strategy.hoverCss === css && "border-action bg-selected",
+                      )}
+                      aria-pressed={strategy.hoverCss === css}
+                      onClick={() => update({ hoverCss: css })}
+                    >
+                      <strong className="block text-ui text-ink">{t(`strategy.hoverStyle.${id}`)}</strong>
+                      <span className="mt-1 block text-caption text-muted">{t(`strategy.hoverStyle.${id}Help`)}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
               <label className={field} htmlFor="hover-css">
                 <span className={fieldLabel}>

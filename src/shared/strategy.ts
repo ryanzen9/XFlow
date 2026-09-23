@@ -154,6 +154,15 @@ export function strategyThreshold(strategy: FilterStrategy): number {
   return (100 - strategy.sensitivity) / 100;
 }
 
+/** User-facing minimum model hit rate, while persisted settings keep the legacy sensitivity field. */
+export function strategyHitRate(strategy: FilterStrategy): number {
+  return 100 - strategy.sensitivity;
+}
+
+export function sensitivityForHitRate(hitRate: number): number {
+  return 100 - Math.max(0, Math.min(100, Math.round(hitRate)));
+}
+
 export function strategiesFor(settings: AppSettings, surface: FilterSurface): FilterStrategy[] {
   return settings.strategies
     .filter((strategy) => strategy.enabled && strategy.surfaces.includes(surface))
