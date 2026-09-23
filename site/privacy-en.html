@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#050508" />
+    <meta name="description" content="How the XFlow website and browser extension process, store, and sync data." />
+    <title>XFlow Privacy Policy</title>
+    <link rel="stylesheet" href="./assets/site.css" />
+  </head>
+  <body>
+    <main class="policy-page">
+      <canvas class="beams" data-refracted-beams aria-hidden="true"></canvas>
+      <article class="policy" aria-labelledby="policy-title">
+        <a class="back-link" href="./">← Back to XFlow</a>
+        <h1 id="policy-title">XFlow Privacy Policy</h1>
+        <p class="policy__date">Effective date: September 23, 2026 · Version: 0.1.0 · Publisher: Ryan Zeng</p>
+        <p class="policy__language"><a href="./privacy.html">简体中文版</a></p>
+
+        <section>
+          <h2>Website visits</h2>
+          <p>
+            This site is statically hosted by GitHub Pages. XFlow's page code does not write cookies or use analytics
+            scripts, tracking pixels, forms, or a custom backend. GitHub may process request and operational data under
+            its
+            <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement"
+              >Privacy Statement</a
+            >.
+          </p>
+        </section>
+
+        <section>
+          <h2>Data processed and why</h2>
+          <ul>
+            <li>
+              Visible post IDs and text on supported X / Twitter pages: used to evaluate posts against enabled
+              strategies when you enable a filtering surface and configure a Provider Key. The extension does not read
+              browsing history on other sites.
+            </li>
+            <li>
+              Strategy names, criteria, and related settings: used to form evaluation requests and present results;
+              settings are stored locally in the browser.
+            </li>
+            <li>
+              Filter activity: recorded only after content is veiled. It may include a content ID, a text preview of up
+              to 500 characters, author, post URL, surface, media type, filter time, device identifier, matched
+              strategy, and reveal or incorrect status.
+            </li>
+            <li>
+              Provider API Keys and optional S3 credentials: stored in the extension's
+              <code>chrome.storage.local</code> for authentication or request signing.
+            </li>
+            <li>
+              Interface language, theme, and other settings: used to provide the extension; interface language stays
+              local and is not part of the S3 sync document.
+            </li>
+          </ul>
+          <p>
+            XFlow does not read X login cookies or sessions or store page HTML, DOM, media files, or a complete browsing
+            path. The current version has no ads, developer telemetry, or developer analytics service.
+          </p>
+        </section>
+
+        <section>
+          <h2>Who receives data</h2>
+          <p>
+            <strong>Your selected Jev Provider.</strong>
+            The extension sends post IDs and text, applicable strategy names and criteria, and that Provider's API Key
+            only to the currently selected OpenRouter, Vercel AI Gateway, or TypeSafe service. The request is used to
+            return a filtering decision. A failed request is not automatically forwarded to another Provider. The
+            Provider and any upstream model services it uses process requests under their own terms and privacy
+            policies. Before choosing one, review the
+            <a href="https://openrouter.ai/privacy/">OpenRouter Privacy Policy</a>,
+            <a href="https://vercel.com/legal/privacy-notice">Vercel Privacy Notice</a> and
+            <a href="https://vercel.com/legal/ai-product-terms">AI Product Terms</a>, or the
+            <a href="https://typesafe.ai/legal/privacy-policy">TypeSafe Privacy Policy</a>. Provider use may incur
+            third-party charges.
+          </p>
+          <p>
+            <strong>Your configured S3 Endpoint (optional).</strong>
+            The extension reads or writes a sync document only after you configure a connection, grant access to the
+            Endpoint, and enable sync. The document includes filter configuration (including strategies and prompts),
+            activity records, and statistics, so it may contain post previews, authors, and post URLs. It excludes
+            Provider API Keys, S3 access credentials, and Session Tokens. Signed request headers give the Endpoint the
+            Access Key ID and optional Session Token; the Secret Access Key is used locally to create the signature and
+            is not sent directly. Once enabled, sync is attempted after configuration changes, at browser startup, and
+            about every 15 minutes. Storage, backup, and retention depend on the service and account you choose.
+          </p>
+          <p>
+            Apart from these necessary transfers, the XFlow project does not sell this data, use it for advertising, or
+            provide it to other recipients. Do not submit keys or sensitive post content in public issues or support
+            exchanges.
+          </p>
+        </section>
+
+        <section>
+          <h2>Retention and deletion</h2>
+          <ul>
+            <li>
+              Activity details are kept for about 30 days; then text previews, authors, URLs, and strategy details are
+              removed. Content identities used for deduplication remain for up to about 12 weeks before being folded
+              into per-device lifetime counts. This does not delete data held by third parties.
+            </li>
+            <li>
+              Use <strong>Clear logs</strong> on the Dashboard's Log page to remove authors, text previews, original
+              links, and matched strategies immediately. Content IDs, daily statistics, and all-time totals remain. If
+              S3 sync is enabled, the extension attempts to sync the cleared state.
+            </li>
+            <li>
+              Use <strong>Clear Activity Data</strong> on the Dashboard's General page to remove local activity details
+              and totals. If S3 sync is enabled, the extension attempts to sync the cleared state so older records do
+              not return later.
+            </li>
+            <li>Clear each local Provider Key on the API Keys page. This does not revoke the key at the Provider.</li>
+            <li>
+              Disabling S3 sync does not remove local connection settings or objects already written to S3. Delete
+              remote copies in your S3 service and check its versions and backups.
+            </li>
+            <li>
+              Uninstalling the extension lets the browser remove local extension data. Data already processed or stored
+              by a Provider or S3 service must be managed under that service's policy and account controls.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Security and permissions</h2>
+          <p>
+            Provider Keys and S3 credentials are not exposed to Content Scripts on X pages and are not included in
+            editable configuration JSON or new S3 sync documents. They receive no additional encryption at rest in
+            <code>chrome.storage.local</code>; someone with access to your browser profile may be able to obtain this
+            local data. Provider and S3 connections use HTTPS. X / Twitter page access lets the extension read posts for
+            evaluation and display revealable veils. You grant access to an S3 host separately when saving its Endpoint.
+            The <code>storage</code> permission stores local data; <code>alarms</code> supports scheduled sync after you
+            enable S3.
+          </p>
+        </section>
+
+        <section>
+          <h2>Chrome Web Store Limited Use</h2>
+          <p>
+            XFlow's use of information obtained from the browser and Chrome extension APIs follows the
+            <a href="https://developer.chrome.com/docs/webstore/program-policies/limited-use"
+              >Limited Use requirements of the Chrome Web Store User Data Policy</a
+            >: it processes only data needed for the user-facing filtering, activity, and user-selected sync features
+            described above; transfers data only to provide those features; does not sell data; and does not use data
+            for personalized or targeted advertising. Developers cannot read local extension data by default. A person
+            may review data you specifically provide for support or as otherwise permitted for legal or security reasons
+            under the policy.
+          </p>
+        </section>
+
+        <section>
+          <h2>Changes and contact</h2>
+          <p>
+            If data practices change materially, the project will update this policy and notify users in the extension
+            interface or release notes. For privacy, deletion, or policy questions, email
+            <a href="mailto:ry4nzeng@gmail.com">ry4nzeng@gmail.com</a> or contact the maintainers through
+            <a href="https://github.com/ryanzen9/XFlow/issues">XFlow GitHub Issues</a>. Do not post keys or sensitive
+            content in public issues.
+          </p>
+        </section>
+      </article>
+    </main>
+    <script type="module" src="./assets/refracted-beams.js"></script>
+  </body>
+</html>

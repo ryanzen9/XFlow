@@ -19,6 +19,10 @@
   一个面向 X / Twitter 的策略驱动内容过滤扩展。
 </p>
 
+<p align="center">
+  <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> · <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a>
+</p>
+
 > 当前版本尚未发布到 Chrome Web Store，请通过开发者模式安装。
 
 ## 界面预览
@@ -164,10 +168,13 @@ bun test                # Bun 单元测试
 bun run build           # 生成 dist/
 bun run check           # 完整质量门禁
 bun run preview:dashboard
+bun run preview:site
 bun run preview:tokens
 ```
 
 Dashboard 预览使用隔离的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。设计 token 索引页位于 `http://127.0.0.1:43993/`，可切换 Light / Dark 并查看解析值。
+
+项目官网预览与 GitHub Pages 发布方式见[官网说明](docs/project-page.md)。
 
 ## Roadmap
 

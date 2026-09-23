@@ -20,6 +20,10 @@
   XFlow does not remove posts or shift the feed. It quietly veils matched content and leaves reveal control with the reader.
 </p>
 
+<p align="center">
+  <a href="https://ryanzen9.github.io/XFlow/">Project website</a> · <a href="https://ryanzen9.github.io/XFlow/privacy-en.html">Privacy policy</a>
+</p>
+
 > The current version is not yet available in the Chrome Web Store. Install it in developer mode.
 
 ## Preview
@@ -165,10 +169,13 @@ bun test                # Bun unit tests
 bun run build           # generate dist/
 bun run check           # complete quality gate
 bun run preview:dashboard
+bun run preview:site
 bun run preview:tokens
 ```
 
 The Dashboard preview uses an isolated localStorage mock. It does not read installed extension data or call a model. The token index is served at `http://127.0.0.1:43993/` and exposes resolved values in both Light and Dark themes.
+
+See the [project website guide](docs/project-page.md) for local preview and GitHub Pages deployment details.
 
 ## Roadmap
 

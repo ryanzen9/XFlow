@@ -11,6 +11,7 @@
     "lint": "bunx oxlint . --deny-warnings",
     "lint:fix": "bunx oxlint . --fix",
     "preview:dashboard": "bun run build && bun run scripts/preview-dashboard.ts",
+    "preview:site": "bun run scripts/preview-site.ts",
     "preview:tokens": "bun run scripts/preview-tokens.ts",
     "typecheck": "bunx tsc --noEmit",
     "test": "bun test",
