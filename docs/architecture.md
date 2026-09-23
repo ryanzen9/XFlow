@@ -146,4 +146,6 @@ Idle → Classifying ─┬→ Visible
 | `.github/workflows/ci.yml`      | `main` 推送、Pull Request、手动 | 质量门禁任务执行 `bun run check`；并行的打包任务执行 `bun run release:verify`                   |
 | `.github/workflows/release.yml` | `v*` 标签、手动                 | 校验标签与 `package.json` 版本一致，执行 `release:check` 与 `release:verify` 后创建草稿 Release |
 
-两个工作流都不需要仓库密钥：版本来自 `package.json` 的 `packageManager`，Release 只用 `GITHUB_TOKEN`（`contents: write`）。所有 Action 固定到提交 SHA。手动触发 `release.yml` 不会创建 Release，可用于演练打包流程。
+两个工作流都不需要仓库密钥：版本来自 `package.json` 的 `packageManager`，Release 只用 `GITHUB_TOKEN`（`contents: write`）。所有 Action 固定到提交 SHA。手动触发 `release.yml` 不会创建 Release，可用于演练打包流程；`workflow_dispatch` 要求工作流文件已在默认分支，因此该工作流在合并到 `main` 后生效。
+
+同一提交在 macOS 本地与 GitHub Ubuntu runner 上产出的归档 SHA-256 完全一致，可复现性由 CI 每次运行持续保证。

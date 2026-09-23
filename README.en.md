@@ -209,6 +209,7 @@ Entry timestamps are pinned to 2020-01-01, entries are sorted by path, and the w
 - Every action is pinned to a commit SHA with the matching version in a trailing comment, so a moved tag cannot change what runs.
 - The packaging job builds the archive twice and compares the bytes, so a dependency that embeds a timestamp or a random identifier fails CI instead of silently breaking reproducibility.
 - Pushing a tag such as `v0.1.0` opens a draft release with the ZIP, its `.sha256`, and its `.files.txt`; publishing stays a manual decision. A manual run only builds and verifies.
+- Manual runs (`workflow_dispatch`) require the workflow file to exist on the default branch, so `release.yml` becomes available for both tag pushes and manual runs once it is merged into `main`.
 
 ## Roadmap
 
