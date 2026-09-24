@@ -34,7 +34,7 @@
 
 <table>
   <tr>
-    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="浅色主题下的 Activity Heatmap、趋势和每周回顾" /></td>
+    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="深色主题下的 Activity 热力图、每周回顾和过滤范围" /></td>
     <td width="28%"><img src="docs/assets/veil-preview.webp" alt="深色主题下的 Blur Veil 本地预览、命中率与阈值控制" /></td>
   </tr>
   <tr>

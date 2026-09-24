@@ -35,7 +35,7 @@
 
 <table>
   <tr>
-    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="Activity heatmap, trend, and weekly review in the light theme" /></td>
+    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="XFlow Activity heatmap, weekly review, and filtering controls in the dark theme" /></td>
     <td width="28%"><img src="docs/assets/veil-preview.webp" alt="Local Blur Veil preview with hit-rate and threshold controls in the dark theme" /></td>
   </tr>
   <tr>
