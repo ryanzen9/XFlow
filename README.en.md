@@ -21,6 +21,10 @@
   XFlow does not remove posts or shift the feed. It quietly veils matched content and leaves reveal control with the reader.
 </p>
 
+<p align="center">
+  <a href="https://ryanzen9.github.io/XFlow/">Project website</a> · <a href="https://ryanzen9.github.io/XFlow/privacy-en.html">Privacy policy</a>
+</p>
+
 > The current version is not yet available in the Chrome Web Store. Install it in developer mode.
 
 ## Preview
@@ -142,6 +146,12 @@ S3 uses a path-style URL: `{endpoint}/{bucket}/{objectKey}`. XFlow requests opti
 
 The bucket must allow GET, PUT, and CORS preflight requests from the extension origin.
 
+## Local decisions and feedback
+
+The Background Worker resolves posts in this order: single-post feedback, author rules, user template/semantic rules, exact cache, normalized cache, template cache, semantic cache, then Jev. Cache entries are bound to a stable fingerprint of the active policy and provider, so policy changes cannot reuse stale decisions.
+
+Every detected post exposes a `J` feedback entry. Stable Tweet IDs support durable single-post hide/allow decisions; generalized and author actions create synchronized rules. Explicit user choices always outrank automatic cache and Jev results. Runtime cache entries remain local, expire after seven days, and are bounded to 5,000 entries by LRU cleanup.
+
 ## Privacy and permissions
 
 See the full [XFlow Privacy Policy](https://ryanzen9.github.io/XFlow/privacy-policy/) ([简体中文](https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/); [source](docs/privacy-policy.en.md)).
@@ -175,9 +185,36 @@ bun run check           # complete quality gate
 bun run release:check   # quality gate plus packaging checks, writes the upload ZIP
 bun run release:package # production build and packaging checks only
 bun run release:verify  # package twice and compare the bytes
+bun run benchmark:cache # test and display cache hit-rate and performance metrics
 bun run preview:dashboard
+bun run preview:site
 bun run preview:tokens
 ```
+
+Benchmark samples and probes live in `scripts/cache-benchmark-dataset.ts`. The dataset covers Exact, Normalized, Template, Semantic, and Miss cache paths, plus varied community, transit, travel, cooking, outdoor, gardening, science, and multilingual content. The synthetic workload keeps a deterministic 80/20 hit/miss ratio. Local timings use Bun's high-resolution timer; the end-to-end comparison is an explicit sequential model with a configurable Jev latency. Run `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800`, or add `--json` for machine-readable output. It never reads credentials or makes network requests.
+
+Live TypeSafe mode uses the official `@typesafe-ai/sdk` with 20–50 built-in sanitized samples and validates Exact, Normalized, Template, and Semantic traffic separately. In an interactive TTY, the screen refreshes during cold requests, cache seeding, and each warm batch, showing in-flight SDK calls, overall and per-layer cache hit rates, cache occupancy, and elapsed time. Non-interactive runs still print the final report, while `--json` remains pure JSON output. Because the production batch limit is five, the cold phase makes 4–10 real provider requests; each warm round then uses fresh probes to verify that the cache avoids remote requests:
+
+```bash
+sh scripts/cache-benchmark.sh --live-typesafe --samples=24 --warm-runs=3
+```
+
+#### TypeSafe results (2026-09-23)
+
+One live run with `jev-latest`, 24 cold samples, and three warm rounds produced these results:
+
+| Metric               |                                                               Observed |
+| -------------------- | ---------------------------------------------------------------------: |
+| Cold phase           |                                                5 SDK batches in 2.44 s |
+| Warm phase           |                     72/72 local cache hits; 6.009 ms average per round |
+| SDK calls avoided    |     15/20 (75%); all 15 calls expected during warm rounds were avoided |
+| Intended cache layer | Exact, Normalized, Template, and Semantic each hit 18/18 probes (100%) |
+| Latency change       |                    99.75% lower for one warm round than the cold phase |
+| Cache payload        |                               About 101.20 KiB added across 92 records |
+
+These figures come from one run and demonstrate the benefit after cache seeding; they do not predict latency for every provider run. “Traffic-type accuracy” measures whether probes reached their intended cache layer, not model classification accuracy. The `blur` / `allow` split and 56.9% average probability have no human-labeled ground truth in this benchmark. The reported 3.5% compares the cache payload with the 2.86 MiB runtime extension assets; serialized payload bytes are an estimate, not browser disk usage.
+
+An interactive terminal prompts for the key with hidden input when `TYPESAFE_API_KEY` is unset; CI may supply that environment variable. The key stays in process memory and is never printed, persisted, or written to reports. Do not use a `--key=...` argument, which could leak through shell history or process listings. The report includes per-traffic hit rates, avoided SDK calls, measured latency, logical build-package size, and the before/after serialized IndexedDB cache payload estimate; browser filesystem overhead varies by platform. `--posts=20..50` remains a compatibility alias for `--samples`, and `--json` is supported.
 
 The Dashboard preview uses an isolated localStorage mock. It does not read installed extension data or call a model. The token index is served at `http://127.0.0.1:43993/` and exposes resolved values in both Light and Dark themes.
 
@@ -211,10 +248,12 @@ Entry timestamps are pinned to 2020-01-01, entries are sorted by path, and the w
 - Pushing a tag such as `v0.1.0` opens a draft release with the ZIP, its `.sha256`, and its `.files.txt`; publishing stays a manual decision. A manual run only builds and verifies.
 - Manual runs (`workflow_dispatch`) require the workflow file to exist on the default branch, so `release.yml` becomes available for both tag pushes and manual runs once it is merged into `main`.
 
+See the [project website guide](docs/project-page.md) for local preview and GitHub Pages deployment details.
+
 ## Roadmap
 
-- [ ] Layered content-decision caching and duplicate-classification avoidance
-- [ ] Extension UI internationalization
+- [x] Layered content-decision caching, user feedback, and duplicate-classification avoidance
+- [x] Extension UI internationalization
 - [ ] Chrome Web Store release
 
 ## Documentation

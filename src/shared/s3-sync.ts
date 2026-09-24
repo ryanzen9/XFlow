@@ -1,11 +1,14 @@
 import {
   applyRemoteConfiguration,
+  CONFIG_SCHEMA_VERSION,
   migrateLegacyOpenRouterKey,
   normalizeConfigurationDocument,
   readConfigurationDocument,
+  withPersistenceLock,
   type ConfigurationDocument,
   type S3SyncSettings,
 } from "./persistence";
+import { mergeUserKnowledge, syncableUserKnowledge } from "./content-decision";
 import { mergeActivityData } from "./activity";
 
 export type SyncDirection = "pushed" | "pulled" | "equal";
@@ -149,10 +152,14 @@ async function push(
   document: ConfigurationDocument,
   allowPermissionRequest: boolean,
 ): Promise<void> {
+  const syncDocument: ConfigurationDocument = {
+    ...document,
+    knowledge: syncableUserKnowledge(document.knowledge),
+  };
   const response = await signedRequest(
     settings,
     "PUT",
-    `${JSON.stringify(document, null, 2)}\n`,
+    `${JSON.stringify(syncDocument, null, 2)}\n`,
     allowPermissionRequest,
   );
   if (!response.ok) throw new Error(`S3 推送失败：HTTP ${response.status}`);
@@ -172,7 +179,7 @@ async function readRemote(
     };
     return {
       document: normalizeConfigurationDocument(raw),
-      legacy: raw.schemaVersion !== 3 || typeof raw.config?.apiKey === "string",
+      legacy: raw.schemaVersion !== CONFIG_SCHEMA_VERSION || typeof raw.config?.apiKey === "string",
       legacyApiKey: typeof raw.config?.apiKey === "string" ? raw.config.apiKey : "",
     };
   } catch (error) {
@@ -196,67 +203,88 @@ export async function synchronizeWithS3(settings: S3SyncSettings, options: SyncO
   const allowPermissionRequest = options.allowPermissionRequest !== false;
   const remoteResult = await readRemote(settings, allowPermissionRequest);
   if (remoteResult?.legacyApiKey) await migrateLegacyOpenRouterKey(remoteResult.legacyApiKey);
-  const local = await readConfigurationDocument();
-  if (!remoteResult) {
-    await push(settings, local, allowPermissionRequest);
+  return withPersistenceLock(async () => {
+    const local = await readConfigurationDocument();
+    if (!remoteResult) {
+      await push(settings, local, allowPermissionRequest);
+      return {
+        direction: "pushed",
+        localVersion: local.configVersion,
+        remoteVersion: local.configVersion,
+        document: local,
+      };
+    }
+
+    const remote = remoteResult.document;
+    const knowledge = syncableUserKnowledge(mergeUserKnowledge(local.knowledge, remote.knowledge));
+    const activity = mergeActivityData(local.activity, remote.activity);
+    const localKnowledgeChanged = JSON.stringify(knowledge) !== JSON.stringify(local.knowledge);
+    const remoteKnowledgeChanged = JSON.stringify(knowledge) !== JSON.stringify(remote.knowledge);
+    const localActivityChanged = JSON.stringify(activity) !== JSON.stringify(local.activity);
+    const remoteActivityChanged = JSON.stringify(activity) !== JSON.stringify(remote.activity);
+    const knowledgeChanged = localKnowledgeChanged || remoteKnowledgeChanged;
+    const knowledgeRevision = Math.max(local.knowledgeRevision, remote.knowledgeRevision) + (knowledgeChanged ? 1 : 0);
+
+    if (local.configVersion > remote.configVersion) {
+      let document = { ...local, knowledge, knowledgeRevision, activity };
+      if (localKnowledgeChanged || local.knowledgeRevision !== knowledgeRevision || localActivityChanged)
+        document = await applyWithLatestActivity(document);
+      await push(settings, document, allowPermissionRequest);
+      return {
+        direction: "pushed",
+        localVersion: document.configVersion,
+        remoteVersion: document.configVersion,
+        document,
+      };
+    }
+
+    if (remote.configVersion > local.configVersion) {
+      const incoming = { ...remote, knowledge, knowledgeRevision, activity };
+      const applied = await applyWithLatestActivity(incoming);
+      if (
+        remoteResult.legacy ||
+        remoteKnowledgeChanged ||
+        remote.knowledgeRevision !== knowledgeRevision ||
+        remoteActivityChanged
+      )
+        await push(settings, applied, allowPermissionRequest);
+      return {
+        direction: "pulled",
+        localVersion: applied.configVersion,
+        remoteVersion: remote.configVersion,
+        document: applied,
+      };
+    }
+
+    const localMetadataChanged =
+      localKnowledgeChanged || local.knowledgeRevision !== knowledgeRevision || localActivityChanged;
+    const remoteMetadataChanged =
+      remoteKnowledgeChanged || remote.knowledgeRevision !== knowledgeRevision || remoteActivityChanged;
+    if (localMetadataChanged || remoteMetadataChanged) {
+      const merged = { ...local, knowledge, knowledgeRevision, activity };
+      const applied = localMetadataChanged ? await applyWithLatestActivity(merged) : merged;
+      if (remoteMetadataChanged || remoteResult.legacy) await push(settings, applied, allowPermissionRequest);
+      return {
+        direction: remoteMetadataChanged ? "pushed" : "pulled",
+        localVersion: applied.configVersion,
+        remoteVersion: remote.configVersion,
+        document: applied,
+      };
+    }
+    if (remoteResult.legacy) {
+      await push(settings, local, allowPermissionRequest);
+      return {
+        direction: "pushed",
+        localVersion: local.configVersion,
+        remoteVersion: local.configVersion,
+        document: local,
+      };
+    }
     return {
-      direction: "pushed",
+      direction: "equal",
       localVersion: local.configVersion,
-      remoteVersion: local.configVersion,
-      document: local,
-    };
-  }
-  const remote = remoteResult.document;
-  const activity = mergeActivityData(local.activity, remote.activity);
-  const localActivityChanged = JSON.stringify(activity) !== JSON.stringify(local.activity);
-  const remoteActivityChanged = JSON.stringify(activity) !== JSON.stringify(remote.activity);
-
-  if (local.configVersion > remote.configVersion) {
-    const document = localActivityChanged
-      ? await applyWithLatestActivity({ ...local, activity })
-      : { ...local, activity };
-    await push(settings, document, allowPermissionRequest);
-    return {
-      direction: "pushed",
-      localVersion: document.configVersion,
-      remoteVersion: document.configVersion,
-      document,
-    };
-  }
-
-  if (remote.configVersion > local.configVersion) {
-    const applied = await applyWithLatestActivity({ ...remote, activity });
-    if (remoteResult.legacy || remoteActivityChanged) await push(settings, applied, allowPermissionRequest);
-    return {
-      direction: "pulled",
-      localVersion: applied.configVersion,
       remoteVersion: remote.configVersion,
-      document: applied,
-    };
-  }
-  if (localActivityChanged || remoteActivityChanged) {
-    const merged = await applyWithLatestActivity({ ...local, activity });
-    await push(settings, merged, allowPermissionRequest);
-    return {
-      direction: "pushed",
-      localVersion: merged.configVersion,
-      remoteVersion: merged.configVersion,
-      document: merged,
-    };
-  }
-  if (remoteResult.legacy) {
-    await push(settings, local, allowPermissionRequest);
-    return {
-      direction: "pushed",
-      localVersion: local.configVersion,
-      remoteVersion: local.configVersion,
       document: local,
     };
-  }
-  return {
-    direction: "equal",
-    localVersion: local.configVersion,
-    remoteVersion: remote.configVersion,
-    document: local,
-  };
+  });
 }

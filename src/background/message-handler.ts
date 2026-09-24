@@ -1,6 +1,9 @@
 import {
   PROVIDERS,
   PROVIDER_IDS,
+  policyVersion,
+  sanitizePost,
+  strategiesFor,
   type ExtensionRequest,
   type ExtensionResponse,
   type FilterSurface,
@@ -14,6 +17,7 @@ import {
   saveProviderKey,
 } from "./services/provider-secrets";
 import { getSettings } from "./services/settings";
+import { saveUserDecision } from "./services/decision-cache";
 import {
   clearActivity,
   clearActivityHistory,
@@ -88,6 +92,61 @@ export function handleMessage(
     Array.isArray(message.posts)
   ) {
     void queueReview(message.posts, message.surface).then(sendResponse);
+    return true;
+  }
+
+  if (message.type === "SAVE_USER_DECISION") {
+    const post = sanitizePost(message.post);
+    const actions = [
+      "hide",
+      "allow",
+      "reduce-similar",
+      "block-similar",
+      "block-author",
+      "allow-author",
+      "correct-hide",
+      "correct-allow",
+    ] as const;
+    if (
+      !isContentScript(sender) ||
+      (message.surface !== "timeline" && message.surface !== "comments") ||
+      !post ||
+      !actions.includes(message.action)
+    ) {
+      sendResponse({ ok: false, code: "INVALID_REQUEST", error: "无效的用户标注请求。" });
+      return false;
+    }
+    void (async () => {
+      const settings = await getSettings();
+      const correction = message.action === "correct-hide" || message.action === "correct-allow";
+      const saved = await saveUserDecision(
+        post,
+        message.surface,
+        message.action,
+        Date.now(),
+        correction ? await policyVersion(settings, message.surface) : message.surface,
+      );
+      const strategy = saved.decision === "allow" ? undefined : strategiesFor(settings, message.surface)[0];
+      return {
+        ok: true,
+        result: {
+          id: post.id,
+          probability: saved.probability,
+          decision: saved.decision,
+          source: saved.source,
+          details: strategy
+            ? {
+                strategy,
+                modelNickname: settings.modelNickname,
+                modelId: PROVIDERS[settings.activeProvider].modelId,
+                surface: message.surface,
+              }
+            : undefined,
+        },
+      } as const;
+    })()
+      .then(sendResponse)
+      .catch(() => sendResponse({ ok: false, code: "API_ERROR", error: "保存用户标注失败，请重试。" }));
     return true;
   }
 

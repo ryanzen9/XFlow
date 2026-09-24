@@ -1,0 +1,267 @@
+import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { policyVersion } from "../../shared";
+import { normalizeSettings } from "../../shared/strategy";
+import { findLocalDecision, rememberJevDecision, resetDecisionCacheForTests, saveUserDecision } from "./decision-cache";
+
+const originalChrome = globalThis.chrome;
+let storage: Record<string, unknown>;
+
+function valuesFor(keys: null | string | string[]): Record<string, unknown> {
+  if (keys === null) return { ...storage };
+  const list = Array.isArray(keys) ? keys : [keys];
+  return Object.fromEntries(list.map((key) => [key, storage[key]]));
+}
+
+beforeEach(() => {
+  storage = {};
+  resetDecisionCacheForTests();
+  globalThis.chrome = {
+    storage: {
+      local: {
+        get: async (keys: null | string | string[]) => valuesFor(keys),
+        set: async (patch: Record<string, unknown>) => Object.assign(storage, patch),
+      },
+    },
+  } as unknown as typeof chrome;
+});
+
+afterAll(() => {
+  globalThis.chrome = originalChrome;
+});
+
+describe("layered decision cache", () => {
+  test("reuses exact results, isolates policies, and expires stale entries", async () => {
+    const settings = normalizeSettings({});
+    const policy = await policyVersion(settings, "timeline");
+    const changedPolicy = await policyVersion({ ...settings, activeProvider: "typesafe" }, "timeline");
+    const start = Date.UTC(2026, 8, 22);
+    await rememberJevDecision("Same post", policy, "blur", 0.92, settings.strategies[0]?.id, start);
+    expect(await findLocalDecision("Same post", "timeline", policy, start + 1)).toMatchObject({
+      decision: "blur",
+      source: "exact-cache",
+    });
+    expect(await findLocalDecision("Same post", "timeline", changedPolicy, start + 1)).toBeNull();
+    expect(await findLocalDecision("Same post", "timeline", policy, start + 8 * 24 * 60 * 60 * 1000)).toBeNull();
+  });
+
+  test("uses a template only after two consistent Jev samples", async () => {
+    const policy = "policy-template";
+    await rememberJevDecision("Get $DOGE now! 100X opportunity", policy, "blur", 0.98);
+    expect(await findLocalDecision("Get $SOL now! 20X opportunity", "timeline", policy)).toBeNull();
+    await rememberJevDecision("Get $PEPE now! 50X opportunity", policy, "blur", 0.97);
+    expect(await findLocalDecision("Get $SOL now! 20X opportunity", "timeline", policy)).toMatchObject({
+      decision: "blur",
+      source: "template-cache",
+    });
+  });
+
+  test("serializes concurrent samples for the same template", async () => {
+    const policy = "policy-template-concurrent";
+    await Promise.all([
+      rememberJevDecision("Get $DOGE now! 100X opportunity", policy, "blur", 0.98),
+      rememberJevDecision("Get $PEPE now! 50X opportunity", policy, "blur", 0.97),
+    ]);
+    expect(await findLocalDecision("Get $SOL now! 20X opportunity", "timeline", policy)).toMatchObject({
+      decision: "blur",
+      source: "template-cache",
+    });
+  });
+
+  test("requires both repeated samples and strong confidence before template reuse", async () => {
+    const policy = "policy-template-confidence";
+    await rememberJevDecision("Buy $DOGE now! 100X", policy, "blur", 0.7);
+    await rememberJevDecision("Buy $PEPE now! 50X", policy, "blur", 0.7);
+    expect(await findLocalDecision("Buy $SOL now! 20X", "timeline", policy)).toBeNull();
+  });
+
+  test("uses local embeddings only when high-confidence neighbours agree", async () => {
+    const policy = "policy-semantic";
+    await rememberJevDecision(
+      "urgent crypto promotion claim your guaranteed bonus reward from verified sponsor today",
+      policy,
+      "blur",
+      0.98,
+    );
+    await rememberJevDecision(
+      "urgent crypto campaign claim your guaranteed bonus reward from verified partner today",
+      policy,
+      "blur",
+      0.97,
+    );
+    await rememberJevDecision(
+      "urgent crypto promotion collect your guaranteed bonus reward from verified partner today",
+      policy,
+      "blur",
+      0.96,
+    );
+    expect(
+      await findLocalDecision(
+        "urgent crypto promotion claim your guaranteed bonus reward from verified partner today",
+        "timeline",
+        policy,
+      ),
+    ).toMatchObject({ decision: "blur", source: "semantic-cache" });
+    expect(
+      await findLocalDecision("family hiking photos from the mountain this weekend", "timeline", policy),
+    ).toBeNull();
+
+    const conflictPolicy = "policy-semantic-conflict";
+    await rememberJevDecision(
+      "urgent crypto promotion claim your guaranteed bonus reward from verified sponsor today",
+      conflictPolicy,
+      "blur",
+      0.98,
+    );
+    await rememberJevDecision(
+      "urgent crypto campaign claim your guaranteed bonus reward from verified partner today",
+      conflictPolicy,
+      "blur",
+      0.97,
+    );
+    await rememberJevDecision(
+      "urgent crypto promotion collect your guaranteed bonus reward from verified partner today",
+      conflictPolicy,
+      "allow",
+      0.02,
+    );
+    expect(
+      await findLocalDecision(
+        "urgent crypto promotion claim your guaranteed bonus reward from verified partner today",
+        "timeline",
+        conflictPolicy,
+      ),
+    ).toBeNull();
+  });
+
+  test("gives explicit user decisions priority over an automatic cache entry", async () => {
+    const policy = "policy-user";
+    await rememberJevDecision("A disputed post", policy, "blur", 0.99);
+    await saveUserDecision({ id: "101", postId: "101", text: "A disputed post" }, "timeline", "allow", 100);
+    expect(
+      await findLocalDecision("A disputed post", "timeline", policy, 101, undefined, undefined, "101"),
+    ).toMatchObject({
+      decision: "allow",
+      source: "user",
+    });
+    expect((storage.userKnowledge as { userDecisions: unknown[] }).userDecisions).toHaveLength(1);
+  });
+
+  test("keeps single-post decisions out of identical content on other posts", async () => {
+    await saveUserDecision({ id: "201", postId: "201", text: "identical text" }, "timeline", "hide", 100);
+    expect(storage.userKnowledge).toMatchObject({
+      userDecisions: [
+        {
+          id: "timeline:post:201",
+          postId: "201",
+          contentHash: "",
+          normalizedContent: "",
+          semanticTokens: [],
+        },
+      ],
+    });
+    expect(
+      await findLocalDecision("identical text", "timeline", "policy", 101, undefined, undefined, "201"),
+    ).toMatchObject({ decision: "blur", source: "user" });
+    expect(
+      await findLocalDecision("identical text", "timeline", "policy", 101, undefined, undefined, "202"),
+    ).toBeNull();
+  });
+
+  test("keeps fallback-only post ids transient", async () => {
+    expect(
+      await saveUserDecision({ id: "visible-1", text: "status-less item" }, "timeline", "hide", 100),
+    ).toMatchObject({
+      decision: "blur",
+      source: "user",
+    });
+    expect(storage.userKnowledge).toBeUndefined();
+    expect(storage.knowledgeRevision).toBeUndefined();
+    expect(await findLocalDecision("status-less item", "timeline", "policy", 101)).toBeNull();
+  });
+
+  test("does not leave an IndexedDB rule behind when durable persistence fails", async () => {
+    const originalSet = chrome.storage.local.set;
+    chrome.storage.local.set = async (patch: Record<string, unknown>) => {
+      if ("userKnowledge" in patch) throw new Error("storage unavailable");
+      Object.assign(storage, patch);
+    };
+    try {
+      await expect(
+        saveUserDecision({ id: "401", postId: "401", text: "must not persist" }, "timeline", "hide", 100),
+      ).rejects.toThrow("storage unavailable");
+    } finally {
+      chrome.storage.local.set = originalSet;
+    }
+    expect(
+      await findLocalDecision("must not persist", "timeline", "policy", 101, undefined, undefined, "401"),
+    ).toBeNull();
+  });
+
+  test("removes IndexedDB rules that are absent from canonical durable knowledge", async () => {
+    await saveUserDecision({ id: "402", postId: "402", text: "removed durable rule" }, "timeline", "hide", 100);
+    delete storage.userKnowledge;
+    storage.knowledgeRevision = 2;
+    expect(
+      await findLocalDecision("removed durable rule", "timeline", "policy", 101, undefined, undefined, "402"),
+    ).toBeNull();
+  });
+
+  test("keeps timestamps strictly increasing and serializes concurrent knowledge writes", async () => {
+    await saveUserDecision({ id: "301", postId: "301", text: "same post" }, "timeline", "hide", 100);
+    await saveUserDecision({ id: "301", postId: "301", text: "same post" }, "timeline", "allow", 100);
+    await Promise.all([
+      saveUserDecision({ id: "302", postId: "302", text: "left post" }, "timeline", "hide", 100),
+      saveUserDecision({ id: "303", postId: "303", text: "right post" }, "timeline", "hide", 100),
+    ]);
+    const decisions = (storage.userKnowledge as { userDecisions: Array<{ id: string; updatedAt: number }> })
+      .userDecisions;
+    expect(decisions.find(({ id }) => id === "timeline:post:301")?.updatedAt).toBe(101);
+    expect(decisions.map(({ id }) => id)).toContainAllValues([
+      "timeline:post:301",
+      "timeline:post:302",
+      "timeline:post:303",
+    ]);
+    expect(storage.configVersion).toBeUndefined();
+    expect(storage.knowledgeRevision).toBe(4);
+  });
+
+  test("keeps policy corrections isolated from other policy versions", async () => {
+    await saveUserDecision({ id: "1", text: "policy-specific post" }, "timeline", "correct-allow", 100, "policy-a");
+    expect(await findLocalDecision("policy-specific post", "timeline", "policy-a", 101)).toMatchObject({
+      decision: "allow",
+      source: "user",
+    });
+    expect(await findLocalDecision("policy-specific post", "timeline", "policy-b", 101)).toBeNull();
+  });
+
+  test("applies an explicit semantic block to sufficiently similar content", async () => {
+    const original = "limited offer claim bonus tokens today from our verified promotion account";
+    await saveUserDecision({ id: "1", text: original }, "timeline", "block-similar", 100);
+    const result = await findLocalDecision(
+      "limited offer claim bonus tokens today from our verified promotion channel",
+      "timeline",
+      "any-policy",
+      101,
+    );
+    expect(result).toMatchObject({ decision: "block", source: "user" });
+  });
+
+  test("persists author rules while allowing a content-specific override", async () => {
+    const policy = "policy-author";
+    await saveUserDecision({ id: "1", text: "first post", authorId: "spammer" }, "timeline", "block-author", 100);
+    expect(await findLocalDecision("another post", "timeline", policy, 101, undefined, "Spammer")).toMatchObject({
+      decision: "block",
+      source: "user",
+    });
+    await saveUserDecision(
+      { id: "2", postId: "2", text: "another post", authorId: "spammer" },
+      "timeline",
+      "allow",
+      102,
+    );
+    expect(await findLocalDecision("another post", "timeline", policy, 103, undefined, "spammer", "2")).toMatchObject({
+      decision: "allow",
+      source: "user",
+    });
+  });
+});

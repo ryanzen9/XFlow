@@ -3,23 +3,32 @@ article[data-xflow-state] {
   position: relative !important;
 }
 
-article[data-xflow-state] > :not(.xflow-veil-host) {
+article[data-xflow-state]:has(.xflow-feedback[open]) {
+  z-index: 7;
+  overflow: visible;
+}
+
+article[data-xflow-feedback] {
+  position: relative !important;
+}
+
+article[data-xflow-state] > :not(.xflow-veil-host):not(.xflow-feedback-host) {
   transform-origin: center;
 }
 
-article[data-xflow-state="obscuring"] > :not(.xflow-veil-host) {
+article[data-xflow-state="obscuring"] > :not(.xflow-veil-host):not(.xflow-feedback-host) {
   animation: xflow-obscure-content 360ms cubic-bezier(0.2, 0, 0, 1) both;
   pointer-events: none !important;
   will-change: filter, opacity;
 }
 
-article[data-xflow-state="obscured"] > :not(.xflow-veil-host) {
+article[data-xflow-state="obscured"] > :not(.xflow-veil-host):not(.xflow-feedback-host) {
   filter: blur(12px) contrast(0.7) saturate(0.8);
   opacity: 0.78;
   pointer-events: none !important;
 }
 
-article[data-xflow-state="revealing"] > :not(.xflow-veil-host) {
+article[data-xflow-state="revealing"] > :not(.xflow-veil-host):not(.xflow-feedback-host) {
   animation: xflow-reveal-content 300ms cubic-bezier(0.2, 0, 0, 1) 40ms both;
   pointer-events: none !important;
   will-change: filter, opacity;
@@ -182,11 +191,125 @@ article[data-xflow-state="revealing"] .xflow-veil__prompt {
   border-radius: 2px;
 }
 
-article[data-xflow-motion="fast"] > :not(.xflow-veil-host),
+article[data-xflow-motion="fast"] > :not(.xflow-veil-host):not(.xflow-feedback-host),
 article[data-xflow-motion="fast"] .xflow-veil::before,
 article[data-xflow-motion="fast"] .xflow-veil__prompt {
   animation-duration: 120ms !important;
   animation-delay: 0ms !important;
+}
+
+.xflow-feedback-host {
+  all: initial;
+  position: absolute;
+  z-index: 6;
+  top: 8px;
+  right: 48px;
+  display: block;
+  color: var(--xflow-post-color, rgb(15, 20, 25));
+  font-family:
+    TwitterChirp,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.xflow-feedback {
+  position: relative;
+}
+
+.xflow-feedback__trigger {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: rgb(10, 119, 118);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  list-style: none;
+  transition: background-color 120ms ease-out;
+  user-select: none;
+}
+
+.xflow-feedback__trigger::-webkit-details-marker {
+  display: none;
+}
+
+.xflow-feedback__trigger:is(:hover, :focus-visible),
+.xflow-feedback[open] > .xflow-feedback__trigger {
+  background: rgba(10, 119, 118, 0.12);
+  outline: none;
+}
+
+.xflow-feedback__menu {
+  box-sizing: border-box;
+  position: absolute;
+  top: 32px;
+  right: 0;
+  display: grid;
+  width: 210px;
+  overflow: hidden;
+  border: 1px solid rgba(127, 127, 127, 0.22);
+  border-radius: 14px;
+  background: rgb(255, 255, 255);
+  color: rgb(15, 20, 25);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+}
+
+.xflow-feedback__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.16);
+  color: rgb(83, 100, 113);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.xflow-feedback__meta strong {
+  color: rgb(10, 119, 118);
+}
+
+.xflow-feedback__menu button {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  padding: 10px 12px;
+  color: inherit;
+  font-size: 14px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.xflow-feedback__menu button:is(:hover, :focus-visible) {
+  background: rgba(127, 127, 127, 0.12);
+  outline: none;
+}
+
+.xflow-feedback__menu button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.xflow-feedback__menu p {
+  margin: 0;
+  padding: 8px 12px;
+  color: rgb(244, 33, 46);
+  font-size: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .xflow-feedback__menu {
+    border-color: rgb(47, 51, 54);
+    background: rgb(0, 0, 0);
+    color: rgb(231, 233, 234);
+  }
 }
 
 @keyframes xflow-obscure-content {

@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, expect, test } from "bun:test";
 import type { ExtensionResponse } from "../shared";
 import { handleMessage } from "./message-handler";
+import { resetDecisionCacheForTests } from "./services/decision-cache";
 import { resetActivityServiceForTests } from "./services/activity";
 
 const originalChrome = globalThis.chrome;
@@ -8,6 +9,7 @@ let storage: Record<string, unknown>;
 let session: Record<string, unknown>;
 
 beforeEach(() => {
+  resetDecisionCacheForTests();
   storage = {
     activeProvider: "openrouter",
     providerSecrets: { openrouter: "sk-or-private-4321", "vercel-ai-gateway": "", typesafe: "" },
@@ -93,6 +95,61 @@ test("allows an options page opened in a tab to save the TypeSafe official key",
   });
   expect(response.ok).toBeTrue();
   expect((storage.providerSecrets as Record<string, string>).typesafe).toBe("typesafe-official-key");
+});
+
+test("accepts a content-script correction and persists synchronized user knowledge", async () => {
+  const response = await new Promise<ExtensionResponse>((resolve) => {
+    expect(
+      handleMessage(
+        {
+          type: "SAVE_USER_DECISION",
+          surface: "timeline",
+          post: { id: "42", postId: "42", text: "show this post" },
+          action: "allow",
+        },
+        { id: "xflow-test", url: "https://x.com/home", tab: { id: 10 } as chrome.tabs.Tab },
+        resolve,
+      ),
+    ).toBeTrue();
+  });
+  expect(response).toMatchObject({ ok: true, result: { id: "42", decision: "allow", source: "user" } });
+  expect((storage.userKnowledge as { userDecisions: unknown[] }).userDecisions).toHaveLength(1);
+  expect(storage.configVersion).toBeUndefined();
+  expect(storage.knowledgeRevision).toBe(1);
+});
+
+test("rejects a malformed user-decision post without throwing", () => {
+  let response: ExtensionResponse | undefined;
+  const keepChannelOpen = handleMessage(
+    { type: "SAVE_USER_DECISION", surface: "timeline", post: null, action: "hide" } as never,
+    { id: "xflow-test", url: "https://x.com/home", tab: { id: 12 } as chrome.tabs.Tab },
+    (value) => {
+      response = value;
+    },
+  );
+  expect(keepChannelOpen).toBeFalse();
+  expect(response).toEqual({ ok: false, code: "INVALID_REQUEST", error: "无效的用户标注请求。" });
+});
+
+test("persists an author rule from a trusted content script", async () => {
+  const response = await new Promise<ExtensionResponse>((resolve) => {
+    expect(
+      handleMessage(
+        {
+          type: "SAVE_USER_DECISION",
+          surface: "timeline",
+          post: { id: "43", text: "author post", authorId: "ExampleAuthor" },
+          action: "block-author",
+        },
+        { id: "xflow-test", url: "https://x.com/home", tab: { id: 11 } as chrome.tabs.Tab },
+        resolve,
+      ),
+    ).toBeTrue();
+  });
+  expect(response).toMatchObject({ ok: true, result: { decision: "block", source: "user" } });
+  expect(storage.userKnowledge).toMatchObject({
+    userDecisions: [{ scope: "author", authorId: "exampleauthor", decision: "block" }],
+  });
 });
 
 test("records filter activity only from an X content script", async () => {

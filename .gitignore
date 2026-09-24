@@ -1,6 +1,7 @@
 # Dependencies and build artifacts
 node_modules/
 dist/
+site-dist/
 coverage/
 output/
 *.lcov

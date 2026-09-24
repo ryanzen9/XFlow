@@ -1,24 +1,25 @@
 import {
-  FALLBACK_THRESHOLD,
   MAX_BATCH_SIZE,
   clampProbability,
   getFilterSurface,
   isFilterablePostOnSurface,
-  strategyThreshold,
   type ExtensionStatus,
   type FilterSurface,
   type PostInput,
   type ReviewResult,
+  type UserDecisionAction,
   type VeilDetails,
 } from "../shared";
 import { ARTICLE_SELECTOR, extractPost } from "./dom/post-extractor";
 import { mountPostVeil, type PostVeilPresentation } from "./render/post-veil";
+import { mountPostFeedback, type PostFeedbackPresentation } from "./render/post-feedback";
 import {
   getExtensionStatus,
   markActivityRevealed,
   recordFilterEvent,
   resetPageActivity,
   reviewPosts,
+  saveUserDecision,
 } from "./services/extension-client";
 
 interface QueueItem extends PostInput {
@@ -41,6 +42,7 @@ const FAST_SCROLL_COOLDOWN_MS = 180;
 
 export class TimelineController {
   private readonly presentations = new Map<HTMLElement, PostVeilPresentation | null>();
+  private readonly feedbackPresentations = new Map<HTMLElement, PostFeedbackPresentation>();
   private readonly deferredObscures = new Map<HTMLElement, DeferredObscure>();
   private readonly filteredPosts = new Map<HTMLElement, FilteredPost>();
   private readonly readingSince = new Map<HTMLElement, number>();
@@ -57,10 +59,12 @@ export class TimelineController {
   private settingsRevision = 0;
   private scanTimer: number | undefined;
   private policyTimer: number | undefined;
+  private decisionTimer: number | undefined;
   private scrollFrame: number | undefined;
   private lastScrollY = window.scrollY;
   private lastScrollAt = performance.now();
   private fastScrollUntil = 0;
+  private ignoreKnowledgeRevisionsUntil = 0;
   private pageToken = this.createPageToken();
 
   constructor() {
@@ -102,6 +106,11 @@ export class TimelineController {
       return;
     }
     if (changes.activeProvider || changes.providerConfigured) {
+      void this.refreshStatus(true);
+      return;
+    }
+    if (changes.decisionKnowledgeRevision) {
+      if (performance.now() < this.ignoreKnowledgeRevisionsUntil) return;
       void this.refreshStatus(true);
       return;
     }
@@ -160,8 +169,13 @@ export class TimelineController {
       if (!extracted) continue;
 
       this.presentations.set(article, null);
+      const item: QueueItem = { ...extracted.post, article, generation: this.generation, surface };
+      this.feedbackPresentations.set(
+        article,
+        mountPostFeedback(article, undefined, Boolean(item.authorId), (action) => this.applyUserDecision(item, action)),
+      );
       if (!isFilterablePostOnSurface(surface, extracted.post.id, location.href)) continue;
-      this.queue.push({ ...extracted.post, article, generation: this.generation, surface });
+      this.queue.push(item);
     }
 
     this.updateReadingZones();
@@ -187,7 +201,15 @@ export class TimelineController {
         let response;
         try {
           response = await reviewPosts(
-            batch.map(({ id, text }) => ({ id, text })),
+            batch.map(({ id, postId, text, authorId, author, url, mediaType }) => ({
+              id,
+              ...(postId ? { postId } : {}),
+              text,
+              ...(authorId ? { authorId } : {}),
+              ...(author ? { author } : {}),
+              ...(url ? { url } : {}),
+              ...(mediaType ? { mediaType } : {}),
+            })),
             surface,
           );
         } catch {
@@ -218,18 +240,68 @@ export class TimelineController {
     for (const item of batch) {
       if (item.generation !== this.generation || !item.article.isConnected) continue;
       const result = byId.get(item.id);
-      if (!result || this.revealedPostIds.has(item.id)) continue;
+      if (!result) continue;
       const probability = clampProbability(result.probability);
       const details = result.details;
-      if (probability < (details ? strategyThreshold(details.strategy) : FALLBACK_THRESHOLD)) continue;
-      this.filteredPosts.set(item.article, { item, probability, details });
-      if (!this.active) continue;
-
-      if (this.hasSettledInReadingZone(item.article)) {
-        this.deferredObscures.set(item.article, { item, probability, details });
-        continue;
+      if (result.decision !== "allow" && !this.revealedPostIds.has(item.id)) {
+        this.filteredPosts.set(item.article, { item, probability, details });
+        if (this.active) {
+          if (this.hasSettledInReadingZone(item.article)) {
+            this.deferredObscures.set(item.article, { item, probability, details });
+          } else {
+            this.obscure(item, probability, details);
+          }
+        }
       }
-      this.obscure(item, probability, details);
+      const existing = this.feedbackPresentations.get(item.article);
+      if (existing) existing.update(result);
+      else {
+        this.feedbackPresentations.set(
+          item.article,
+          mountPostFeedback(item.article, result, Boolean(item.authorId), (action) =>
+            this.applyUserDecision(item, action),
+          ),
+        );
+      }
+    }
+  }
+
+  private async applyUserDecision(item: QueueItem, action: UserDecisionAction): Promise<void> {
+    const durableDecision = Boolean(item.postId) || (action !== "hide" && action !== "allow");
+    if (durableDecision) this.ignoreKnowledgeRevisionsUntil = performance.now() + 1_000;
+    const response = await saveUserDecision(
+      {
+        id: item.id,
+        ...(item.postId ? { postId: item.postId } : {}),
+        text: item.text,
+        ...(item.authorId ? { authorId: item.authorId } : {}),
+        ...(item.author ? { author: item.author } : {}),
+        ...(item.url ? { url: item.url } : {}),
+        ...(item.mediaType ? { mediaType: item.mediaType } : {}),
+      },
+      item.surface,
+      action,
+    );
+    if (!response.ok || !("result" in response)) throw new Error(response.ok ? "Invalid response" : response.error);
+    const result = response.result;
+    this.feedbackPresentations.get(item.article)?.update(result);
+    if (result.decision === "allow") {
+      this.revealedPostIds.add(item.id);
+      this.filteredPosts.delete(item.article);
+      this.deferredObscures.delete(item.article);
+      this.presentations.get(item.article)?.reveal();
+    } else {
+      this.revealedPostIds.delete(item.id);
+      const filtered = { item, probability: result.probability, details: result.details };
+      this.filteredPosts.set(item.article, filtered);
+      this.obscure(item, result.probability, result.details);
+    }
+    if (durableDecision) {
+      if (this.decisionTimer !== undefined) window.clearTimeout(this.decisionTimer);
+      this.decisionTimer = window.setTimeout(() => {
+        this.decisionTimer = undefined;
+        void this.refreshStatus(true);
+      }, 400);
     }
   }
 
@@ -330,6 +402,8 @@ export class TimelineController {
       if (article.isConnected) continue;
       presentation?.destroy();
       this.presentations.delete(article);
+      this.feedbackPresentations.get(article)?.destroy();
+      this.feedbackPresentations.delete(article);
       this.deferredObscures.delete(article);
       this.filteredPosts.delete(article);
       this.readingSince.delete(article);
@@ -341,7 +415,9 @@ export class TimelineController {
     this.generation += 1;
     if (this.scanTimer !== undefined) window.clearTimeout(this.scanTimer);
     if (this.policyTimer !== undefined) window.clearTimeout(this.policyTimer);
+    if (this.decisionTimer !== undefined) window.clearTimeout(this.decisionTimer);
     this.policyTimer = undefined;
+    this.decisionTimer = undefined;
     if (this.scrollFrame !== undefined) cancelAnimationFrame(this.scrollFrame);
     this.scanTimer = undefined;
     this.scrollFrame = undefined;
@@ -351,7 +427,9 @@ export class TimelineController {
     this.readingSince.clear();
     this.activityEvents.clear();
     for (const presentation of this.presentations.values()) presentation?.destroy();
+    for (const presentation of this.feedbackPresentations.values()) presentation.destroy();
     this.presentations.clear();
+    this.feedbackPresentations.clear();
   }
 
   private async refreshStatus(reset = false): Promise<void> {
@@ -371,7 +449,7 @@ export class TimelineController {
     try {
       const response = await getExtensionStatus();
       if (revision !== this.settingsRevision) return;
-      this.active = response.ok && "configured" in response && response.configured && this.isSurfaceEnabled(response);
+      this.active = response.ok && "configured" in response && this.isSurfaceEnabled(response);
     } catch {
       if (revision !== this.settingsRevision) return;
       this.active = false;
@@ -413,7 +491,7 @@ export class TimelineController {
     try {
       const response = await getExtensionStatus();
       if (revision !== this.settingsRevision) return;
-      this.active = response.ok && "configured" in response && response.configured && this.isSurfaceEnabled(response);
+      this.active = response.ok && "configured" in response && this.isSurfaceEnabled(response);
     } catch {
       if (revision !== this.settingsRevision) return;
       this.active = false;
