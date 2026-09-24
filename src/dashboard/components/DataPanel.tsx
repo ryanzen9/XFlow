@@ -12,6 +12,7 @@ import {
 } from "../../shared";
 import { cn } from "../../ui/cn";
 import { localizeError, useI18n } from "../../ui/i18n";
+import { privacyPolicyUrl } from "../../ui/privacy";
 import {
   card,
   control,
@@ -216,6 +217,17 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
               <p className={sectionDescription}>{t("data.s3Description")}</p>
             </div>
           </div>
+          <p className="mt-4 border-l-[3px] border-line-strong bg-inset px-[13px] py-[11px] text-meta leading-[1.7] text-ink">
+            {t("data.privacyNotice")}{" "}
+            <a
+              className="underline decoration-fg-4 underline-offset-[3px] hover:decoration-fg-2"
+              href={privacyPolicyUrl(locale)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t("privacy.policyLink")}
+            </a>
+          </p>
           <div
             className="my-[18px] mb-1 flex items-center gap-2.5 rounded-md border border-line bg-canvas/45 px-3 py-[11px]"
             role="status"

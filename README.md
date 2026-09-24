@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml"><img src="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <img src="https://img.shields.io/badge/version-0.1.0-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.0" />
   <img src="https://img.shields.io/badge/Manifest-V3-525252?style=flat-square&labelColor=0a0a0a" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/React-19-525252?style=flat-square&labelColor=0a0a0a" alt="React 19" />
@@ -33,7 +34,7 @@
 
 <table>
   <tr>
-    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="浅色主题下的 Activity Heatmap、趋势和每周回顾" /></td>
+    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="深色主题下的 Activity 热力图、每周回顾和过滤范围" /></td>
     <td width="28%"><img src="docs/assets/veil-preview.webp" alt="深色主题下的 Blur Veil 本地预览、命中率与阈值控制" /></td>
   </tr>
   <tr>
@@ -131,11 +132,12 @@ bun run check
 - Dashboard 提供过去 12 周 Heatmap、最近 7 天趋势、当前自然周回顾和最近 30 天筛选历史。
 - 只有明确选择 **Not supposed to be filtered** 才会标记错误；临时 Reveal 不会自动视为误判。
 - 详细历史在 30 天后压缩；事件身份在 12 周后折叠为按设备合并的紧凑计数，以维持累计值并限制存储增长。
+- 日志页可单独清理作者、内容预览、原文链接和命中策略，保留每日统计与累计数量。
 - 全部清除会写入 `clearedAt` 墓碑，避免旧设备或远程对象恢复已清除记录。
 
 ## S3 同步
 
-S3 使用 path-style URL：`{endpoint}/{bucket}/{objectKey}`。首次保存 Endpoint 时扩展会请求可选主机权限；启用后会在配置写入、浏览器启动和每 15 分钟定时检查时同步。
+S3 使用 path-style URL：`{endpoint}/{bucket}/{objectKey}`。首次保存 Endpoint 时扩展会请求可选主机权限；启用后会在配置写入、浏览器启动和每 15 分钟定时检查时同步。生产清单只声明 `https://*/*`，因此使用 `http://localhost` 或 `http://127.0.0.1` 的本地 S3 需要先执行 `bun run build:dev`。
 
 - 本地配置版本更新或远程对象不存在：推送本地配置。
 - 远程配置版本更新：拉取并应用远程配置。
@@ -163,12 +165,17 @@ Background Worker 按“单条标注 → 作者规则 → 用户模板/语义规
 
 ## 隐私与权限
 
+完整说明见 [XFlow 隐私政策](https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/)（[English](https://ryanzen9.github.io/XFlow/privacy-policy/)；[仓库源文件](docs/privacy-policy.md)）。
+
 - 只有已启用范围内、从 X 页面提取的文本会发送到当前选中的 Provider。
 - Provider API Key 与 S3 凭据保存在 `chrome.storage.local`，目前没有额外加密。
 - Content Script 只能读取不含密钥的 `chrome.storage.session` 设置镜像。
 - 配置 JSON 和远程 S3 文档不包含 Provider API Key 或 S3 凭据。
-- Activity 只保存内容 ID、短文本预览、作者、过滤时间、命中策略和必要状态；不保存 HTML、DOM、Cookie、Session、媒体文件或浏览路径。
+- Activity 保存内容 ID、短文本预览、作者、对应 X 帖子 URL、过滤时间、命中策略和必要状态；不保存 HTML、DOM、Cookie、Session、媒体文件或完整浏览路径。
 - 固定主机权限仅包含 X / Twitter 与三个 Provider；S3 Endpoint 通过用户操作授予可选权限。
+- 生产 `manifest.json` 不声明任何 localhost / 127.0.0.1 来源；本地 http 调试来源只由 `bun run build:dev` 注入。
+
+生产清单要求 Chrome 123 或更高版本：界面配色通过 `light-dark()` 解析。扩展名称、描述与工具栏提示来自 `_locales/en` 与 `_locales/zh_CN`，图标为 `icons/` 下四个独立尺寸的 PNG。
 
 加载扩展前，请自行审阅 [`manifest.json`](manifest.json) 与所选 Provider 的数据政策。不要在 Issue、日志、测试或截图中提交真实凭据。
 
@@ -184,7 +191,11 @@ bun run lint:fix        # 修复可自动处理的规则
 bun run typecheck       # TypeScript 静态检查
 bun test                # Bun 单元测试
 bun run build           # 生成 dist/
+bun run build:dev       # 生成 dist/，额外注入 localhost 调试来源
 bun run check           # 完整质量门禁
+bun run release:check   # 完整质量门禁 + 打包校验，产出可上传 ZIP
+bun run release:package # 只做生产构建与打包校验
+bun run release:verify  # 连续打包两次并逐字节比较
 bun run benchmark:cache # 测试并展示分层缓存命中率与性能影响
 bun run preview:dashboard
 bun run preview:site
@@ -217,6 +228,36 @@ sh scripts/cache-benchmark.sh --live-typesafe --samples=24 --warm-runs=3
 未设置 `TYPESAFE_API_KEY` 时，交互式终端会隐藏输入 Key；CI 可使用环境变量传入。Key 只存在于当前进程内存，不会打印、保存到扩展存储或写入报告。不要使用 `--key=...`，以免密钥进入 Shell 历史或进程列表。报告包含各类型命中率、SDK 调用减少率、真实延迟、构建包逻辑体积，以及缓存 IndexedDB 序列化载荷的前后变化；浏览器文件系统开销会因平台而异。`--posts=20..50` 仍作为 `--samples` 的兼容别名，`--json` 可输出机器可读结果。
 
 Dashboard 预览使用隔离的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。设计 token 索引页位于 `http://127.0.0.1:43993/`，可切换 Light / Dark 并查看解析值。
+
+## 发布打包
+
+```bash
+bun run release:check     # 质量门禁 + 打包校验，产出可上传 ZIP
+bun run release:package   # 仅生产构建 + 打包校验
+bun run release:verify    # 连续打包两次并逐字节比较，验证可复现
+```
+
+`release:check` 与 `release:package` 都会先清空 `dist/` 与 `output/release/`，再以 `--release` 重新构建（不生成 source map），然后：
+
+- 断言权限、manifest / package 版本一致性、本地化键与图标尺寸，并确认包内文件恰好是 manifest 与扩展页面引用到的那些。
+- 扫描产物中的 `eval(`、`new Function(`、`importScripts(`、`sourceMappingURL`、远程页面资源与 localhost 来源。
+- 生成 `output/release/xflow-<version>.zip`，ZIP 根目录直接包含 `manifest.json`，不包含 `dist/` 外层目录。
+- 用内置 ZIP 校验加系统 `unzip -t` / `unzip -Z1` 交叉验证，输出 SHA-256 与逐文件清单。
+
+ZIP 内记录的时间戳固定为 2020-01-01，条目按路径排序，且只依赖 Bun 与 `node:zlib`，因此同一份提交在任何机器上都会生成完全相同的字节。`output/`、`*.zip`、`*.crx`、`*.pem` 均被 Git 忽略。
+
+## 持续集成与发布自动化
+
+| 工作流                                                           | 触发                              | 作用                                                                                       |
+| ---------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------ |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml)           | 推送到 `main`、Pull Request、手动 | 质量门禁（格式、Lint、类型、测试、生产构建）；另一个并行任务打包并证明归档可复现           |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | 推送 `v*` 标签、手动              | 校验标签与版本一致，跑完整发布门禁，再次验证可复现，上传 ZIP 并创建**草稿** GitHub Release |
+
+- 两个工作流都只用 Bun：`oven-sh/setup-bun` 从 `package.json` 的 `packageManager` 读取版本，依赖用 `bun install --frozen-lockfile` 安装。
+- 所有 Action 固定到提交 SHA，并在行尾注释标注对应版本，避免可变标签被改写。
+- 打包任务连续打包两次并逐字节比较，任何引入时间戳或随机标识的依赖都会让 CI 失败。
+- 推送 `v0.1.0` 这类标签后会自动创建草稿 Release，附带 ZIP、`.sha256` 与 `.files.txt`；公开发布仍需人工确认。手动触发只构建与校验，不会创建 Release。
+- 手动触发（`workflow_dispatch`）要求工作流文件已存在于默认分支，因此 `release.yml` 的标签触发与手动触发都在合并到 `main` 之后生效。
 
 项目官网预览与 GitHub Pages 发布方式见[官网说明](docs/project-page.md)。
 

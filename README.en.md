@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml"><img src="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <img src="https://img.shields.io/badge/version-0.1.0-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.0" />
   <img src="https://img.shields.io/badge/Manifest-V3-525252?style=flat-square&labelColor=0a0a0a" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/React-19-525252?style=flat-square&labelColor=0a0a0a" alt="React 19" />
@@ -34,7 +35,7 @@
 
 <table>
   <tr>
-    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="Activity heatmap, trend, and weekly review in the light theme" /></td>
+    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="XFlow Activity heatmap, weekly review, and filtering controls in the dark theme" /></td>
     <td width="28%"><img src="docs/assets/veil-preview.webp" alt="Local Blur Veil preview with hit-rate and threshold controls in the dark theme" /></td>
   </tr>
   <tr>
@@ -132,11 +133,12 @@ See the [Blur Veil design specification](docs/blur-veil-design.md) for interacti
 - The Dashboard provides a 12-week heatmap, seven-day trend, current calendar-week review, and 30 days of filter history.
 - An event is marked incorrect only after **Not supposed to be filtered** is explicitly selected. A temporary reveal is not automatically treated as a mistake.
 - Detailed history is compacted after 30 days. Event identity is folded into compact per-device counts after 12 weeks, retaining all-time totals while bounding storage.
+- The Log page can clear authors, content previews, original links, and matched strategies while retaining daily statistics and all-time totals.
 - Clearing activity writes a `clearedAt` tombstone so an older device or remote object cannot restore deleted records.
 
 ## S3 synchronization
 
-S3 uses a path-style URL: `{endpoint}/{bucket}/{objectKey}`. XFlow requests optional host access when an endpoint is first saved. Once enabled, it synchronizes after config writes, at browser startup, and every 15 minutes.
+S3 uses a path-style URL: `{endpoint}/{bucket}/{objectKey}`. XFlow requests optional host access when an endpoint is first saved. Once enabled, it synchronizes after config writes, at browser startup, and every 15 minutes. The production manifest only declares `https://*/*`, so a local S3 endpoint on `http://localhost` or `http://127.0.0.1` requires `bun run build:dev` first.
 
 - A newer local config, or a missing remote object, pushes the local document.
 - A newer remote config is pulled and applied.
@@ -152,12 +154,17 @@ Every detected post exposes a `J` feedback entry. Stable Tweet IDs support durab
 
 ## Privacy and permissions
 
+See the full [XFlow Privacy Policy](https://ryanzen9.github.io/XFlow/privacy-policy/) ([简体中文](https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/); [source](docs/privacy-policy.en.md)).
+
 - Only text extracted from enabled X surfaces is sent to the currently selected provider.
 - Provider API keys and S3 credentials live in `chrome.storage.local` without additional encryption.
 - Content Scripts can only read a secret-free settings mirror in `chrome.storage.session`.
 - Editable configuration and remote S3 documents never include provider API keys or S3 credentials.
-- Activity stores only a content ID, short text preview, author, filter time, matched policy, and required state. It does not store HTML, DOM, cookies, sessions, media files, or browsing paths.
+- Activity stores a content ID, short text preview, author, corresponding X post URL, filter time, matched policy, and required state. It does not store HTML, DOM, cookies, sessions, media files, or a complete browsing path.
 - Fixed host permissions cover only X / Twitter and the three providers. An S3 endpoint receives optional access through an explicit user action.
+- The production `manifest.json` declares no localhost / 127.0.0.1 origin. Local http debug origins are injected only by `bun run build:dev`.
+
+The production manifest requires Chrome 123 or later, because the palette resolves through `light-dark()`. The extension name, description, and toolbar tooltip come from `_locales/en` and `_locales/zh_CN`, and the icons are four independent sizes under `icons/`.
 
 Review [`manifest.json`](manifest.json) and your selected provider's data policy before installing. Never submit real credentials in issues, logs, tests, or screenshots.
 
@@ -173,7 +180,11 @@ bun run lint:fix        # fix supported lint rules
 bun run typecheck       # TypeScript checks
 bun test                # Bun unit tests
 bun run build           # generate dist/
+bun run build:dev       # generate dist/ with localhost debug origins
 bun run check           # complete quality gate
+bun run release:check   # quality gate plus packaging checks, writes the upload ZIP
+bun run release:package # production build and packaging checks only
+bun run release:verify  # package twice and compare the bytes
 bun run benchmark:cache # test and display cache hit-rate and performance metrics
 bun run preview:dashboard
 bun run preview:site
@@ -206,6 +217,36 @@ These figures come from one run and demonstrate the benefit after cache seeding;
 An interactive terminal prompts for the key with hidden input when `TYPESAFE_API_KEY` is unset; CI may supply that environment variable. The key stays in process memory and is never printed, persisted, or written to reports. Do not use a `--key=...` argument, which could leak through shell history or process listings. The report includes per-traffic hit rates, avoided SDK calls, measured latency, logical build-package size, and the before/after serialized IndexedDB cache payload estimate; browser filesystem overhead varies by platform. `--posts=20..50` remains a compatibility alias for `--samples`, and `--json` is supported.
 
 The Dashboard preview uses an isolated localStorage mock. It does not read installed extension data or call a model. The token index is served at `http://127.0.0.1:43993/` and exposes resolved values in both Light and Dark themes.
+
+## Release packaging
+
+```bash
+bun run release:check     # quality gate plus packaging, writes the upload ZIP
+bun run release:package   # production build and packaging only
+bun run release:verify    # package twice and compare the bytes, proving reproducibility
+```
+
+`release:check` and `release:package` clear `dist/` and `output/release/`, rebuild with `--release` (no source maps), and then:
+
+- Assert permissions, manifest/package version parity, locale keys and icon sizes, and prove the packaged files are exactly the ones the manifest and extension pages reference.
+- Scan the output for `eval(`, `new Function(`, `importScripts(`, `sourceMappingURL`, remote page assets, and localhost origins.
+- Write `output/release/xflow-<version>.zip` with `manifest.json` directly at the ZIP root and no `dist/` wrapper.
+- Verify the archive with the built-in reader plus the system `unzip -t` / `unzip -Z1`, and print the SHA-256 and per-file listing.
+
+Entry timestamps are pinned to 2020-01-01, entries are sorted by path, and the writer depends only on Bun and `node:zlib`, so the same commit produces byte-identical archives on every machine. `output/`, `*.zip`, `*.crx`, and `*.pem` are git-ignored.
+
+## Continuous integration and release automation
+
+| Workflow                                                         | Trigger                              | What it does                                                                                                                                            |
+| ---------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml)           | push to `main`, pull request, manual | Quality gate (format, lint, type checks, tests, production build); a parallel job packages and proves reproducibility                                   |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | `v*` tag push, manual                | Checks the tag against the packaged version, reruns the release gate, re-verifies reproducibility, uploads the ZIP and opens a **draft** GitHub Release |
+
+- Both workflows use Bun only: `oven-sh/setup-bun` reads the version from `packageManager` in `package.json`, and dependencies are installed with `bun install --frozen-lockfile`.
+- Every action is pinned to a commit SHA with the matching version in a trailing comment, so a moved tag cannot change what runs.
+- The packaging job builds the archive twice and compares the bytes, so a dependency that embeds a timestamp or a random identifier fails CI instead of silently breaking reproducibility.
+- Pushing a tag such as `v0.1.0` opens a draft release with the ZIP, its `.sha256`, and its `.files.txt`; publishing stays a manual decision. A manual run only builds and verifies.
+- Manual runs (`workflow_dispatch`) require the workflow file to exist on the default branch, so `release.yml` becomes available for both tag pushes and manual runs once it is merged into `main`.
 
 See the [project website guide](docs/project-page.md) for local preview and GitHub Pages deployment details.
 

@@ -119,6 +119,19 @@ Toolbar Badge 与全局统计分离。后台在 `chrome.storage.session` 中按 
 
 版本元数据不出现在 Dashboard 的可编辑 JSON 中。启用 S3 同步后，应用配置仍按 `configVersion` 决定方向，Activity 则在任何方向都按稳定事件 ID 合并，归档计数按设备取最大值，状态按 `Filtered → Revealed → Marked Incorrect` 单调合并。远程读取完成后会重新读取并合并最新本地 Activity，避免同步期间的新事件被旧快照覆盖。Endpoint 权限只在用户保存 S3 设置时申请；启动和每 15 分钟同步不会弹出权限请求，也不会进入逐条过滤热路径。
 
+## Manifest and permissions
+
+`manifest.json` 是唯一的生产清单来源，由 `scripts/manifest.ts` 读取、校验并写入 `dist/`：
+
+- 固定权限只有 `storage` 与 `alarms`；固定主机权限只有 X / Twitter 与三个 Provider。
+- 可选主机权限只有 `https://*/*`。S3 Endpoint 的精确 Origin 在用户保存设置时通过 `chrome.permissions.request` 申请，启动与定时同步不会触发权限请求。
+- `http://localhost/*` 与 `http://127.0.0.1/*` 只由 `bun run build:dev` 注入开发清单，生产包和发布校验禁止出现任何开发来源。
+- `minimum_chrome_version` 为 `123`：界面配色依赖 `light-dark()`；`color-mix()`、`toSorted`、`:has()` 与 `findLast` 的要求都更低，`URL.canParse` 由 `typeof` 检查保护。
+- 名称、描述与工具栏提示使用 `__MSG_*__`，文案位于 `_locales/en` 与 `_locales/zh_CN`。
+- `icons/icon-{16,32,48,128}.png` 是提交到仓库的独立尺寸 PNG；构建只复制，不重新生成。
+
+`scripts/manifest.test.ts` 断言权限清单、manifest / package 版本一致性、图标像素尺寸与本地化键集合；构建在写入清单前会运行同一组校验，因此开发权限无法进入发布包。
+
 ## Blur Veil state machine
 
 ```text
@@ -142,4 +155,28 @@ Idle → Classifying ─┬→ Visible
 - `popup.js` / `popup.css`：扩展弹窗。
 - `dashboard.js` / `dashboard.css`：扩展选项页。
 
-`manifest.json`、`popup.html` 和 `dashboard.html` 一并复制到 `dist/`。`dist/` 是可重建产物，不纳入版本控制。
+`manifest.json` 经 `scripts/manifest.ts` 校验后写入 `dist/`，`icons/` 与 `_locales/` 一并复制；`popup.html`、`dashboard.html`、`logo.png` 和 `logo-dark.png` 直接复制。`dist/` 是可重建产物，不纳入版本控制。
+
+## Release packaging
+
+`bun run release:package` 清空 `dist/` 与 `output/release/` 后以 `--release` 重建（`sourcemap: "none"`），再交给 `scripts/release.ts`：
+
+1. `planRelease()` 只读取即将打包的字节，断言权限、版本一致性、本地化键与图标尺寸，并要求包内文件集合与 manifest + 扩展页面引用集合完全相等——多一个文件或少一个文件都会失败。
+2. 同一批字节再按扩展名执行禁用模式扫描，`eval(`、`new Function(`、`importScripts(`、`sourceMappingURL`、远程页面资源与 localhost 来源都会阻断发布。规则表见 `FORBIDDEN_ARCHIVE_RULES` 与 `FORBIDDEN_PATTERNS`。
+3. `scripts/archive.ts` 用 `node:zlib` 生成 ZIP：条目按路径排序、`manifest.json` 固定在首位、时间戳固定为 2020-01-01，因此同一份 `dist/` 产生完全相同的字节。写入前会用内置读取器逐条回读并校验 CRC-32，写入后由系统 `unzip -t` / `unzip -Z1` 独立确认。
+4. 产物为 `output/release/xflow-<version>.zip` 及其 `.sha256` 与 `.files.txt`；`output/`、`*.zip`、`*.crx`、`*.pem` 均被 Git 忽略。
+
+`bun run release:check` 先运行完整质量门禁，只有全部通过才会打包，因此被上传的产物一定是通过检查的那一份。
+
+`bun run release:verify` 连续调用两次 `packageRelease()`（每次都清空并重建），再逐字节比较 `output/release/` 下的全部产物，把“同一提交生成同一归档”从人工约定变成可执行断言。
+
+## CI and release automation
+
+| Workflow                        | 触发                            | 作用                                                                                            |
+| ------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `.github/workflows/ci.yml`      | `main` 推送、Pull Request、手动 | 质量门禁任务执行 `bun run check`；并行的打包任务执行 `bun run release:verify`                   |
+| `.github/workflows/release.yml` | `v*` 标签、手动                 | 校验标签与 `package.json` 版本一致，执行 `release:check` 与 `release:verify` 后创建草稿 Release |
+
+两个工作流都不需要仓库密钥：版本来自 `package.json` 的 `packageManager`，Release 只用 `GITHUB_TOKEN`（`contents: write`）。所有 Action 固定到提交 SHA。手动触发 `release.yml` 不会创建 Release，可用于演练打包流程；`workflow_dispatch` 要求工作流文件已在默认分支，因此该工作流在合并到 `main` 后生效。
+
+同一提交在 macOS 本地与 GitHub Ubuntu runner 上产出的归档 SHA-256 完全一致，可复现性由 CI 每次运行持续保证。
