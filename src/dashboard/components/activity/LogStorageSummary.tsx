@@ -135,7 +135,7 @@ export function LogStorageSummary({
   );
 
   return (
-    <section className="rounded-xl border border-line bg-surface p-[18px]" aria-labelledby="log-storage-title">
+    <section aria-labelledby="log-storage-title">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-3">
