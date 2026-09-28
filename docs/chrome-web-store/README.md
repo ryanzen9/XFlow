@@ -14,6 +14,8 @@ This directory contains the store copy and upload-ready artwork for PR #9, stage
 
 The description is written for version `0.1.0`. Recheck all copy against the final ZIP before submitting the item, especially if the version, providers, permissions, or S3 behavior changes.
 
+The exact release ZIP's unpacked-load, console, and packaged-byte scan results are recorded in [`stage-5-qa.md`](stage-5-qa.md).
+
 ## Upload-ready artwork
 
 | Order / field          | File                                                                   | Dimensions     | What it shows                                              |
