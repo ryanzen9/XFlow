@@ -2,10 +2,12 @@ import type { Theme } from "../shared";
 import { cn } from "./cn";
 import { useI18n } from "./i18n";
 import { focusRing } from "./styles";
+import { setThemeMode } from "./theme-mode";
 
 export function applyTheme(theme: Theme): void {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
+  setThemeMode(theme);
 }
 
 export async function initializeTheme(): Promise<void> {

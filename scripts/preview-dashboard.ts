@@ -117,6 +117,8 @@ const allowedFiles = new Set([
   "popup.css",
   "content.js",
   "content.css",
+  "logo.png",
+  "logo-dark.png",
 ]);
 const server = Bun.serve({
   hostname: "127.0.0.1",

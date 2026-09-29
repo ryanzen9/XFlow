@@ -172,6 +172,8 @@ bun run lint            # Oxlint; warnings fail the command
 bun run lint:fix        # fix supported lint rules
 bun run typecheck       # TypeScript checks
 bun test                # Bun unit tests
+bun run theme:build     # generate Astryx CSS/JS from the editable Neutral theme
+bun run theme:check     # verify generated theme files match the source
 bun run build           # generate dist/
 bun run check           # complete quality gate
 bun run benchmark:cache # test and display cache hit-rate and performance metrics

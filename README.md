@@ -183,6 +183,8 @@ bun run lint            # Oxlint，warning 视为失败
 bun run lint:fix        # 修复可自动处理的规则
 bun run typecheck       # TypeScript 静态检查
 bun test                # Bun 单元测试
+bun run theme:build     # 从可编辑的 Neutral 主题源码生成 Astryx CSS/JS
+bun run theme:check     # 验证 Astryx 主题产物与源码一致
 bun run build           # 生成 dist/
 bun run check           # 完整质量门禁
 bun run benchmark:cache # 测试并展示分层缓存命中率与性能影响
