@@ -19,22 +19,24 @@ function HistoryItem({ item, busy, onIncorrect }: { item: ActivityEvent; busy: b
     incorrect: t("history.incorrect"),
   };
   return (
-    <details className="group border-t border-line py-3 first:border-t-0">
-      <summary className="grid cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-md focus-visible:outline-(length:--focus-ring-width) focus-visible:outline-offset-(--focus-ring-offset) focus-visible:outline-focus">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 text-meta text-muted">
-            <strong className="text-xs text-ink">{item.author || t("history.unknownAuthor")}</strong>
-            {item.mediaType && <span className="rounded bg-selected px-1.5 py-0.5 capitalize">{item.mediaType}</span>}
-            <span>{statusLabel[item.status]}</span>
-          </div>
-          <p className="mt-1 line-clamp-2 text-xs leading-[1.65] text-muted">
-            {item.preview || t("history.contentUnavailable")}
-          </p>
-          <p className="mt-1 text-caption text-faint">{item.policyName || t("history.policyUnavailable")}</p>
-        </div>
-        <time className="text-caption whitespace-nowrap text-muted" dateTime={new Date(item.filteredAt).toISOString()}>
+    <details className="group border-b border-line">
+      <summary className="grid min-h-13 cursor-pointer list-none grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md py-2 focus-visible:outline-(length:--focus-ring-width) focus-visible:outline-offset-(--focus-ring-offset) focus-visible:outline-focus sm:grid-cols-[auto_minmax(0,1fr)_minmax(5rem,7rem)_minmax(6rem,8rem)_auto]">
+        <time
+          className="font-mono text-caption whitespace-nowrap text-muted"
+          dateTime={new Date(item.filteredAt).toISOString()}
+        >
           {timeFormatter.format(item.filteredAt)}
         </time>
+        <span className="min-w-0 truncate text-xs text-ink">{item.preview || t("history.contentUnavailable")}</span>
+        <span className="hidden truncate text-meta text-muted sm:block">
+          {item.author || t("history.unknownAuthor")}
+        </span>
+        <span className="hidden truncate text-meta text-muted sm:block">
+          {item.policyName || t("history.policyUnavailable")}
+        </span>
+        <span className="text-caption whitespace-nowrap text-muted group-open:text-ink">
+          {statusLabel[item.status]} <span aria-hidden="true">⌄</span>
+        </span>
       </summary>
       <div className="mt-3 rounded-lg border border-line bg-canvas/50 p-3 text-meta leading-[1.7] text-muted">
         <p className="whitespace-pre-wrap text-ink">{item.preview || t("history.contentUnavailable")}</p>
@@ -43,6 +45,14 @@ function HistoryItem({ item, busy, onIncorrect }: { item: ActivityEvent; busy: b
           <dd>{new Date(item.filteredAt).toLocaleString(locale)}</dd>
           <dt>{t("history.matchedPolicy")}</dt>
           <dd>{item.policyName || t("common.unavailable")}</dd>
+          <dt>{t("history.author")}</dt>
+          <dd>{item.author || t("history.unknownAuthor")}</dd>
+          {item.mediaType && (
+            <>
+              <dt>{t("history.mediaType")}</dt>
+              <dd className="capitalize">{item.mediaType}</dd>
+            </>
+          )}
         </dl>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           {item.url && (
@@ -91,6 +101,8 @@ export function FilterHistory({
   const visibleHistory = history.slice(pageStart, pageStart + HISTORY_PAGE_SIZE);
   const today = localDayKey(now);
   const yesterday = localDayKey(addLocalDays(startOfLocalDay(now), -1));
+  const dayCounts = new Map<string, number>();
+  for (const item of history) dayCounts.set(item.day, (dayCounts.get(item.day) ?? 0) + 1);
   const groups = new Map<string, ActivityEvent[]>();
   for (const item of visibleHistory) groups.set(item.day, [...(groups.get(item.day) ?? []), item]);
   const groupLabel = (day: string) =>
@@ -101,8 +113,8 @@ export function FilterHistory({
         : new Date(`${day}T12:00:00`).toLocaleDateString(locale, { month: "long", day: "numeric" });
 
   return (
-    <section className="rounded-xl border border-line bg-surface p-[18px]" aria-labelledby="history-title">
-      <div className="mb-2 flex items-baseline justify-between gap-3">
+    <section aria-labelledby="history-title">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
         <div>
           <h2 id="history-title" className="text-sm font-semibold">
             {t("history.title")}
@@ -117,10 +129,15 @@ export function FilterHistory({
         <p className="border-t border-line py-6 text-center text-xs text-muted">{t("history.empty")}</p>
       ) : (
         <>
-          <div>
+          <div className="border-t border-line">
             {[...groups].map(([day, items]) => (
-              <div key={day} className="mt-4 first:mt-2">
-                <h3 className="font-mono text-caption font-semibold text-muted">{groupLabel(day)}</h3>
+              <div key={day} className="mt-5 first:mt-3">
+                <div className="flex items-baseline justify-between gap-3 pb-2">
+                  <h3 className="font-mono text-caption font-semibold text-ink">{groupLabel(day)}</h3>
+                  <span className="font-mono text-caption text-muted">
+                    {t("history.records", { count: number.format(dayCounts.get(day) ?? 0) })}
+                  </span>
+                </div>
                 {items.map((item) => (
                   <HistoryItem key={item.id} item={item} busy={busy} onIncorrect={() => onIncorrect(item.id)} />
                 ))}
