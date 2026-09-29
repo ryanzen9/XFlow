@@ -193,6 +193,8 @@ bun run preview:site
 bun run preview:tokens
 ```
 
+Neutral 主题使用扩展内置的 Figtree 可变字体（Latin / Latin Extended），构建时从 `@fontsource-variable/figtree` 复制到 `dist/fonts/`，无需远程字体请求。运行 `bun run preview:dashboard` 后，打开 `/__preview__/foundation.html` 可检查真实 Astryx Button、TextInput 的明暗模式与键盘焦点；该验证页只由本地预览服务提供，不包含在扩展包中。
+
 缓存基准的样本与探针集中在 `scripts/cache-benchmark-dataset.ts`，覆盖 Exact、Normalized、Template、Semantic 与 Miss 五类缓存路径，以及社区通知、交通、旅行、烹饪、户外、园艺、科学和中西文内容。合成工作负载保持固定的 80/20 命中与未命中比例；本地查询耗时来自 Bun 高精度计时器，Jev 调用减少率来自实际缓存命中结果。端到端耗时对比属于单条顺序请求模型，默认假设每次 Jev 调用为 600ms，可通过 `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800` 调整；使用 `--json` 可输出机器可读结果。该脚本不会读取真实凭据或发起网络请求。
 
 真实 TypeSafe 模式通过官方 `@typesafe-ai/sdk` 处理 20–50 条内置脱敏样本，并分别验证 Exact、Normalized、Template 与 Semantic 四类流量。在交互式 TTY 中，界面会随冷请求、缓存写入和每个 warm 批次刷新，显示进行中的 SDK 请求、整体和分层缓存命中率、缓存占用与耗时；非交互运行仍在结束时输出报告，`--json` 保持纯 JSON 输出。由于生产批次上限为 5，冷阶段会产生 4–10 次真实 Provider 请求，之后使用每轮不同的探针验证缓存是否完全避免远程请求：

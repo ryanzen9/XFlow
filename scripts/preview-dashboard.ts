@@ -119,7 +119,22 @@ const allowedFiles = new Set([
   "content.css",
   "logo.png",
   "logo-dark.png",
+  "fonts/figtree-latin-wght-normal.woff2",
+  "fonts/figtree-latin-ext-wght-normal.woff2",
 ]);
+const foundationBundle = await Bun.build({
+  entrypoints: [new URL("./qa/astryx-foundation-entry.tsx", import.meta.url).pathname],
+  target: "browser",
+  format: "esm",
+  define: { "process.env.NODE_ENV": JSON.stringify("production") },
+});
+if (!foundationBundle.success) {
+  for (const log of foundationBundle.logs) console.error(log);
+  throw new Error("Unable to build the Astryx foundation preview.");
+}
+const foundationScript = foundationBundle.outputs.find((output) => output.path.endsWith(".js"));
+if (!foundationScript) throw new Error("Missing Astryx foundation preview script.");
+
 const server = Bun.serve({
   hostname: "127.0.0.1",
   port: Number(Bun.env.DASHBOARD_PREVIEW_PORT || 43992),
@@ -128,6 +143,13 @@ const server = Bun.serve({
     if (path === "/favicon.ico") return new Response(null, { status: 204 });
     if (path === "/__preview__/storage.js")
       return new Response(storageMock, { headers: { "Content-Type": "text/javascript" } });
+    if (path === "/__preview__/foundation.html")
+      return new Response(
+        '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Astryx foundation preview</title><link rel="stylesheet" href="/dashboard.css"></head><body><div id="root"></div><script type="module" src="/__preview__/foundation.js"></script></body></html>',
+        { headers: { "Content-Type": "text/html" } },
+      );
+    if (path === "/__preview__/foundation.js")
+      return new Response(foundationScript, { headers: { "Content-Type": "text/javascript" } });
     const name = path === "/" ? "dashboard.html" : path.slice(1);
     if (!allowedFiles.has(name)) return new Response("Not found", { status: 404 });
     const file = Bun.file(new URL(`../dist/${name}`, import.meta.url));

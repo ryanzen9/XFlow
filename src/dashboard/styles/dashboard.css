@@ -5,6 +5,7 @@
 @import "@astryxdesign/core/reset.css";
 @import "@astryxdesign/core/astryx.css";
 @import "../../themes/neutral/neutral.css";
+@import "../../styles/figtree.css";
 @import "@astryxdesign/core/tailwind-theme.css";
 @import "../../styles/theme.css";
 @import "../../content/content.css" layer(components);

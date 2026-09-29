@@ -65,7 +65,7 @@ Policy 指纹包含 surface、Provider、策略 ID、启用状态、优先级、
 | `src/ui` / `src/styles` | 跨入口 UI utility、主题与国际化逻辑和 Tailwind token                           |
 | `src/themes/neutral`    | 可编辑的 Astryx Neutral 主题源码与由 CLI 生成的 CSS/JS                         |
 
-Popup 与 Dashboard 的入口均由 `AstryxThemeRoot` 包裹。它通过 `src/ui/theme-mode.ts` 订阅现有的 Light / Dark 设置；`applyTheme()` 更新浏览器根节点和订阅者，因此两套界面使用同一个模式。Astryx 组件读取 `src/themes/neutral/neutralTheme.ts` 定义的 token；尚未迁移的界面继续读取 `src/styles/token.css` 和 Tailwind bridge。两个入口的 CSS 显式声明 reset、Tailwind 与 Astryx 的层顺序。
+Popup 与 Dashboard 的入口均由 `AstryxThemeRoot` 包裹。它通过 `src/ui/theme-mode.ts` 订阅现有的 Light / Dark 设置；`applyTheme()` 更新浏览器根节点和订阅者，因此两套界面使用同一个模式。Astryx 组件读取 `src/themes/neutral/neutralTheme.ts` 定义的 token；尚未迁移的界面继续读取 `src/styles/token.css` 和 Tailwind bridge。两个入口的 CSS 显式声明 reset、Tailwind 与 Astryx 的层顺序。`src/styles/figtree.css` 把 Neutral 主题声明的 Figtree 指向扩展内的字体文件；构建脚本从安装包复制字体与 OFL 许可证到 `dist/fonts/`。本地预览服务另提供 `/__preview__/foundation.html` 验证 Astryx 控件，不将该页面打入扩展。
 
 ## Review and provider layers
 
