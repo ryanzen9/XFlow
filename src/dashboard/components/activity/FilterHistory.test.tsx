@@ -26,7 +26,8 @@ test("paginates a busy day in ten-record pages", () => {
     <FilterHistory history={history} now={now} busy={false} onIncorrect={() => {}} />,
   );
 
-  expect(markup).toContain("51 条记录");
+  expect(markup.match(/51 条记录/g)).toHaveLength(2);
+  expect(markup).not.toContain("10 条记录");
   expect(markup).toContain("显示 1–10，共 51 条");
   expect(markup).toContain("第 1 / 6 页");
   expect(markup).toContain("preview 9");
