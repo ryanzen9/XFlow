@@ -1,9 +1,17 @@
-import { PROVIDERS, type ProviderId } from "../../shared";
+import { PROVIDERS, type JevRequestErrorCode, type ProviderId } from "../../shared";
 
 function errorStatus(error: unknown): unknown {
   if (!error || typeof error !== "object") return undefined;
   const candidate = error as { statusCode?: unknown; status?: unknown };
   return candidate.statusCode ?? candidate.status;
+}
+
+export function providerErrorCode(error: unknown): JevRequestErrorCode {
+  const status = errorStatus(error);
+  if (status === 401 || status === 403) return "auth";
+  if (status === 402) return "billing";
+  if (status === 429) return "rate-limit";
+  return "provider";
 }
 
 export function readableProviderError(providerId: ProviderId, error: unknown): string {

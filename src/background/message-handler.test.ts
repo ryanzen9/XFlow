@@ -3,6 +3,7 @@ import type { ExtensionResponse } from "../shared";
 import { handleMessage } from "./message-handler";
 import { resetDecisionCacheForTests } from "./services/decision-cache";
 import { resetActivityServiceForTests } from "./services/activity";
+import { resetJevRequestLogServiceForTests } from "./services/jev-request-log";
 
 const originalChrome = globalThis.chrome;
 let storage: Record<string, unknown>;
@@ -17,6 +18,7 @@ beforeEach(() => {
   };
   session = {};
   resetActivityServiceForTests();
+  resetJevRequestLogServiceForTests();
   globalThis.chrome = {
     runtime: { id: "xflow-test", getURL: (path: string) => `chrome-extension://xflow-test/${path}` },
     storage: {
@@ -52,6 +54,52 @@ test("rejects provider credential messages sent from a content-script tab", () =
   );
   expect(keepChannelOpen).toBeFalse();
   expect(response).toEqual({ ok: false, code: "FORBIDDEN", error: "只有扩展页面可以管理 API Key。" });
+});
+
+test("keeps Jev request logs restricted to trusted extension pages", async () => {
+  storage.jevRequestLog = {
+    schemaVersion: 1,
+    entries: [
+      {
+        id: "request-1",
+        kind: "review",
+        requestedAt: Date.now(),
+        durationMs: 12,
+        providerId: "openrouter",
+        modelId: "typesafe/jev-1.13",
+        status: "success",
+        itemCount: 1,
+        questionCount: 1,
+      },
+    ],
+  };
+  let rejected: ExtensionResponse | undefined;
+  expect(
+    handleMessage(
+      { type: "GET_JEV_REQUEST_LOG" },
+      { id: "xflow-test", url: "https://x.com/home", tab: { id: 7 } as chrome.tabs.Tab },
+      (value) => {
+        rejected = value;
+      },
+    ),
+  ).toBeFalse();
+  expect(rejected).toMatchObject({ ok: false, code: "FORBIDDEN" });
+
+  const response = await new Promise<ExtensionResponse>((resolve) => {
+    expect(
+      handleMessage(
+        { type: "GET_JEV_REQUEST_LOG" },
+        {
+          id: "xflow-test",
+          url: "chrome-extension://xflow-test/dashboard.html",
+          tab: { id: 8 } as chrome.tabs.Tab,
+        },
+        resolve,
+      ),
+    ).toBeTrue();
+  });
+  expect(response).toMatchObject({ ok: true, requestLog: { entries: [{ id: "request-1" }] } });
+  expect(JSON.stringify(response)).not.toContain("sk-or-private");
 });
 
 test("returns only masked provider metadata to a trusted extension page", async () => {

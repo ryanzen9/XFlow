@@ -51,6 +51,10 @@ function ChinesePolicy() {
             Provider API Key 与可选的 S3 凭据：保存在扩展的 <code>chrome.storage.local</code>
             ，供所选服务鉴权或签名请求使用。
           </li>
+          <li>
+            Jev 请求诊断：在本机保存渠道、模型、请求类型、耗时、数量与结果；不保存 API Key、帖子正文或 Provider
+            原始错误。
+          </li>
           <li>界面语言、主题及其他设置：用于提供扩展功能；界面语言保存在本机，不进入 S3 同步文档。</li>
         </ul>
         <p>
@@ -100,6 +104,7 @@ function ChinesePolicy() {
             后，扩展会尝试同步清除状态，以防旧记录在之后的同步中恢复。
           </li>
           <li>在 API Keys 页可逐个清除本机 Provider Key；这不会撤销 Provider 账户中的密钥。</li>
+          <li>Jev 请求诊断最多保留 30 天或 200 条，可在 Dashboard 日志页单独清除；它不会同步到 S3。</li>
           <li>
             停用 S3 同步不会删除本机连接配置或已写入 S3 的对象。远程副本需在你选用的 S3
             服务中删除，并检查该服务的版本与备份。
@@ -187,6 +192,10 @@ function EnglishPolicy() {
             for authentication or request signing.
           </li>
           <li>
+            Jev request diagnostics: provider, model, request type, duration, counts, and outcome are stored locally;
+            API Keys, post text, and raw Provider errors are not stored.
+          </li>
+          <li>
             Interface language, theme, and other settings: used to provide the extension; interface language stays local
             and is not part of the S3 sync document.
           </li>
@@ -246,6 +255,10 @@ function EnglishPolicy() {
             return later.
           </li>
           <li>Clear each local Provider Key on the API Keys page. This does not revoke the key at the Provider.</li>
+          <li>
+            Jev request diagnostics are kept for up to 30 days or 200 entries and can be cleared separately on the
+            Dashboard Log page. They are not synced to S3.
+          </li>
           <li>
             Disabling S3 sync does not remove local connection settings or objects already written to S3. Delete remote
             copies in your S3 service and check its versions and backups.

@@ -87,6 +87,19 @@ test("evaluates applicable strategies and selects the first priority that crosse
     ],
   });
   expect(JSON.stringify(result)).not.toContain("sk-or-test");
+  expect(storage.jevRequestLog).toMatchObject({
+    entries: [
+      {
+        kind: "review",
+        providerId: "openrouter",
+        status: "success",
+        itemCount: 1,
+        questionCount: 2,
+        surface: "comments",
+      },
+    ],
+  });
+  expect(JSON.stringify(storage.jevRequestLog)).not.toContain("example reply");
 });
 
 test("a matching high-priority strategy wins even when a lower strategy has a higher rate", async () => {

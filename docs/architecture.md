@@ -29,6 +29,8 @@ Activity Service ──► local event store ──► Popup / General / Log
 
 Content Script 负责发现帖子、提取最小历史元数据和渲染遮罩，不持有 API Key。只有遮罩实际挂载、内容真正进入 Filtered 状态后，才向后台 Activity Service 发送事件。后台负责全局去重、页面 Badge、策略选择、外部请求、配置迁移和自动同步。
 
+Provider 请求完成后，Background 仅把渠道、模型、请求类型、耗时、项目/问题数量和成功或归一化错误类型写入本机 Jev 请求日志。健康检查复用同一 Provider Adapter 发起一个最小判断请求，因此同时验证 API Key、渠道接口和模型访问；它不会携带 X 帖子内容。
+
 ## Local-first decision pipeline
 
 ```text
@@ -82,9 +84,11 @@ Policy 指纹包含 surface、Provider、策略 ID、启用状态、优先级、
 - Content Script 只读取发布到 `chrome.storage.session` 的安全设置镜像。
 - API Key 管理消息必须同时匹配当前扩展 ID 与扩展 URL；来自 X 页面的 Content Script 无法读写密钥。
 - Dashboard 只接收“是否已配置”和末四位提示，不接收已保存的完整 API Key。
+- Provider 健康检查与 Jev 请求日志消息只接受可信扩展页面；Content Script 无法发起健康检查或读取日志。
 - 配置 JSON 与 S3 远程文档不包含 Provider Key 或 S3 凭据。
 - Activity 只接受来自 X/Twitter Content Script 的记录消息；读取、错误标记和清除只接受可信扩展页面。
 - 历史不保存 HTML、DOM、Cookie、Session、媒体文件、Tracking 参数或无关网络数据。
+- Jev 请求日志不保存 API Key、请求 state/questions、帖子正文或 Provider 原始错误，只保留本机诊断元数据。
 
 这些本机凭据没有额外加密，安全性依赖浏览器扩展存储和操作系统账户边界。
 
@@ -112,6 +116,8 @@ ConfigurationDocument
 Popup 与 Dashboard 的界面语言使用独立的本机键 `xflow.uiLocale`。它只控制静态标签、状态提示、日期与数字格式，不翻译或改写策略名称、提示词、Hover 模板、CSS、模型昵称和配置 JSON 等用户内容。该键不属于 `AppSettings`，因此不会增加 `configVersion`，也不会进入可编辑配置、S3 文档或 Content Script 的安全设置镜像。
 
 语言切换只重新渲染界面文案，不触发配置或 S3 的重新读取，因此 Data 页面中的未保存草稿保持原样。共享校验器和后台服务可以保留内部错误语义，但 UI 必须通过已知错误映射或 locale-neutral code 选择当前语言的用户文案；不得直接显示后台返回的中文错误字符串。
+
+Jev 请求日志使用独立的 `jevRequestLog` 本机键，保留最近 30 天且最多 200 条，支持在 Dashboard 单独清除。它不属于 `AppSettings`、版本化配置文档或 Activity，因此不会更新 `configVersion`，也不会上传 S3。
 
 Activity 事件 ID 来自稳定 X 内容 ID；没有稳定 ID 时优先使用移除查询参数与锚点后的 canonical URL，最后才使用作者与文本的 SHA-256。Today、Heatmap 和 Trend 从近期去重事件派生，因此刷新、DOM 重建、路由切换和重复同步不会增加累计值。详情字段在 30 天后压缩；事件身份在 12 周后折叠为按设备单调合并的紧凑计数，避免本地存储无限增长，同时维持 All Time。日志页可以单独清除作者、摘要、原文链接与命中策略而保留统计；`historyClearedAt` 墓碑清除早于它的同步副本详情，已存在事件的 `detailsCleared` 标记还能防止时钟超前的副本恢复详情。`clearedAt` 墓碑则防止多设备同步恢复已完全清除的事件。清理操作保留已有的较新墓碑。
 
