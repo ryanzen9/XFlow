@@ -101,6 +101,8 @@ export function FilterHistory({
   const visibleHistory = history.slice(pageStart, pageStart + HISTORY_PAGE_SIZE);
   const today = localDayKey(now);
   const yesterday = localDayKey(addLocalDays(startOfLocalDay(now), -1));
+  const dayCounts = new Map<string, number>();
+  for (const item of history) dayCounts.set(item.day, (dayCounts.get(item.day) ?? 0) + 1);
   const groups = new Map<string, ActivityEvent[]>();
   for (const item of visibleHistory) groups.set(item.day, [...(groups.get(item.day) ?? []), item]);
   const groupLabel = (day: string) =>
@@ -133,7 +135,7 @@ export function FilterHistory({
                 <div className="flex items-baseline justify-between gap-3 pb-2">
                   <h3 className="font-mono text-caption font-semibold text-ink">{groupLabel(day)}</h3>
                   <span className="font-mono text-caption text-muted">
-                    {t("history.records", { count: number.format(items.length) })}
+                    {t("history.records", { count: number.format(dayCounts.get(day) ?? 0) })}
                   </span>
                 </div>
                 {items.map((item) => (
