@@ -183,6 +183,8 @@ bun run lint            # Oxlint，warning 视为失败
 bun run lint:fix        # 修复可自动处理的规则
 bun run typecheck       # TypeScript 静态检查
 bun test                # Bun 单元测试
+bun run theme:build     # 从可编辑的 Neutral 主题源码生成 Astryx CSS/JS
+bun run theme:check     # 验证 Astryx 主题产物与源码一致
 bun run build           # 生成 dist/
 bun run check           # 完整质量门禁
 bun run benchmark:cache # 测试并展示分层缓存命中率与性能影响
@@ -190,6 +192,8 @@ bun run preview:dashboard
 bun run preview:site
 bun run preview:tokens
 ```
+
+Neutral 主题使用扩展内置的 Figtree 可变字体（Latin / Latin Extended），构建时从 `@fontsource-variable/figtree` 复制到 `dist/fonts/`，无需远程字体请求。运行 `bun run preview:dashboard` 后，打开 `/__preview__/foundation.html` 可检查真实 Astryx Button、TextInput 的明暗模式与键盘焦点；该验证页只由本地预览服务提供，不包含在扩展包中。
 
 缓存基准的样本与探针集中在 `scripts/cache-benchmark-dataset.ts`，覆盖 Exact、Normalized、Template、Semantic 与 Miss 五类缓存路径，以及社区通知、交通、旅行、烹饪、户外、园艺、科学和中西文内容。合成工作负载保持固定的 80/20 命中与未命中比例；本地查询耗时来自 Bun 高精度计时器，Jev 调用减少率来自实际缓存命中结果。端到端耗时对比属于单条顺序请求模型，默认假设每次 Jev 调用为 600ms，可通过 `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800` 调整；使用 `--json` 可输出机器可读结果。该脚本不会读取真实凭据或发起网络请求。
 

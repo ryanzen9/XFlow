@@ -1,7 +1,8 @@
 # Design tokens
 
-`src/styles/token.css` is the single source of truth for colour, typography, space, layout and motion.
-`src/styles/theme.css` maps those tokens onto Tailwind utilities. Components consume utilities or tokens —
+`src/styles/token.css` is the source of truth for the current Popup and Dashboard Tailwind UI.
+`src/styles/theme.css` maps those tokens onto Tailwind utilities. Astryx components use the editable
+`src/themes/neutral/neutralTheme.ts` and its generated CSS/JS instead. Components consume utilities or tokens —
 never literal colours, radii, durations or font sizes.
 
 ```

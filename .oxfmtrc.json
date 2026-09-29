@@ -16,6 +16,10 @@
     ".agents/**",
     ".claude/**",
     "coverage/**",
+    "src/themes/neutral/neutral.css",
+    "src/themes/neutral/neutral.js",
+    "src/themes/neutral/neutral.d.ts",
+    "src/themes/neutral/neutral.variants.d.ts",
     "bun.lock"
   ]
 }
