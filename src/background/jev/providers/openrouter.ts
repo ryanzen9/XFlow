@@ -1,6 +1,12 @@
 import { PROVIDERS, probabilityFromAnswer } from "../../../shared";
 import type { JevProvider } from "../types";
 
+function isValidNoulAnswer(answer: unknown): boolean {
+  if (!answer || typeof answer !== "object") return false;
+  const candidate = answer as { type?: unknown; noul?: unknown };
+  return candidate.type === "noul" && typeof candidate.noul === "number" && Number.isFinite(candidate.noul);
+}
+
 export const openRouterProvider: JevProvider = {
   id: "openrouter",
   modelId: PROVIDERS.openrouter.modelId,
@@ -17,7 +23,10 @@ export const openRouterProvider: JevProvider = {
       },
     });
     return Object.fromEntries(
-      Object.keys(request.questions).map((id) => [id, probabilityFromAnswer(response.answers[id])]),
+      Object.keys(request.questions).flatMap((id) => {
+        const answer = response.answers[id];
+        return isValidNoulAnswer(answer) ? [[id, probabilityFromAnswer(answer)]] : [];
+      }),
     );
   },
 };

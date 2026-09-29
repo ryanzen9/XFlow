@@ -17,6 +17,8 @@ mock.module("@openrouter/sdk", () => ({
   },
 }));
 const { requestPostReviews } = await import("./jev");
+const { checkProviderHealth } = await import("./provider-health");
+const { openRouterProvider } = await import("../jev/providers/openrouter");
 const { resetDecisionCacheForTests, saveUserDecision } = await import("./decision-cache");
 const originalChrome = globalThis.chrome;
 const originalIndexedDBDescriptor = Object.getOwnPropertyDescriptor(globalThis, "indexedDB");
@@ -142,6 +144,14 @@ test("disabled surface and missing credentials never attempt model evaluation", 
     ).ok,
   ).toBe(false);
   expect(submitted).toBeNull();
+});
+
+test("health checks reject missing and malformed OpenRouter answers", async () => {
+  for (const providerAnswers of [{}, { health_check: { type: "noul", noul: "not-a-number" } }]) {
+    answers = providerAnswers;
+    const result = await checkProviderHealth("openrouter", secrets, openRouterProvider);
+    expect(result).toMatchObject({ healthy: false, errorCode: "invalid-response" });
+  }
 });
 
 test("serves repeated content from the policy-aware cache without credentials", async () => {

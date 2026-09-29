@@ -29,7 +29,12 @@ export function JevRequestHistory({ entries, busy, onClear }: Props) {
         </div>
         <div className="flex items-center gap-3">
           <span className={tag}>{t("jevLog.records", { count: entries.length })}</span>
-          <button className={secondaryButton} type="button" disabled={busy || entries.length === 0} onClick={onClear}>
+          <button
+            className={secondaryButton}
+            type="button"
+            disabled={busy || entries.length === 0}
+            onClick={() => void onClear().catch(() => undefined)}
+          >
             {busy ? t("jevLog.clearing") : t("jevLog.clear")}
           </button>
         </div>

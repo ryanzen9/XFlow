@@ -3,10 +3,12 @@ import { initializeAutomaticSync, requestAutomaticSync } from "./services/config
 import { initializeSettings } from "./services/settings";
 import { initializeStorageAccess, publishPublicSettings } from "./services/public-settings";
 import { forgetPageActivity, initializeActivityTracking } from "./services/activity";
+import { initializeJevRequestLogMaintenance } from "./services/jev-request-log";
 
 initializeAutomaticSync();
 void initializeStorageAccess();
 void initializeActivityTracking();
+void initializeJevRequestLogMaintenance();
 
 chrome.runtime.onInstalled.addListener(() => {
   void initializeSettings().then(() => requestAutomaticSync());

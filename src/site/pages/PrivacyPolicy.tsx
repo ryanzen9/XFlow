@@ -68,7 +68,8 @@ function ChinesePolicy() {
         <p>
           <strong>你选中的 Jev Provider。</strong>扩展只向当前选中的 OpenRouter、Vercel AI Gateway 或 TypeSafe
           发送待判断帖子的 ID、正文、适用策略的名称与规则，以及该 Provider 的 API
-          Key。请求用于返回过滤判断；失败时不会自动转发到另一家 Provider。Provider
+          Key。请求用于返回过滤判断；失败时不会自动转发到另一家 Provider。Provider 健康检查由用户主动触发，会向所选
+          Provider 发送不含 X 帖子或策略内容的固定合成 state 与 question，并可能产生第三方用量或费用。所选 Provider
           及其可能使用的上游模型服务按各自条款和隐私政策处理请求。请在选择前阅读{" "}
           <Link href={openRouterPrivacy}>OpenRouter 隐私政策</Link>、<Link href={vercelPrivacy}>Vercel 隐私声明</Link>及{" "}
           <Link href={vercelAiTerms}>AI 产品条款</Link>，或 <Link href={typeSafePrivacy}>TypeSafe 隐私政策</Link>。使用
@@ -124,7 +125,7 @@ function ChinesePolicy() {
           中没有额外静态加密；能访问该浏览器配置文件的人可能获得这些本机数据。Provider 与 S3 Endpoint 使用 HTTPS；S3
           校验仅允许将 <code>http://localhost</code> 与 <code>http://127.0.0.1</code> 用于本机调试。扩展访问 X / Twitter
           页面用于读取待判断内容并显示可揭示的遮罩；S3 主机访问由你在保存 Endpoint 时单独授权。<code>storage</code>{" "}
-          用于保存本机数据；<code>alarms</code> 用于启用 S3 后的定时同步。
+          用于保存本机数据；<code>alarms</code> 用于启用 S3 后的定时同步及每日清理过期的 Jev 请求日志。
         </p>
       </section>
 
@@ -212,8 +213,10 @@ function EnglishPolicy() {
           <strong>Your selected Jev Provider.</strong>The extension sends post IDs and text, applicable strategy names
           and criteria, and that Provider's API Key only to the currently selected OpenRouter, Vercel AI Gateway, or
           TypeSafe service. The request is used to return a filtering decision. A failed request is not automatically
-          forwarded to another Provider. The Provider and any upstream model services it uses process requests under
-          their own terms and privacy policies. Before choosing one, review the{" "}
+          forwarded to another Provider. A health check is explicitly user-triggered and sends the selected Provider a
+          fixed synthetic state and question containing no X post or policy content; it may count toward third-party
+          usage or charges. The Provider and any upstream model services it uses process requests under their own terms
+          and privacy policies. Before choosing one, review the{" "}
           <Link href={openRouterPrivacy}>OpenRouter Privacy Policy</Link>,{" "}
           <Link href={vercelPrivacy}>Vercel Privacy Notice</Link> and <Link href={vercelAiTerms}>AI Product Terms</Link>
           , or the <Link href={typeSafePrivacy}>TypeSafe Privacy Policy</Link>. Provider use may incur third-party
@@ -280,7 +283,7 @@ function EnglishPolicy() {
           for <code>localhost</code> and <code>127.0.0.1</code> for local development. X / Twitter page access lets the
           extension read posts for evaluation and display revealable veils. You grant access to an S3 host separately
           when saving its Endpoint. The <code>storage</code> permission stores local data; <code>alarms</code> supports
-          scheduled sync after you enable S3.
+          scheduled sync after you enable S3 and daily pruning of expired Jev request diagnostics.
         </p>
       </section>
 

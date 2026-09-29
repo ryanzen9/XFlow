@@ -7,6 +7,8 @@ import {
 } from "../../shared";
 
 let mutationChain: Promise<unknown> = Promise.resolve();
+const MAINTENANCE_ALARM = "jev-request-log-maintenance";
+const MAINTENANCE_INTERVAL_MINUTES = 24 * 60;
 
 function enqueue<T>(operation: () => Promise<T>): Promise<T> {
   const task = mutationChain.then(operation, operation);
@@ -48,6 +50,25 @@ export function clearJevRequestLog(): Promise<JevRequestLogData> {
     await chrome.storage.local.set({ [JEV_REQUEST_LOG_KEY]: EMPTY_JEV_REQUEST_LOG });
     return EMPTY_JEV_REQUEST_LOG;
   });
+}
+
+function requestMaintenance(): void {
+  void getJevRequestLog().catch((error) => {
+    console.warn("[XFlow] Jev request log maintenance failed.", error);
+  });
+}
+
+export async function initializeJevRequestLogMaintenance(): Promise<void> {
+  chrome.alarms.create(MAINTENANCE_ALARM, { periodInMinutes: MAINTENANCE_INTERVAL_MINUTES });
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === MAINTENANCE_ALARM) requestMaintenance();
+  });
+  chrome.runtime.onStartup.addListener(requestMaintenance);
+  try {
+    await getJevRequestLog();
+  } catch (error) {
+    console.warn("[XFlow] Initial Jev request log maintenance failed.", error);
+  }
 }
 
 export function resetJevRequestLogServiceForTests(): void {
