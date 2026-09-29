@@ -5,6 +5,7 @@ import { providerLabel, translate, useI18n, type Locale, type MessageKey } from 
 import { control, field, fieldHelp, fieldLabel, primaryButton, secondaryButton, tag } from "../../ui/styles";
 import {
   clearProviderCredential,
+  checkProviderCredential,
   loadProviderSummaries,
   ProviderCredentialError,
   saveProviderCredential,
@@ -43,11 +44,12 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
     typesafe: false,
   });
   const [pending, setPending] = useState<ProviderId | null>(null);
+  const [healthPending, setHealthPending] = useState<ProviderId | null>(null);
   const activeProviderId = settings.activeProvider;
   const activeProvider = PROVIDERS[activeProviderId];
   const activeSummary = summaries.find((summary) => summary.id === activeProviderId);
   const isPending = pending === activeProviderId;
-  const credentialsBusy = busy || pending !== null;
+  const credentialsBusy = busy || pending !== null || healthPending !== null;
   const helpId = `provider-key-help-${activeProviderId}`;
   const placeholder =
     activeProviderId === "openrouter"
@@ -107,6 +109,24 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
       onStatus({ message: credentialErrorMessage(locale, error, "api.clearFailed"), error: true });
     } finally {
       setPending(null);
+    }
+  };
+
+  const checkHealth = async (providerId: ProviderId) => {
+    setHealthPending(providerId);
+    try {
+      const result = await checkProviderCredential(providerId);
+      const provider = providerLabel(providerId, locale);
+      if (result.healthy) {
+        onStatus({ message: t("api.healthPassed", { provider, latency: result.latencyMs }), error: false });
+      } else {
+        const reason = t(`api.healthError.${result.errorCode ?? "provider"}` as MessageKey);
+        onStatus({ message: t("api.healthFailed", { provider, reason }), error: true });
+      }
+    } catch (error) {
+      onStatus({ message: credentialErrorMessage(locale, error, "api.healthRequestFailed"), error: true });
+    } finally {
+      setHealthPending(null);
     }
   };
 
@@ -256,6 +276,14 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
             </small>
           </label>
           <div className="mt-6 flex flex-col-reverse gap-2 border-t border-line pt-5 sm:flex-row sm:flex-wrap sm:justify-end">
+            <button
+              className={secondaryButton}
+              type="button"
+              disabled={credentialsBusy || !activeSummary?.configured}
+              onClick={() => void checkHealth(activeProviderId)}
+            >
+              {healthPending === activeProviderId ? t("api.healthChecking") : t("api.healthCheck")}
+            </button>
             {activeSummary?.configured && (
               <button
                 className={secondaryButton}

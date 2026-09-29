@@ -1,9 +1,11 @@
 import { ACTIVITY_HISTORY_DAYS, activityDays, activityHistory, type ActivityDay } from "../../shared";
 import { useI18n } from "../../ui/i18n";
 import { useActivity } from "../hooks/use-activity";
+import { useJevRequestLog } from "../hooks/use-jev-request-log";
 import { DailyBlockedChart } from "./activity/DailyBlockedChart";
 import { FilterHistory } from "./activity/FilterHistory";
 import { LogStorageSummary } from "./activity/LogStorageSummary";
+import { JevRequestHistory } from "./activity/JevRequestHistory";
 
 export function LogOverview({ days }: { days: ActivityDay[] }) {
   const { locale, t } = useI18n();
@@ -42,11 +44,15 @@ export function LogOverview({ days }: { days: ActivityDay[] }) {
 /** The Log page owns the 30-day filtering record; insights stay on General. */
 export function LogPanel() {
   const activity = useActivity();
+  const requests = useJevRequestLog();
   const history = activityHistory(activity.data, activity.now);
   const days = activityDays(activity.data, ACTIVITY_HISTORY_DAYS, activity.now);
 
   return (
-    <div className="grid max-w-[1180px] content-start gap-4" aria-busy={activity.loading || activity.busy}>
+    <div
+      className="grid max-w-[1180px] content-start gap-4"
+      aria-busy={activity.loading || activity.busy || requests.loading || requests.busy}
+    >
       <section
         className="overflow-hidden rounded-xl border border-line bg-surface"
         aria-labelledby="log-overview-title"
@@ -70,9 +76,15 @@ export function LogPanel() {
           />
         </div>
       </section>
+      <JevRequestHistory entries={requests.data.entries} busy={requests.busy} onClear={requests.clear} />
       {activity.error && (
         <p className="text-xs text-danger" role="alert">
           {activity.error}
+        </p>
+      )}
+      {requests.error && (
+        <p className="text-xs text-danger" role="alert">
+          {requests.error}
         </p>
       )}
     </div>

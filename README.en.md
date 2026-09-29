@@ -114,6 +114,8 @@ After rebuilding, reload the extension from the extensions page and refresh any 
 
 The active provider is always an explicit user choice. XFlow does not silently forward content to another provider after a failure, avoiding unexpected data routing or cost changes.
 
+The API Keys page can send a minimal Jev health check to each provider to verify the saved credential and endpoint. This is a real provider request and may count toward third-party usage or charges.
+
 ## Policies and interaction
 
 - Timelines and replies have independent policy queues, each ordered from P1.
@@ -130,6 +132,7 @@ See the [Blur Veil design specification](docs/blur-veil-design.md) for interacti
 
 - The Popup shows today's and all-time filter totals. The toolbar badge counts unique content only for the current page lifecycle in the current tab and stays hidden at zero.
 - The Dashboard provides a 12-week heatmap, seven-day trend, current calendar-week review, and 30 days of filter history.
+- The Log page also keeps up to 200 Jev request metadata entries for 30 days, including provider, model, duration, item/question counts, and outcome. It never stores API Keys or post text, can be cleared separately, and prunes expired records at background startup and during daily maintenance.
 - An event is marked incorrect only after **Not supposed to be filtered** is explicitly selected. A temporary reveal is not automatically treated as a mistake.
 - Detailed history is compacted after 30 days. Event identity is folded into compact per-device counts after 12 weeks, retaining all-time totals while bounding storage.
 - Clearing activity writes a `clearedAt` tombstone so an older device or remote object cannot restore deleted records.
@@ -152,11 +155,12 @@ Every detected post exposes a `J` feedback entry. Stable Tweet IDs support durab
 
 ## Privacy and permissions
 
-- Only text extracted from enabled X surfaces is sent to the currently selected provider.
+- Content evaluation sends only text extracted from enabled X surfaces to the selected provider. A user-triggered health check additionally sends a fixed synthetic test payload with no X content.
 - Provider API keys and S3 credentials live in `chrome.storage.local` without additional encryption.
 - Content Scripts can only read a secret-free settings mirror in `chrome.storage.session`.
 - Editable configuration and remote S3 documents never include provider API keys or S3 credentials.
 - Activity stores only a content ID, short text preview, author, filter time, matched policy, and required state. It does not store HTML, DOM, cookies, sessions, media files, or browsing paths.
+- Jev request diagnostics stay local, never enter editable configuration or S3 sync, and contain no API Key, request body, post text, or raw provider error.
 - Fixed host permissions cover only X / Twitter and the three providers. An S3 endpoint receives optional access through an explicit user action.
 
 Review [`manifest.json`](manifest.json) and your selected provider's data policy before installing. Never submit real credentials in issues, logs, tests, or screenshots.

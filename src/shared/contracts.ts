@@ -2,6 +2,7 @@ import type { VeilDetails } from "./strategy";
 import type { ProviderId, ProviderSummary } from "./providers";
 import type { ContentDecision, DecisionSource, UserDecisionAction } from "./content-decision";
 import type { ActivityData, ActivityMediaType, ActivityStatus, ActivitySummary } from "./activity";
+import type { JevRequestErrorCode, JevRequestLogData } from "./jev-request-log";
 
 export interface PostInput {
   id: string;
@@ -32,6 +33,14 @@ export interface ExtensionStatus {
   modelId: string;
 }
 
+export interface ProviderHealthResult {
+  providerId: ProviderId;
+  healthy: boolean;
+  checkedAt: number;
+  latencyMs: number;
+  errorCode?: JevRequestErrorCode;
+}
+
 export type ExtensionErrorCode = "CONFIG_REQUIRED" | "DISABLED" | "API_ERROR" | "FORBIDDEN" | "INVALID_REQUEST";
 
 export type ExtensionRequest =
@@ -53,7 +62,10 @@ export type ExtensionRequest =
   | { type: "CLEAR_ACTIVITY_HISTORY" }
   | { type: "GET_PROVIDER_SUMMARIES" }
   | { type: "SAVE_PROVIDER_KEY"; providerId: ProviderId; apiKey: string }
-  | { type: "CLEAR_PROVIDER_KEY"; providerId: ProviderId };
+  | { type: "CLEAR_PROVIDER_KEY"; providerId: ProviderId }
+  | { type: "CHECK_PROVIDER_HEALTH"; providerId: ProviderId }
+  | { type: "GET_JEV_REQUEST_LOG" }
+  | { type: "CLEAR_JEV_REQUEST_LOG" };
 
 export type ExtensionResponse =
   | ({ ok: true } & ExtensionStatus)
@@ -64,4 +76,6 @@ export type ExtensionResponse =
   | { ok: true; cleared: true }
   | { ok: true; updated: true }
   | { ok: true; providerSummaries: ProviderSummary[] }
+  | { ok: true; providerHealth: ProviderHealthResult }
+  | { ok: true; requestLog: JevRequestLogData }
   | { ok: false; code: ExtensionErrorCode; error: string };

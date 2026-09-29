@@ -27,6 +27,8 @@ import {
   resetPageActivity,
 } from "./services/activity";
 import { requestAutomaticSync } from "./services/config-sync";
+import { checkProviderHealth } from "./services/provider-health";
+import { clearJevRequestLog, getJevRequestLog } from "./services/jev-request-log";
 
 let reviewChain: Promise<unknown> = Promise.resolve();
 
@@ -235,7 +237,8 @@ export function handleMessage(
   if (
     message.type === "GET_PROVIDER_SUMMARIES" ||
     message.type === "SAVE_PROVIDER_KEY" ||
-    message.type === "CLEAR_PROVIDER_KEY"
+    message.type === "CLEAR_PROVIDER_KEY" ||
+    message.type === "CHECK_PROVIDER_HEALTH"
   ) {
     if (!isExtensionPage(sender)) {
       sendResponse({ ok: false, code: "FORBIDDEN", error: "只有扩展页面可以管理 API Key。" });
@@ -258,12 +261,36 @@ export function handleMessage(
             return { ok: false, code: "INVALID_REQUEST", error: "未知的 API 渠道。" } as const;
           }
           await clearProviderKey(message.providerId);
+        } else if (message.type === "CHECK_PROVIDER_HEALTH") {
+          if (!PROVIDER_IDS.includes(message.providerId)) {
+            return { ok: false, code: "INVALID_REQUEST", error: "未知的 API 渠道。" } as const;
+          }
+          const secrets = await getProviderSecrets();
+          if (!secrets[message.providerId]) {
+            return { ok: false, code: "CONFIG_REQUIRED", error: "请先配置 API Key。" } as const;
+          }
+          return {
+            ok: true,
+            providerHealth: await checkProviderHealth(message.providerId, secrets),
+          } as const;
         }
         return { ok: true, providerSummaries: await getProviderSummaries(settings.activeProvider) } as const;
       } catch {
         return { ok: false, code: "API_ERROR", error: "API Key 操作失败，请重试。" } as const;
       }
     })().then(sendResponse);
+    return true;
+  }
+
+  if (message.type === "GET_JEV_REQUEST_LOG" || message.type === "CLEAR_JEV_REQUEST_LOG") {
+    if (!isExtensionPage(sender)) {
+      sendResponse({ ok: false, code: "FORBIDDEN", error: "只有扩展页面可以管理 Jev 请求日志。" });
+      return false;
+    }
+    const operation = message.type === "GET_JEV_REQUEST_LOG" ? getJevRequestLog : clearJevRequestLog;
+    void operation()
+      .then((requestLog) => sendResponse({ ok: true, requestLog }))
+      .catch(() => sendResponse({ ok: false, code: "API_ERROR", error: "Jev 请求日志操作失败。" }));
     return true;
   }
 

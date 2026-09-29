@@ -14,4 +14,5 @@ test("renders API providers as a master-detail layout", () => {
   expect(markup).toContain('id="provider-key-typesafe"');
   expect(markup).not.toContain('id="provider-key-openrouter"');
   expect(markup).not.toContain('id="provider-key-vercel-ai-gateway"');
+  expect(markup).toContain("运行健康检查");
 });
