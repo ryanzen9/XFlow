@@ -38,9 +38,11 @@ The extension processes these categories; include locally stored data when answe
 
 **中文用途说明：** 数据仅用于用户请求的过滤、Activity 查看以及用户自行配置的可选 S3 同步。XFlow 不出售数据，不将数据用于广告，也没有接收帖子内容、Activity 或凭据的开发者服务器。第三方 Provider 和用户选中的 S3 服务按各自政策处理数据。用户可在 Dashboard 清理本机日志详情或 Activity 数据，并停用 S3 同步。本机凭据没有在浏览器配置文件存储机制之外再做静态加密。
 
-**Privacy policy URL:** `https://ryanzen9.github.io/XFlow/privacy-policy/`
+**Privacy policy URL:** `https://ryanzen9.github.io/XFlow/privacy.html`
 
-**Chinese privacy policy URL:** `https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/`
+**Chinese privacy policy URL:** `https://ryanzen9.github.io/XFlow/privacy.html`
+
+**English privacy policy URL:** `https://ryanzen9.github.io/XFlow/privacy-en.html`
 
 ## Remote code
 

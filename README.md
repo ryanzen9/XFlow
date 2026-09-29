@@ -169,7 +169,7 @@ Background Worker 按“单条标注 → 作者规则 → 用户模板/语义规
 
 ## 隐私与权限
 
-完整说明见 [XFlow 隐私政策](https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/)（[English](https://ryanzen9.github.io/XFlow/privacy-policy/)；[仓库源文件](docs/privacy-policy.md)）。
+完整说明见 [XFlow 隐私政策](https://ryanzen9.github.io/XFlow/privacy.html)（[English](https://ryanzen9.github.io/XFlow/privacy-en.html)；[仓库源文件](docs/privacy-policy.md)）。
 
 - 只有已启用范围内、从 X 页面提取的文本会发送到当前选中的 Provider。
 - Provider API Key 与 S3 凭据保存在 `chrome.storage.local`，目前没有额外加密。

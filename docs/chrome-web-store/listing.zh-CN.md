@@ -20,7 +20,7 @@ XFlow 帮助你更有意识地阅读 X / Twitter。它依据你创建的过滤�
 
 XFlow 是独立项目，与 X Corp.、OpenRouter、Vercel 或 TypeSafe 不存在隶属、认可或赞助关系。这些名称仅用于标识兼容服务。
 
-隐私政策：https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/
+隐私政策：https://ryanzen9.github.io/XFlow/privacy.html
 
 ## 单一用途 · Privacy practices
 

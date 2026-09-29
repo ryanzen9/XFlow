@@ -6,8 +6,8 @@ permalink: /privacy-policy/
 
 # XFlow Privacy Policy
 
-**Effective date: September 23, 2026**  
-**Applies to: XFlow browser extension 0.1.0**  
+**Effective date: September 23, 2026**<br />
+**Applies to: XFlow browser extension 0.1.0**<br />
 **Publisher: Ryan Zeng**
 
 [简体中文版](https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/)

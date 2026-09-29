@@ -6,8 +6,8 @@ permalink: /privacy-policy/zh-CN/
 
 # XFlow 隐私政策
 
-**生效日期：2026 年 9 月 23 日**  
-**适用范围：XFlow 浏览器扩展 0.1.0**  
+**生效日期：2026 年 9 月 23 日**<br />
+**适用范围：XFlow 浏览器扩展 0.1.0**<br />
 **发布者：Ryan Zeng**
 
 [English version](https://ryanzen9.github.io/XFlow/privacy-policy/)

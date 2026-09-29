@@ -20,7 +20,7 @@ Optional S3 sync lets you use an endpoint you configure to sync filtering config
 
 XFlow is an independent project. It is not affiliated with, endorsed by, or sponsored by X Corp., OpenRouter, Vercel, or TypeSafe. Their names identify compatible services only.
 
-Privacy policy: https://ryanzen9.github.io/XFlow/privacy-policy/
+Privacy policy: https://ryanzen9.github.io/XFlow/privacy-en.html
 
 ## Single purpose · Privacy practices
 

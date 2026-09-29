@@ -158,7 +158,7 @@ Every detected post exposes a `J` feedback entry. Stable Tweet IDs support durab
 
 ## Privacy and permissions
 
-See the full [XFlow Privacy Policy](https://ryanzen9.github.io/XFlow/privacy-policy/) ([简体中文](https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/); [source](docs/privacy-policy.en.md)).
+See the full [XFlow Privacy Policy](https://ryanzen9.github.io/XFlow/privacy-en.html) ([简体中文](https://ryanzen9.github.io/XFlow/privacy.html); [source](docs/privacy-policy.en.md)).
 
 - Only text extracted from enabled X surfaces is sent to the currently selected provider.
 - Provider API keys and S3 credentials live in `chrome.storage.local` without additional encryption.

@@ -4,15 +4,15 @@ This directory contains the store copy and upload-ready artwork for PR #9, stage
 
 ## Copy into Developer Dashboard
 
-| Dashboard area                                        | Source                                             |
-| ----------------------------------------------------- | -------------------------------------------------- |
-| Store listing · English                               | [`listing.en.md`](listing.en.md)                   |
-| Store listing · Simplified Chinese                    | [`listing.zh-CN.md`](listing.zh-CN.md)             |
-| Privacy practices, permissions, reviewer instructions | [`dashboard-fields.md`](dashboard-fields.md)       |
-| Privacy policy URL                                    | `https://ryanzen9.github.io/XFlow/privacy-policy/` |
-| Support URL                                           | `https://github.com/ryanzen9/XFlow/issues`         |
+| Dashboard area                                        | Source                                          |
+| ----------------------------------------------------- | ----------------------------------------------- |
+| Store listing · English                               | [`listing.en.md`](listing.en.md)                |
+| Store listing · Simplified Chinese                    | [`listing.zh-CN.md`](listing.zh-CN.md)          |
+| Privacy practices, permissions, reviewer instructions | [`dashboard-fields.md`](dashboard-fields.md)    |
+| Privacy policy URL                                    | `https://ryanzen9.github.io/XFlow/privacy.html` |
+| Support URL                                           | `https://github.com/ryanzen9/XFlow/issues`      |
 
-The description is written for version `0.1.0`. Recheck all copy against the final ZIP before submitting the item, especially if the version, providers, permissions, or S3 behavior changes.
+The description is written for version `0.1.0`. The public listing currently shows only the short bilingual overview, so the detailed copy here remains a proposed Dashboard update. Recheck all copy against the released package before submitting a metadata change, especially if the version, providers, permissions, or S3 behavior changes.
 
 The exact release ZIP's unpacked-load, console, and packaged-byte scan results are recorded in [`stage-5-qa.md`](stage-5-qa.md).
 
