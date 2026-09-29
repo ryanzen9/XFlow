@@ -25,7 +25,7 @@
   <a href="https://ryanzen9.github.io/XFlow/">Project website</a> · <a href="https://ryanzen9.github.io/XFlow/privacy-en.html">Privacy policy</a>
 </p>
 
-> The current version is not yet available in the Chrome Web Store. Install it in developer mode.
+> XFlow 0.1.0 is [public on the Chrome Web Store](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj). You need your own supported provider API key after installation; provider usage may incur third-party charges.
 
 ## Preview
 
@@ -79,7 +79,11 @@ Blur Veil state machine ── Hover / Reveal / Re-obscure
 
 The Content Script only discovers posts, extracts the minimum required text and metadata, renders the veil, and reports events that actually entered the filtered state. External requests, credentials, migrations, activity deduplication, and synchronization remain in the background Service Worker. See the [architecture guide](docs/architecture.md) for the complete boundary.
 
-## Quick start
+## Install from the Chrome Web Store
+
+Select **Add to Chrome** on the [XFlow store page](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj). Then open the Dashboard, save a supported provider key under **API Keys**, and select that provider. Open or refresh `https://x.com/home` to use enabled filtering strategies.
+
+## Install from source (developers)
 
 Requirements:
 
@@ -254,7 +258,7 @@ See the [project website guide](docs/project-page.md) for local preview and GitH
 
 - [x] Layered content-decision caching, user feedback, and duplicate-classification avoidance
 - [x] Extension UI internationalization
-- [ ] Chrome Web Store release
+- [x] Chrome Web Store release (0.1.0, September 29, 2026)
 
 ## Documentation
 

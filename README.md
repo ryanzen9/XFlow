@@ -24,7 +24,7 @@
   <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> · <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a>
 </p>
 
-> 当前版本尚未发布到 Chrome Web Store，请通过开发者模式安装。
+> XFlow 0.1.0 已在 [Chrome Web Store](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj) 公开上架。安装后需要自行配置受支持 Provider 的 API Key；使用 Provider 可能产生第三方费用。
 
 ## 界面预览
 
@@ -78,7 +78,11 @@ Blur Veil 状态机 ── Hover / Reveal / Re-obscure
 
 Content Script 只负责发现帖子、提取必要文本与元数据、渲染遮罩和上报已实际过滤的事件。外部请求、密钥、迁移、Activity 去重和同步都留在后台 Service Worker。完整边界见 [架构文档](docs/architecture.md)。
 
-## 快速开始
+## 从商店安装
+
+在 [Chrome Web Store 的 XFlow 页面](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj) 点击“添加至 Chrome”，然后打开扩展的 Dashboard，在 **API Keys** 中保存至少一个 Provider Key 并设为当前渠道。打开或刷新 `https://x.com/home` 即可使用已启用的过滤策略。
+
+## 从源码安装（开发者）
 
 要求：
 
@@ -265,7 +269,7 @@ ZIP 内记录的时间戳固定为 2020-01-01，条目按路径排序，且只�
 
 - [x] 分层内容决策缓存、用户标注与重复判断去重
 - [x] 扩展界面国际化
-- [ ] Chrome Web Store 发布
+- [x] Chrome Web Store 发布（0.1.0，2026-09-29）
 
 ## 文档
 
