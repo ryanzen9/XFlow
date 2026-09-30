@@ -1,0 +1,94 @@
+name: Release
+
+# Pushing a version tag (for example `v0.1.0`) opens a draft GitHub Release with
+# the verified archive attached. Publishing that release stays a manual,
+# deliberate step. A manual run builds and verifies the package without
+# touching releases, which makes it safe to rehearse.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+# Creating the draft release and uploading its assets needs write access.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and verify the release package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      # A tag that disagrees with the packaged version would publish an archive
+      # whose manifest version does not match its own release.
+      - name: Check that the tag matches the packaged version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version=$(bun -e 'console.log((await Bun.file("package.json").json()).version)')
+          echo "tag=${GITHUB_REF_NAME} package.json=${version}"
+          if [ "$tag" != "$version" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match package.json version ${version}"
+            exit 1
+          fi
+      # `release:check` runs the full quality gate and refuses to package when
+      # anything fails, so the artifact is always the one that passed.
+      - name: Run the release gate and package the extension
+        run: bun run release:check
+      - name: Prove the archive is reproducible
+        run: bun run release:verify
+      - name: Write the release notes
+        run: |
+          archive=$(ls output/release/*.zip)
+          name=$(basename "$archive")
+          hash=$(awk '{print $1}' "$archive.sha256")
+          size=$(wc -c < "$archive" | tr -d ' ')
+          {
+            echo "Verified release package for \`${GITHUB_REF_NAME}\`, built from commit \`${GITHUB_SHA}\`."
+            echo
+            echo "| artifact | size | sha256 |"
+            echo "| --- | --- | --- |"
+            echo "| \`${name}\` | ${size} bytes | \`${hash}\` |"
+            echo
+            echo "This archive was produced by \`.github/workflows/release.yml\` and is the"
+            echo "exact file to upload to the Chrome Web Store Developer Dashboard:"
+            echo "\`manifest.json\` sits at the ZIP root, and the package contains no source"
+            echo "maps, no sources, and no credentials."
+            echo
+            echo "- \`bun run check\` passed: formatting, linting, type checks, tests and the production build."
+            echo "- The archive was packaged twice from clean \`dist/\` directories and compared byte for byte."
+            echo "- Permission, version, localization, asset-reference and remote-code assertions passed."
+            echo
+            echo "Verify a downloaded copy with: \`shasum -a 256 -c ${name}.sha256\`"
+          } > output/release/release-notes.md
+      - name: Upload the release archive as a workflow artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: output/release/*.zip
+          archive: false
+          if-no-files-found: error
+          retention-days: 30
+      - name: Open or update the draft GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          draft: true
+          generate_release_notes: true
+          body_path: output/release/release-notes.md
+          fail_on_unmatched_files: true
+          files: |
+            output/release/*.zip
+            output/release/*.sha256
+            output/release/*.files.txt

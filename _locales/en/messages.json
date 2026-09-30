@@ -1,0 +1,14 @@
+{
+  "appName": {
+    "message": "XFlow",
+    "description": "Extension name shown in chrome://extensions and the Chrome Web Store entry."
+  },
+  "appDescription": {
+    "message": "Filter X timelines and replies with your own Jev provider key, blurring the posts your rules flag.",
+    "description": "Extension description. Chrome allows at most 132 characters."
+  },
+  "actionTitle": {
+    "message": "XFlow settings",
+    "description": "Tooltip of the toolbar button."
+  }
+}

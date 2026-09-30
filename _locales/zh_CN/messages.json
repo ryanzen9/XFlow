@@ -1,0 +1,14 @@
+{
+  "appName": {
+    "message": "XFlow",
+    "description": "扩展在 chrome://extensions 与 Chrome 应用商店中显示的名称。"
+  },
+  "appDescription": {
+    "message": "使用你自己的 Jev Provider Key，按自定义策略判断 X 时间线与评论区内容，并以可揭示遮罩降低干扰。",
+    "description": "扩展描述，Chrome 最多允许 132 个字符。"
+  },
+  "actionTitle": {
+    "message": "XFlow 设置",
+    "description": "工具栏按钮的悬停提示。"
+  }
+}

@@ -10,6 +10,7 @@ import {
 } from "../shared";
 import { cn } from "../ui/cn";
 import { LanguageToggle, localizeError, providerLabel, useI18n } from "../ui/i18n";
+import { privacyPolicyUrl } from "../ui/privacy";
 import { card, eyebrow, textButton } from "../ui/styles";
 import { ThemeToggle, applyTheme } from "../ui/theme";
 import { ApiKeysPanel } from "./components/ApiKeysPanel";
@@ -334,6 +335,14 @@ export function App() {
         )}
         <footer className="mt-[42px] flex justify-between gap-3 border-t border-line pt-[18px] text-caption text-muted sm:text-meta">
           <span>XFlow - build your X</span>
+          <a
+            className="underline decoration-fg-4 underline-offset-[3px] hover:decoration-fg-2"
+            href={privacyPolicyUrl(locale)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("privacy.policyLink")}
+          </a>
           <span>Created By Ryan Zeng</span>
         </footer>
       </main>
