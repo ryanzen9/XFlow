@@ -5,7 +5,8 @@ on:
     branches: [main]
     paths:
       - "src/site/**"
-      - "src/styles/token.css"
+      - "src/themes/neutral/**"
+      - "src/styles/figtree.css"
       - "scripts/build-site.ts"
       - "package.json"
       - "bun.lock"
@@ -35,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
       - name: Build React website
-        run: bun run scripts/build-site.ts
+        run: bun run build:site
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload static site

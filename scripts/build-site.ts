@@ -48,7 +48,6 @@ function htmlDocument({ page, lang, title, description }: (typeof pages)[number]
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="${description}" />
     <title>${title}</title>
-    <link rel="stylesheet" href="./assets/tokens.css" />
     <link rel="stylesheet" href="./assets/site.css" />
   </head>
   <body>
@@ -67,16 +66,31 @@ for (const page of pages) {
 }
 
 await Promise.all([
-  copyFile(resolve(repositoryRoot, "src/styles/token.css"), resolve(assetsRoot, "tokens.css")),
-  copyFile(resolve(repositoryRoot, "src/site/site.css"), resolve(assetsRoot, "site.css")),
+  copyFile(resolve(repositoryRoot, "src/site/assets/xflow-hero.webp"), resolve(assetsRoot, "xflow-hero.webp")),
   Bun.write(resolve(outputRoot, ".nojekyll"), ""),
 ]);
+
+const stylesheet = Bun.spawn(
+  ["bunx", "--no-install", "tailwindcss", "-i", "src/site/site.css", "-o", "site-dist/assets/site.css", "--minify"],
+  { cwd: repositoryRoot, stdout: "inherit", stderr: "inherit" },
+);
+if ((await stylesheet.exited) !== 0) throw new Error("Could not build the XFlow website stylesheet.");
+
+// Tailwind inlines the font declarations; keep their referenced files beside
+// the stylesheet so GitHub Pages project subpaths work without an external CDN.
+const fontsRoot = resolve(repositoryRoot, "node_modules/@fontsource-variable/figtree/files");
+await mkdir(resolve(assetsRoot, "fonts"), { recursive: true });
+for (const font of new Bun.Glob("figtree-*-wght-normal.woff2").scanSync(fontsRoot)) {
+  await copyFile(resolve(fontsRoot, font), resolve(assetsRoot, "fonts", font));
+}
+await copyFile(resolve(fontsRoot, "../LICENSE"), resolve(assetsRoot, "fonts/OFL.txt"));
 
 const clientBuild = await Bun.build({
   entrypoints: [resolve(repositoryRoot, "src/site/client.tsx")],
   outdir: assetsRoot,
   target: "browser",
   minify: true,
+  define: { "process.env.NODE_ENV": JSON.stringify("production") },
 });
 
 if (!clientBuild.success) {
