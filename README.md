@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  Jev For your X：按自定义策略遮罩 X / Twitter 中命中的内容，减少推广等干扰。
+  Jev For your X：过滤 X / Twitter 中的广告，并自定义其他内容的过滤规则。
 </p>
 
 <p align="center">
@@ -29,17 +29,17 @@
 ## 界面预览
 
 <p align="center">
-  <img src="docs/assets/strategy-editor.webp" alt="深色主题下的 XFlow 策略编辑器与本地 Blur Veil 实时预览" width="100%" />
+  <img src="docs/assets/strategy-editor.webp" alt="深色主题下的 XFlow 广告与自定义内容过滤策略编辑器" width="100%" />
 </p>
 
 <table>
   <tr>
     <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="深色主题下的 Activity 热力图、每周回顾和过滤范围" /></td>
-    <td width="28%"><img src="docs/assets/veil-preview.webp" alt="深色主题下的 Blur Veil 本地预览、命中率与阈值控制" /></td>
+    <td width="28%"><img src="docs/assets/veil-preview.webp" alt="深色主题下的过滤结果本机预览、命中率与阈值控制" /></td>
   </tr>
   <tr>
     <td align="center"><sub>本地 Activity、30 天历史与 12 周趋势</sub></td>
-    <td align="center"><sub>不调用模型的 Blur Veil 实时预览</sub></td>
+    <td align="center"><sub>不调用模型的过滤结果预览</sub></td>
   </tr>
 </table>
 
@@ -49,13 +49,13 @@
 
 |      | 能力                      | 当前行为                                                                                 |
 | ---- | ------------------------- | ---------------------------------------------------------------------------------------- |
-| `01` | Policy engine             | 为时间线和评论区分别配置多条策略、提示词、Hit Rate 与 P1 → Pn 优先级。                   |
-| `02` | Blur Veil                 | 保留帖子原始尺寸和 DOM，以模糊遮罩、Hover 信息及点击或键盘揭示降低干扰。                 |
+| `01` | 广告与推广过滤            | 默认策略识别广告、推广、垃圾信息及诈骗诱导；只处理命中启用策略的内容。                   |
+| `02` | 自定义内容策略            | 为时间线和评论区分别配置多条规则、提示词、Hit Rate 与 P1 → Pn 优先级。                   |
 | `03` | Multi-provider Jev        | 显式选择 OpenRouter、Vercel AI Gateway 或 TypeSafe；失败时不进行隐式渠道降级。           |
 | `04` | Local-first activity      | 在本机记录去重后的过滤事件，提供今日/累计计数、Heatmap、趋势、周报、历史与页面 Badge。   |
 | `05` | Versioned S3 sync         | 可选同步配置和 Activity；配置按版本决定方向，事件按稳定 ID 合并，清除状态由墓碑保护。    |
 | `06` | Local credential boundary | Provider Key 与 S3 凭据只留在扩展本机存储，不进入 Content Script、配置 JSON 或 S3 文档。 |
-| `07` | Token-driven UI           | Popup 与 Dashboard 使用同一套设计 token，支持高对比 Light / Dark 主题和 reduced motion。 |
+| `07` | 可恢复的过滤结果          | 命中内容在原页面中隐藏，用户可随时显示；Popup 与 Dashboard 支持 Light / Dark 主题。      |
 
 ## 工作方式
 

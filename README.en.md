@@ -17,8 +17,8 @@
 </p>
 
 <p align="center">
-  Jev For your X: veil X / Twitter content that matches your policies to reduce distractions.<br />
-  XFlow does not remove posts or shift the feed. It quietly veils matched content and leaves reveal control with the reader.
+  Jev For your X: filter ads in X / Twitter and choose what else to filter with your own policies.<br />
+  Matching posts can be shown again whenever you choose.
 </p>
 
 <p align="center">
@@ -30,17 +30,17 @@
 ## Preview
 
 <p align="center">
-  <img src="docs/assets/strategy-editor.webp" alt="XFlow policy editor and local Blur Veil preview in the dark theme" width="100%" />
+  <img src="docs/assets/strategy-editor.webp" alt="XFlow ad and custom content filtering strategy editor in the dark theme" width="100%" />
 </p>
 
 <table>
   <tr>
     <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="XFlow Activity heatmap, weekly review, and filtering controls in the dark theme" /></td>
-    <td width="28%"><img src="docs/assets/veil-preview.webp" alt="Local Blur Veil preview with hit-rate and threshold controls in the dark theme" /></td>
+    <td width="28%"><img src="docs/assets/veil-preview.webp" alt="Local filtering result preview with hit-rate and threshold controls in the dark theme" /></td>
   </tr>
   <tr>
     <td align="center"><sub>Local activity, 30-day history, and a 12-week trend</sub></td>
-    <td align="center"><sub>A live Blur Veil preview that never calls a model</sub></td>
+    <td align="center"><sub>A local filtering result preview that never calls a model</sub></td>
   </tr>
 </table>
 
@@ -48,15 +48,15 @@ The screenshots come from an isolated Dashboard mock store. They contain no real
 
 ## Why XFlow
 
-|      | Capability                | Current behavior                                                                                                               |
-| ---- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `01` | Policy engine             | Configure separate policy queues, prompts, Hit Rate thresholds, and P1 → Pn priorities for timelines and replies.              |
-| `02` | Blur Veil                 | Preserve the original post geometry while using a progressive veil, hover context, and click or keyboard reveal.               |
-| `03` | Multi-provider Jev        | Explicitly select OpenRouter, Vercel AI Gateway, or TypeSafe, with no silent provider fallback.                                |
-| `04` | Local-first activity      | Track deduplicated filter events locally with today/all-time counts, a heatmap, trend, weekly review, history, and page badge. |
-| `05` | Versioned S3 sync         | Optionally sync config and activity; config follows versions, events merge by stable ID, and tombstones protect cleared data.  |
-| `06` | Local credential boundary | Keep provider keys and S3 credentials in extension-local storage, outside Content Scripts, editable JSON, and S3 documents.    |
-| `07` | Token-driven UI           | Share one token system across Popup and Dashboard with high-contrast Light / Dark themes and reduced-motion support.           |
+|      | Capability                 | Current behavior                                                                                                               |
+| ---- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `01` | Ad and promotion filtering | Default strategies identify ads, promotions, spam, and scams; only content matching enabled policies is filtered.              |
+| `02` | Custom content policies    | Configure separate rules, prompts, Hit Rate thresholds, and P1 → Pn priorities for timelines and replies.                      |
+| `03` | Multi-provider Jev         | Explicitly select OpenRouter, Vercel AI Gateway, or TypeSafe, with no silent provider fallback.                                |
+| `04` | Local-first activity       | Track deduplicated filter events locally with today/all-time counts, a heatmap, trend, weekly review, history, and page badge. |
+| `05` | Versioned S3 sync          | Optionally sync config and activity; config follows versions, events merge by stable ID, and tombstones protect cleared data.  |
+| `06` | Local credential boundary  | Keep provider keys and S3 credentials in extension-local storage, outside Content Scripts, editable JSON, and S3 documents.    |
+| `07` | Reversible results         | Matching content is hidden on the original page and can be shown again; Popup and Dashboard support Light / Dark themes.       |
 
 ## How it works
 

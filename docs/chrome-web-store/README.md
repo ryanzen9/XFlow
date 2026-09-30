@@ -18,13 +18,13 @@ The exact release ZIP's unpacked-load, console, and packaged-byte scan results a
 
 ## Store artwork
 
-| Order / field          | File                                                               | Dimensions     | What it shows                                              |
-| ---------------------- | ------------------------------------------------------------------ | -------------- | ---------------------------------------------------------- |
-| Store icon             | [`assets/store-icon-128.png`](assets/store-icon-128.png)           | 128 × 128 PNG  | The same XFlow mark used by the extension                  |
-| Screenshot 1           | `01-popup.png`                                                     | 1280 × 800 PNG | Actual dark-mode Popup in a monochrome presentation frame  |
-| Screenshot 2           | `02-activity-dashboard.png`                                        | 1280 × 800 PNG | Actual dark-mode Activity trend and weekly review          |
-| Screenshot 3           | `03-strategy-and-veil.png`                                         | 1280 × 800 PNG | Actual dark-mode strategy editor and local veil simulation |
-| Small promotional tile | [`assets/small-promo-440x280.png`](assets/small-promo-440x280.png) | 440 × 280 PNG  | Text-light monochrome brand art                            |
+| Order / field          | File                                                               | Dimensions     | What it shows                                                |
+| ---------------------- | ------------------------------------------------------------------ | -------------- | ------------------------------------------------------------ |
+| Store icon             | [`assets/store-icon-128.png`](assets/store-icon-128.png)           | 128 × 128 PNG  | The same XFlow mark used by the extension                    |
+| Screenshot 1           | `01-popup.png`                                                     | 1280 × 800 PNG | Actual dark-mode Popup in a monochrome presentation frame    |
+| Screenshot 2           | `02-activity-dashboard.png`                                        | 1280 × 800 PNG | Actual dark-mode Activity trend and weekly review            |
+| Screenshot 3           | `03-strategy-and-veil.png`                                         | 1280 × 800 PNG | Actual dark-mode strategy editor and local filtering preview |
+| Small promotional tile | [`assets/small-promo-440x280.png`](assets/small-promo-440x280.png) | 440 × 280 PNG  | Text-light monochrome brand art                              |
 
 The three screenshots were uploaded to the Chrome Web Store but are not tracked in Git, following the repository rule against committed screenshots. During the PR #9 review follow-up, copies were preserved in the review worktree's ignored `output/store-assets/` directory. The optional 1400 × 560 marquee tile is deliberately omitted. Screenshots are English-language UI captures; do not label them as Chinese screenshots in the Dashboard.
 

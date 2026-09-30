@@ -6,7 +6,7 @@
 
 [English version](https://ryanzen9.github.io/XFlow/privacy-en.html)
 
-XFlow 帮助你在 X / Twitter 的时间线和评论区，按自己设定的策略判断并遮蔽内容。本政策说明扩展处理哪些数据、数据流向何处，以及如何删除这些数据。XFlow 项目没有用于接收帖子内容、过滤记录或凭据的开发者服务器；扩展会按你的设置直接连接所选第三方服务。
+XFlow 帮助你按默认与自定义策略过滤 X / Twitter 时间线和评论区的广告、推广及其他不想看的内容。命中的内容仍可由你手动显示。本政策说明扩展处理哪些数据、数据流向何处，以及如何删除这些数据。XFlow 项目没有用于接收帖子内容、过滤记录或凭据的开发者服务器；扩展会按你的设置直接连接所选第三方服务。
 
 ## 处理的数据及用途
 
@@ -44,7 +44,7 @@ XFlow 不读取 X 登录 Cookie 或 Session，不保存页面 HTML、DOM、媒�
 
 与 Provider 及正式使用的 S3 Endpoint 的连接使用 HTTPS。Provider Key 和 S3 凭据不会提供给 X 页面上的 Content Script，也不会写入可编辑配置 JSON 或新的 S3 同步文档。它们在 `chrome.storage.local` 中**没有额外静态加密**；能访问该浏览器配置文件的人可能获得这些本机数据。请保护浏览器配置文件、Provider 账户及 S3 凭据。
 
-扩展访问 X / Twitter 页面是为了读取待判断内容并显示可揭示的遮罩；访问 Provider 主机是为了完成你选择的判断服务。S3 主机访问由你在保存 Endpoint 时单独授权。`storage` 权限用于保存上述本机数据；`alarms` 权限用于启用 S3 后的定时同步。
+扩展访问 X / Twitter 页面是为了读取待判断内容、应用广告与自定义内容过滤策略，并在原页面呈现可重新显示的结果；访问 Provider 主机是为了完成你选择的判断服务。S3 主机访问由你在保存 Endpoint 时单独授权。`storage` 权限用于保存上述本机数据；`alarms` 权限用于启用 S3 后的定时同步。
 
 ## Chrome Web Store Limited Use
 

@@ -6,11 +6,11 @@ Use these answers with the production `0.1.0` ZIP. The Dashboard may change its 
 
 **English**
 
-> XFlow evaluates visible X / Twitter posts in the Home timeline and replies against user-created filtering strategies through the user's selected Jev provider, then displays a revealable veil over matching content.
+> XFlow filters ads, promotions, and other unwanted X / Twitter posts in Home timelines and replies using configurable strategies and the user's selected Jev provider. Users can show matching posts again.
 
 **简体中文**
 
-> XFlow 根据用户创建的过滤策略，通过用户选中的 Jev Provider 判断 X / Twitter 首页时间线和评论区中可见的帖子，并为命中内容显示可揭示的遮罩。
+> XFlow 使用可配置的过滤策略和用户选中的 Jev Provider，过滤 X / Twitter 首页时间线与评论区中的广告、推广及其他不想看的帖子；用户可随时重新显示命中的内容。
 
 ## Permission justifications
 
@@ -18,7 +18,7 @@ Use these answers with the production `0.1.0` ZIP. The Dashboard may change its 
 | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `storage`                                                                                | Stores filtering settings, strategies, UI preferences, Activity, durable feedback-derived decisions, provider API keys, and optional S3 connection settings in the browser. Credentials stay in `chrome.storage.local` and are not placed in synced configuration documents.           | 在浏览器本机保存过滤设置、策略、界面偏好、Activity、用户反馈规则、Provider API Key 和可选 S3 连接设置。凭据仅在 `chrome.storage.local` 中保存，不进入同步配置文档。 |
 | `alarms`                                                                                 | When S3 sync is enabled, schedules an approximately 15-minute check to sync configuration, Activity, and feedback-derived decisions with the user's chosen endpoint.                                                                                                                   | 用户启用 S3 同步后，约每 15 分钟检查并同步配置、Activity 和用户反馈规则到指定 Endpoint。                                                                            |
-| `https://x.com/*`, `https://twitter.com/*` content script matches                        | Reads visible timeline posts and replies to apply the user's filtering strategies and render revealable veils on those pages.                                                                                                                                                          | 读取时间线和评论区中可见的帖子，以应用用户设置的过滤策略并在原页面显示可揭示遮罩。                                                                                  |
+| `https://x.com/*`, `https://twitter.com/*` content script matches                        | Reads visible timeline posts and replies to apply ad and custom content filtering strategies and show the results on those pages.                                                                                                                                                      | 读取时间线和评论区中可见的帖子，以应用广告与自定义内容过滤策略，并在原页面呈现结果。                                                                                |
 | `https://openrouter.ai/*`, `https://ai-gateway.vercel.sh/*`, `https://api.typesafe.ai/*` | Sends the post ID and text plus applicable strategy names and criteria to the provider the user selects, using that provider's user-supplied API key, to obtain a filtering decision. No automatic fallback sends the request to another provider.                                     | 只向用户选中的 Provider 发送帖子 ID、正文及适用策略名称与规则，并使用用户提供的对应 API Key 获取过滤判断；不会自动转发给其他 Provider。                             |
 | Optional `https://*/*`                                                                   | Supports user-defined HTTPS S3-compatible endpoints. XFlow requests access to the specific endpoint origin only when the user saves its settings, then uses it for optional configuration, Activity, and feedback-rule sync. The extension does not request blanket access at install. | 支持用户自定义 HTTPS S3 兼容 Endpoint。仅在用户保存设置时请求其精确 Origin 权限，之后用于可选的配置、Activity 和反馈规则同步；安装时不会请求访问所有网站。          |
 
@@ -52,7 +52,7 @@ Select **No**. All executable JavaScript is bundled in the extension ZIP. Provid
 
 1. Install the exact `xflow-0.1.0.zip` prepared by the release workflow. Open the Dashboard from the extension Popup.
 2. Choose one of the three Jev providers and enter a **temporary, low-limit, revocable reviewer API key** in the Dashboard's API Keys page. The reviewer key must be provided through a suitable private Dashboard field or another approved reviewer channel; never paste it into the listing, screenshots, PR, or repository. The owner must decide how to supply this key before submission.
-3. In Strategies, inspect the built-in Home and reply strategies and the local veil preview. Open an X Home timeline or post replies page and observe filtering; select **Show** on a veiled post to reveal it. A live decision needs the selected provider key and may incur provider charges.
+3. In Strategies, inspect the built-in Home and reply strategies and the local filtering result preview. Open an X Home timeline or post replies page and observe filtering; select **Show** on a filtered post to display it again. A live decision needs the selected provider key and may incur provider charges.
 4. Open General to view Activity and Log to review recorded filtered posts. Use **Clear logs** or **Clear Activity Data** to verify Activity deletion controls; neither action deletes feedback-derived rules.
 5. Optional S3: configure an endpoint the reviewer controls, grant access to that exact origin, enable sync, and inspect the Data page. S3 is not required to test the core filtering purpose.
 

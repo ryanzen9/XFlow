@@ -6,7 +6,7 @@
 
 [简体中文版](https://ryanzen9.github.io/XFlow/privacy.html)
 
-XFlow helps you evaluate and veil content in X / Twitter timelines and replies using rules you create. This policy explains what the extension processes, where data goes, and how to delete it. The XFlow project does not operate a developer server that receives post content, filter activity, or credentials. The extension connects directly to the third-party services you choose.
+XFlow helps you filter ads, promotions, and other unwanted content in X / Twitter timelines and replies with default and custom policies. You can show matching content again. This policy explains what the extension processes, where data goes, and how to delete it. The XFlow project does not operate a developer server that receives post content, filter activity, or credentials. The extension connects directly to the third-party services you choose.
 
 ## Data processed and why
 
@@ -44,7 +44,7 @@ Apart from these necessary transfers, the XFlow project does not sell this data,
 
 Connections to Providers and S3 Endpoints in normal use use HTTPS. Provider Keys and S3 credentials are not exposed to Content Scripts on X pages and are not included in editable configuration JSON or new S3 sync documents. They receive **no additional encryption at rest** in `chrome.storage.local`; someone with access to your browser profile may be able to obtain this local data. Protect your browser profile, Provider accounts, and S3 credentials.
 
-X / Twitter page access lets the extension read posts to evaluate and display revealable veils. Provider host access supports your selected evaluation service. You grant access to an S3 host separately when saving its Endpoint. The `storage` permission stores the local data described above; `alarms` supports scheduled sync after you enable S3.
+X / Twitter page access lets the extension read posts, apply ad and custom content filtering policies, and show reversible results on the original page. Provider host access supports your selected evaluation service. You grant access to an S3 host separately when saving its Endpoint. The `storage` permission stores the local data described above; `alarms` supports scheduled sync after you enable S3.
 
 ## Chrome Web Store Limited Use
 

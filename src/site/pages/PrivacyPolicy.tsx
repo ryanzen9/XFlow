@@ -128,8 +128,8 @@ function ChinesePolicy() {
           同步文档。它们在 <code>chrome.storage.local</code>{" "}
           中没有额外静态加密；能访问该浏览器配置文件的人可能获得这些本机数据。正式版本与 Provider、S3 Endpoint
           的连接使用 HTTPS；本机 HTTP S3 调试仅在开发构建中可用。扩展访问 X / Twitter
-          页面用于读取待判断内容并显示可揭示的遮罩；S3 主机访问由你在保存 Endpoint 时单独授权。<code>storage</code>{" "}
-          用于保存本机数据；<code>alarms</code> 用于启用 S3 后的定时同步。
+          页面用于读取待判断内容、应用广告与自定义内容过滤策略，并在原页面呈现可重新显示的结果；S3 主机访问由你在保存
+          Endpoint 时单独授权。<code>storage</code> 用于保存本机数据；<code>alarms</code> 用于启用 S3 后的定时同步。
         </p>
       </section>
 
@@ -288,10 +288,10 @@ function EnglishPolicy() {
           editable configuration JSON or new S3 sync documents. They receive no additional encryption at rest in{" "}
           <code>chrome.storage.local</code>; someone with access to your browser profile may be able to obtain this
           local data. Production connections to Providers and S3 endpoints use HTTPS; local HTTP S3 testing is only
-          available in a development build. X / Twitter page access lets the extension read posts for evaluation and
-          display revealable veils. You grant access to an S3 host separately when saving its Endpoint. The{" "}
-          <code>storage</code> permission stores local data; <code>alarms</code> supports scheduled sync after you
-          enable S3.
+          available in a development build. X / Twitter page access lets the extension read posts, apply ad and custom
+          content filtering policies, and show reversible results on the original page. You grant access to an S3 host
+          separately when saving its Endpoint. The <code>storage</code> permission stores local data;{" "}
+          <code>alarms</code> supports scheduled sync after you enable S3.
         </p>
       </section>
 

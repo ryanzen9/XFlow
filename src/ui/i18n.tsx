@@ -85,13 +85,13 @@ const zh = {
   "general.activityPrivacy": "过滤活动保存在本机，仅在你启用 S3 时同步。",
   "general.localFirst": "本机优先",
   "general.scope": "过滤范围",
-  "general.scopeDescription": "决定在哪里开启安静的阅读体验。",
+  "general.scopeDescription": "选择在哪里启用广告与自定义内容过滤。",
   "general.live": "实时生效",
   "general.homeTimeline": "Home 时间线",
-  "general.homeDescription": "识别首页中的推广与干扰内容。",
+  "general.homeDescription": "识别首页中的广告、推广及其他不想看的内容。",
   "general.comments": "评论区",
   "general.commentsDescription": "处理详情页中的评论，保留当前根博文。",
-  "general.pauseHelp": "暂停时，遮罩会平滑退出。重新启用后，命中的内容会重新进入隐藏状态。",
+  "general.pauseHelp": "暂停后，过滤效果会平滑退出。重新启用后，命中的内容会再次隐藏。",
   "general.modelDisplay": "模型显示",
   "general.modelDisplayDescription": "为 Hover 信息设置熟悉的模型昵称。",
   "general.modelNickname": "模型昵称",
@@ -333,11 +333,11 @@ const zh = {
   "preview.visible": "未达到阈值 · 保持可见",
   "preview.revealed": "已揭示 · 内容可见",
   "preview.hit": "已命中 · Hover 查看变量",
-  "preview.replay": "重播遮罩 ↻",
+  "preview.replay": "重播过滤预览 ↻",
   "preview.rate": "模拟 hitrate",
   "preview.threshold": "当前阈值 {value}。",
   "preview.content": "自定义预览内容",
-  "preview.help": "将鼠标移到遮罩上查看 Hover，点击或按 Enter 揭示内容。预览不会发送 API 请求。",
+  "preview.help": "将鼠标移到过滤结果上查看 Hover，点击或按 Enter 显示内容。预览不会发送 API 请求。",
 } as const;
 
 export type MessageKey = keyof typeof zh;
@@ -420,13 +420,14 @@ const en: Record<MessageKey, string> = {
   "general.activityPrivacy": "Filtering activity stays on your device and syncs only when you enable S3.",
   "general.localFirst": "Local first",
   "general.scope": "Filtering scope",
-  "general.scopeDescription": "Choose where the quieter reading experience is active.",
+  "general.scopeDescription": "Choose where ad and custom content filtering runs.",
   "general.live": "Live",
   "general.homeTimeline": "Home timeline",
-  "general.homeDescription": "Detect promotions and distractions in the Home timeline.",
+  "general.homeDescription": "Detect ads, promotions, and other unwanted Home timeline content.",
   "general.comments": "Replies",
   "general.commentsDescription": "Process replies on detail pages while preserving the root post.",
-  "general.pauseHelp": "When paused, veils exit smoothly. Matching content is veiled again after re-enabling.",
+  "general.pauseHelp":
+    "When paused, the filtering effect fades out. Matching content is hidden again after re-enabling.",
   "general.modelDisplay": "Model display",
   "general.modelDisplayDescription": "Set a familiar model nickname for Hover details.",
   "general.modelNickname": "Model nickname",
@@ -677,12 +678,12 @@ const en: Record<MessageKey, string> = {
   "preview.visible": "Below threshold · Remains visible",
   "preview.revealed": "Revealed · Content visible",
   "preview.hit": "Matched · Hover to inspect variables",
-  "preview.replay": "Replay veil ↻",
+  "preview.replay": "Replay filter preview ↻",
   "preview.rate": "Simulated hitrate",
   "preview.threshold": "Current threshold {value}. This is not a real model decision.",
   "preview.content": "Custom preview content",
   "preview.help":
-    "Hover the veil to inspect it; click or press Enter to reveal content. The preview sends no API requests.",
+    "Hover the filtered result to inspect it; click or press Enter to show the post. The preview sends no API requests.",
 };
 
 const catalogs: Record<Locale, Record<MessageKey, string>> = {
