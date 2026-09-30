@@ -21,7 +21,7 @@ function ChinesePolicy() {
         ← 返回 XFlow
       </a>
       <h1 id="policy-title">XFlow 隐私政策</h1>
-      <p className="policy__date">生效日期：2026 年 9 月 30 日 · 适用版本：0.1.0 · 发布者：Ryan Zeng</p>
+      <p className="policy__date">生效日期：2026 年 9 月 30 日 · 适用版本：0.1.0–0.1.1 · 发布者：Ryan Zeng</p>
       <p className="policy__language">
         <Link href="./privacy-en.html">English version</Link>
       </p>
@@ -96,7 +96,7 @@ function ChinesePolicy() {
             周，之后折叠为按设备汇总的累计计数。第三方服务中的数据不会因此自动删除。
           </li>
           <li>
-            用户反馈形成的长期判断规则在 0.1.0
+            用户反馈形成的长期判断规则在 0.1.0 和 0.1.1
             中不会自动过期。“清理日志”和“清除活动数据”不会删除这类独立记录。删除本机反馈记录需要卸载扩展或在浏览器中清除其存储数据。如已启用
             S3，请先在所有设备上停用同步，并删除 S3 对象及其版本和备份；否则剩余副本可能重新恢复这些记录。
           </li>
@@ -161,7 +161,7 @@ function EnglishPolicy() {
         ← Back to XFlow
       </a>
       <h1 id="policy-title">XFlow Privacy Policy</h1>
-      <p className="policy__date">Effective date: September 30, 2026 · Version: 0.1.0 · Publisher: Ryan Zeng</p>
+      <p className="policy__date">Effective date: September 30, 2026 · Versions: 0.1.0–0.1.1 · Publisher: Ryan Zeng</p>
       <p className="policy__language">
         <Link href="./privacy.html">简体中文版</Link>
       </p>
@@ -253,11 +253,11 @@ function EnglishPolicy() {
             per-device lifetime counts. This does not delete data held by third parties.
           </li>
           <li>
-            Feedback-derived user decisions have no automatic expiration in version 0.1.0. <strong>Clear logs</strong>{" "}
-            and <strong>Clear Activity Data</strong> do not remove these separate records. To remove local feedback
-            records, uninstall the extension or clear its stored data in the browser. If S3 sync was enabled, first
-            disable it on every device and delete the S3 object, including versions and backups; otherwise a remaining
-            copy can restore the records.
+            Feedback-derived user decisions have no automatic expiration in versions 0.1.0 and 0.1.1.{" "}
+            <strong>Clear logs</strong> and <strong>Clear Activity Data</strong> do not remove these separate records.
+            To remove local feedback records, uninstall the extension or clear its stored data in the browser. If S3
+            sync was enabled, first disable it on every device and delete the S3 object, including versions and backups;
+            otherwise a remaining copy can restore the records.
           </li>
           <li>
             Use <strong>Clear logs</strong> on the Dashboard's Log page to remove authors, text previews, original

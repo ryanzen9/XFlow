@@ -1,6 +1,6 @@
-# Chrome Web Store listing kit · XFlow 0.1.0
+# Chrome Web Store listing kit · XFlow 0.1.1
 
-This directory contains the store copy, icon, and promotional artwork prepared for the initial `0.1.0` release and its metadata follow-up. The English and Simplified Chinese listings carry equivalent copy. Final language, regions, and visibility are tracked in [`../pull-request/9.md`](../pull-request/9.md).
+This directory contains the store copy, icon, and promotional artwork for the `0.1.1` update. The English and Simplified Chinese listings carry equivalent copy. The initial `0.1.0` release and its public listing are recorded in [`../pull-request/9.md`](../pull-request/9.md).
 
 ## Copy into Developer Dashboard
 
@@ -12,9 +12,9 @@ This directory contains the store copy, icon, and promotional artwork prepared f
 | Privacy policy URL                                    | `https://ryanzen9.github.io/XFlow/privacy.html` |
 | Support URL                                           | `https://github.com/ryanzen9/XFlow/issues`      |
 
-The descriptions are written for version `0.1.0`. Their short summaries match `_locales/en/messages.json` and `_locales/zh_CN/messages.json` for a future package; editing those source files does not change the already published extension. The publisher reported updating the Dashboard description on 2026-09-30, while an anonymous check of the public page still showed the previous short bilingual overview. Confirm the new copy is public after the metadata review before treating these listings as live. Recheck all copy against the released package whenever the version, providers, permissions, or S3 behavior changes.
+The descriptions are written for version `0.1.1`. Their short summaries match `_locales/en/messages.json` and `_locales/zh_CN/messages.json` in the new package. Editing these files does not change the already published `0.1.0` item; copy the listing text into the Developer Dashboard and confirm it is public after review. Recheck all copy against the released package whenever the version, providers, permissions, or S3 behavior changes.
 
-The exact release ZIP's unpacked-load, console, and packaged-byte scan results are recorded in [`stage-5-qa.md`](stage-5-qa.md).
+The `0.1.0` release ZIP's unpacked-load, console, and packaged-byte scan results are recorded in [`stage-5-qa.md`](stage-5-qa.md). Repeat the ZIP and unpacked-load checks for the exact `0.1.1` package before submitting it.
 
 ## Store artwork
 
@@ -26,7 +26,7 @@ The exact release ZIP's unpacked-load, console, and packaged-byte scan results a
 | Screenshot 3           | `03-strategy-and-veil.png`                                         | 1280 × 800 PNG | Actual dark-mode strategy editor and local filtering preview |
 | Small promotional tile | [`assets/small-promo-440x280.png`](assets/small-promo-440x280.png) | 440 × 280 PNG  | Text-light monochrome brand art                              |
 
-The three screenshots were uploaded to the Chrome Web Store but are not tracked in Git, following the repository rule against committed screenshots. During the PR #9 review follow-up, copies were preserved in the review worktree's ignored `output/store-assets/` directory. The optional 1400 × 560 marquee tile is deliberately omitted. Screenshots are English-language UI captures; do not label them as Chinese screenshots in the Dashboard.
+The three screenshots were uploaded for `0.1.0` but are not tracked in Git, following the repository rule against committed screenshots. During the PR #9 review follow-up, copies were preserved in the review worktree's ignored `output/store-assets/` directory. Screenshot 3 shows the earlier **Replay Veil** label and `XFlow / 0.1` footer; replace it with a current dark-mode capture before submitting `0.1.1`. The optional 1400 × 560 marquee tile is deliberately omitted. Screenshots are English-language UI captures; do not label them as Chinese screenshots in the Dashboard.
 
 The UI was captured from the production build through `scripts/preview-dashboard.ts` with a local storage mock. A temporary preview-only change served the bundled logos; it is not part of the extension or this commit. Activity records, strategy text, and the nonworking `DEMO-KEY-NOT-VALID` value existed only in the temporary browser session. No account name, real post, real API key, S3 credential, or browser trace is present in these assets. The third screenshot explicitly shows the built-in **Local simulation**, not a live provider decision.
 

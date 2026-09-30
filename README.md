@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml"><img src="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <img src="https://img.shields.io/badge/version-0.1.0-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.0" />
+  <img src="https://img.shields.io/badge/version-0.1.1-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.1" />
   <img src="https://img.shields.io/badge/Manifest-V3-525252?style=flat-square&labelColor=0a0a0a" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/React-19-525252?style=flat-square&labelColor=0a0a0a" alt="React 19" />
   <img src="https://img.shields.io/badge/TypeScript-5-525252?style=flat-square&labelColor=0a0a0a" alt="TypeScript 5" />
@@ -24,7 +24,7 @@
   <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> · <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a>
 </p>
 
-> XFlow 0.1.0 已在 [Chrome Web Store](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj) 公开上架。安装后需要自行配置受支持 Provider 的 API Key；使用 Provider 可能产生第三方费用。
+> Chrome Web Store 当前公开版本为 0.1.0；本仓库正在准备 0.1.1 更新。可从 [XFlow 商店页面](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj)安装。安装后需要自行配置受支持 Provider 的 API Key；使用 Provider 可能产生第三方费用。
 
 ## 界面预览
 
@@ -261,7 +261,7 @@ ZIP 内记录的时间戳固定为 2020-01-01，条目按路径排序，且只�
 - 两个工作流都只用 Bun：`oven-sh/setup-bun` 从 `package.json` 的 `packageManager` 读取版本，依赖用 `bun install --frozen-lockfile` 安装。
 - 所有 Action 固定到提交 SHA，并在行尾注释标注对应版本，避免可变标签被改写。
 - 打包任务连续打包两次并逐字节比较，任何引入时间戳或随机标识的依赖都会让 CI 失败。
-- 推送 `v0.1.0` 这类标签后会自动创建草稿 Release，附带 ZIP、`.sha256` 与 `.files.txt`；公开发布仍需人工确认。手动触发只构建与校验，不会创建 Release。
+- 推送 `v0.1.1` 这类标签后会自动创建草稿 Release，附带 ZIP、`.sha256` 与 `.files.txt`；公开发布仍需人工确认。手动触发只构建与校验，不会创建 Release。
 - 手动触发（`workflow_dispatch`）要求工作流文件已存在于默认分支，因此 `release.yml` 的标签触发与手动触发都在合并到 `main` 之后生效。
 
 项目官网预览与 GitHub Pages 发布方式见[官网说明](docs/project-page.md)。

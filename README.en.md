@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml"><img src="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <img src="https://img.shields.io/badge/version-0.1.0-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.0" />
+  <img src="https://img.shields.io/badge/version-0.1.1-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.1" />
   <img src="https://img.shields.io/badge/Manifest-V3-525252?style=flat-square&labelColor=0a0a0a" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/React-19-525252?style=flat-square&labelColor=0a0a0a" alt="React 19" />
   <img src="https://img.shields.io/badge/TypeScript-5-525252?style=flat-square&labelColor=0a0a0a" alt="TypeScript 5" />
@@ -25,7 +25,7 @@
   <a href="https://ryanzen9.github.io/XFlow/">Project website</a> · <a href="https://ryanzen9.github.io/XFlow/privacy-en.html">Privacy policy</a>
 </p>
 
-> XFlow 0.1.0 is [public on the Chrome Web Store](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj). You need your own supported provider API key after installation; provider usage may incur third-party charges.
+> Chrome Web Store currently serves 0.1.0; this repository is preparing the 0.1.1 update. Install from the [XFlow store page](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj). You need your own supported provider API key after installation; provider usage may incur third-party charges.
 
 ## Preview
 
@@ -250,7 +250,7 @@ Entry timestamps are pinned to 2020-01-01, entries are sorted by path, and the w
 - Both workflows use Bun only: `oven-sh/setup-bun` reads the version from `packageManager` in `package.json`, and dependencies are installed with `bun install --frozen-lockfile`.
 - Every action is pinned to a commit SHA with the matching version in a trailing comment, so a moved tag cannot change what runs.
 - The packaging job builds the archive twice and compares the bytes, so a dependency that embeds a timestamp or a random identifier fails CI instead of silently breaking reproducibility.
-- Pushing a tag such as `v0.1.0` opens a draft release with the ZIP, its `.sha256`, and its `.files.txt`; publishing stays a manual decision. A manual run only builds and verifies.
+- Pushing a tag such as `v0.1.1` opens a draft release with the ZIP, its `.sha256`, and its `.files.txt`; publishing stays a manual decision. A manual run only builds and verifies.
 - Manual runs (`workflow_dispatch`) require the workflow file to exist on the default branch, so `release.yml` becomes available for both tag pushes and manual runs once it is merged into `main`.
 
 See the [project website guide](docs/project-page.md) for local preview and GitHub Pages deployment details.

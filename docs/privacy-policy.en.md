@@ -1,7 +1,7 @@
 # XFlow Privacy Policy
 
 **Effective date: September 30, 2026**<br />
-**Applies to: XFlow browser extension 0.1.0**<br />
+**Applies to: XFlow browser extension 0.1.0–0.1.1**<br />
 **Publisher: Ryan Zeng**
 
 [简体中文版](https://ryanzen9.github.io/XFlow/privacy.html)
@@ -33,7 +33,7 @@ Apart from these necessary transfers, the XFlow project does not sell this data,
 ## Retention and deletion
 
 - Activity details are kept for about 30 days; then text previews, authors, URLs, and strategy details are removed. Content identities used for deduplication remain for up to about 12 weeks before being folded into per-device lifetime counts. The extension applies these limits when activity data is read or updated. They do not delete data held by third parties.
-- Feedback-derived user decisions have no automatic expiration in version 0.1.0. **Clear logs** and **Clear Activity Data** do not remove these separate records. To remove local feedback records, uninstall the extension or clear its stored data in the browser. If you enabled S3 sync, first disable it on every device and delete the S3 object, including any versions and backups; otherwise a remaining copy can restore the records.
+- Feedback-derived user decisions have no automatic expiration in versions 0.1.0 and 0.1.1. **Clear logs** and **Clear Activity Data** do not remove these separate records. To remove local feedback records, uninstall the extension or clear its stored data in the browser. If you enabled S3 sync, first disable it on every device and delete the S3 object, including any versions and backups; otherwise a remaining copy can restore the records.
 - Use **Clear logs** on the Dashboard's Log page to remove authors, text previews, original links, and matched strategies immediately. Content identifiers, daily statistics, and all-time totals remain. If S3 sync is enabled, the extension attempts to sync this cleared state.
 - Use **Clear Activity Data** on the Dashboard's General page to remove local activity details and totals. If S3 sync is enabled, the extension attempts to propagate the cleared state to the remote document so older records do not return on a later sync. Updating the remote copy requires a successful connection.
 - Clear each local Provider Key on the API Keys page. Clearing a key locally does not revoke it at the Provider; you can revoke it in that Provider's console.

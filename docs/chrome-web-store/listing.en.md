@@ -1,4 +1,4 @@
-# English store listing · XFlow 0.1.0
+# English store listing · XFlow 0.1.1
 
 ## Name
 
@@ -6,7 +6,7 @@ XFlow
 
 ## Short description
 
-Use Jev to automate content filtering on X, creating a customized, comfortable, and refreshing browsing experience.
+Jev For your X: Filter ads and other unwanted content in X timelines and replies with custom policies.
 
 ## Detailed description
 
@@ -16,7 +16,7 @@ Choose a Jev provider from OpenRouter, Vercel AI Gateway, or TypeSafe and supply
 
 Use the Popup to control Home and reply filtering, then open the Dashboard to edit strategies, preview how filtered posts appear, review Activity, and manage your provider key. Activity is stored locally and can optionally be synced to your S3 endpoint. You can clear log details or clear Activity data from the Dashboard; these controls do not erase separate feedback rules.
 
-Optional S3 sync lets you use an endpoint you configure to sync filtering configuration, Activity, and durable user-feedback rules across devices. It runs only after you configure the endpoint, grant access, and enable sync. The sync document excludes provider API keys, S3 credentials, and semantic embeddings; it can include strategy text, post previews, authors, URLs, Activity status, normalized post text, semantic tokens, post and author IDs, decisions, and device IDs. Feedback rules have no automatic expiration in 0.1.0. You can leave S3 sync off.
+Optional S3 sync lets you use an endpoint you configure to sync filtering configuration, Activity, and durable user-feedback rules across devices. It runs only after you configure the endpoint, grant access, and enable sync. The sync document excludes provider API keys, S3 credentials, and semantic embeddings; it can include strategy text, post previews, authors, URLs, Activity status, normalized post text, semantic tokens, post and author IDs, decisions, and device IDs. Feedback rules have no automatic expiration in 0.1.1. You can leave S3 sync off.
 
 XFlow is an independent project. It is not affiliated with, endorsed by, or sponsored by X Corp., OpenRouter, Vercel, or TypeSafe. Their names identify compatible services only.
 
@@ -26,9 +26,9 @@ Privacy policy: https://ryanzen9.github.io/XFlow/privacy-en.html
 
 XFlow filters ads, promotions, and other unwanted X / Twitter posts in Home timelines and replies using configurable strategies and the user's selected Jev provider. Users can show matching posts again.
 
-## What's new in 0.1.0
+## What's new in 0.1.1
 
-Initial Chrome Web Store release: ad and promotion filtering, customizable Home and reply strategies, a local result preview, Activity dashboard, three selectable Jev providers, and optional user-configured S3 sync. Filtered posts can be shown again. Requires Chrome 123 or newer and the user's own provider API key for filtering decisions; provider charges may apply.
+Updated English and Chinese descriptions of ad and custom content filtering, clearer privacy disclosures for feedback rules and S3 sync, and stricter package validation for translations and icons. Filtering behavior, permissions, and supported providers are unchanged.
 
 ## Editorial checks
 
