@@ -14,7 +14,7 @@ This directory contains the store copy, icon, and promotional artwork for the `0
 
 The descriptions are written for version `0.1.1`. Their short summaries match `_locales/en/messages.json` and `_locales/zh_CN/messages.json` in the new package. Editing these files does not change the already published `0.1.0` item; copy the listing text into the Developer Dashboard and confirm it is public after review. Recheck all copy against the released package whenever the version, providers, permissions, or S3 behavior changes.
 
-The `0.1.0` release ZIP's unpacked-load, console, and packaged-byte scan results are recorded in [`stage-5-qa.md`](stage-5-qa.md). Repeat the ZIP and unpacked-load checks for the exact `0.1.1` package before submitting it.
+The `0.1.0` release ZIP's checks are recorded in [`stage-5-qa.md`](stage-5-qa.md). The exact `0.1.1` package's reproducibility, unpacked-load, console, resource, and packaged-byte checks are recorded in [`qa-0.1.1.md`](qa-0.1.1.md). Repeat these checks if the ZIP changes before submission.
 
 ## Store artwork
 
