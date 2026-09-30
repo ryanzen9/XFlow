@@ -21,7 +21,7 @@ function ChinesePolicy() {
         ← 返回 XFlow
       </a>
       <h1 id="policy-title">XFlow 隐私政策</h1>
-      <p className="policy__date">生效日期：2026 年 9 月 23 日 · 适用版本：0.1.0 · 发布者：Ryan Zeng</p>
+      <p className="policy__date">生效日期：2026 年 9 月 30 日 · 适用版本：0.1.0–0.1.1 · 发布者：Ryan Zeng</p>
       <p className="policy__language">
         <Link href="./privacy-en.html">English version</Link>
       </p>
@@ -48,6 +48,10 @@ function ChinesePolicy() {
             URL、页面范围、媒体类型、过滤时间、设备标识、命中策略及揭示或误判状态。
           </li>
           <li>
+            用户反馈形成的长期判断规则：可能保存最长 5,000 字符的规范化帖子正文、语义词、帖子及作者 ID、判断结果和设备
+            ID。规则保存在本机；启用 S3 后也进入同步文档，语义向量仅留在本机。
+          </li>
+          <li>
             Provider API Key 与可选的 S3 凭据：保存在扩展的 <code>chrome.storage.local</code>
             ，供所选服务鉴权或签名请求使用。
           </li>
@@ -72,10 +76,11 @@ function ChinesePolicy() {
         </p>
         <p>
           <strong>你配置的 S3 Endpoint（可选）。</strong>只有你配置连接、授予该 Endpoint
-          的访问权限并启用同步后，扩展才会读写同步文档。文档包含过滤配置（包括策略与提示词）、活动记录及统计，因此可能包含帖子预览、作者和帖子
-          URL；不包含 Provider API Key、S3 访问密钥或 Session Token。签名请求会向 Endpoint 提供 Access Key ID 和可选
-          Session Token；Secret Access Key 仅在本机生成签名，不直接发送。启用同步后，扩展会在配置变更、浏览器启动及约每
-          15 分钟的定时检查时尝试同步。存储、备份和保留规则由你选用的服务及账户设置决定。
+          的访问权限并启用同步后，扩展才会读写同步文档。文档包含过滤配置（包括策略与提示词）、活动记录及统计，以及用户反馈形成的长期判断规则。因此可能包含帖子预览、作者、帖子
+          URL、规范化帖子正文、语义词、帖子及作者 ID、判断结果和设备 ID；语义向量仅留在本机。文档不包含 Provider API
+          Key、S3 访问密钥或 Session Token。签名请求会向 Endpoint 提供 Access Key ID 和可选 Session Token；Secret Access
+          Key 仅在本机生成签名，不直接发送。启用同步后，扩展会在配置变更、浏览器启动及约每 15
+          分钟的定时检查时尝试同步。存储、备份和保留规则由你选用的服务及账户设置决定。
         </p>
         <p>
           除上述必要传输外，XFlow 项目不会出售这些数据、用于广告，或提供给其他接收方。请勿在公开 Issue
@@ -89,6 +94,11 @@ function ChinesePolicy() {
           <li>
             过滤活动详情保留约 30 天；之后移除正文预览、作者、URL 和策略详情。去重所需的内容身份最多保留约 12
             周，之后折叠为按设备汇总的累计计数。第三方服务中的数据不会因此自动删除。
+          </li>
+          <li>
+            用户反馈形成的长期判断规则在 0.1.0 和 0.1.1
+            中不会自动过期。“清理日志”和“清除活动数据”不会删除这类独立记录。删除本机反馈记录需要卸载扩展或在浏览器中清除其存储数据。如已启用
+            S3，请先在所有设备上停用同步，并删除 S3 对象及其版本和备份；否则剩余副本可能重新恢复这些记录。
           </li>
           <li>
             在 Dashboard
@@ -116,10 +126,10 @@ function ChinesePolicy() {
         <p>
           Provider Key 和 S3 凭据不会提供给 X 页面上的 Content Script，也不会写入可编辑配置 JSON 或新的 S3
           同步文档。它们在 <code>chrome.storage.local</code>{" "}
-          中没有额外静态加密；能访问该浏览器配置文件的人可能获得这些本机数据。Provider 与 S3 Endpoint 使用 HTTPS；S3
-          校验仅允许将 <code>http://localhost</code> 与 <code>http://127.0.0.1</code> 用于本机调试。扩展访问 X / Twitter
-          页面用于读取待判断内容并显示可揭示的遮罩；S3 主机访问由你在保存 Endpoint 时单独授权。<code>storage</code>{" "}
-          用于保存本机数据；<code>alarms</code> 用于启用 S3 后的定时同步。
+          中没有额外静态加密；能访问该浏览器配置文件的人可能获得这些本机数据。正式版本与 Provider、S3 Endpoint
+          的连接使用 HTTPS；本机 HTTP S3 调试仅在开发构建中可用。扩展访问 X / Twitter
+          页面用于读取待判断内容、应用广告与自定义内容过滤策略，并在原页面呈现可重新显示的结果；S3 主机访问由你在保存
+          Endpoint 时单独授权。<code>storage</code> 用于保存本机数据；<code>alarms</code> 用于启用 S3 后的定时同步。
         </p>
       </section>
 
@@ -151,7 +161,7 @@ function EnglishPolicy() {
         ← Back to XFlow
       </a>
       <h1 id="policy-title">XFlow Privacy Policy</h1>
-      <p className="policy__date">Effective date: September 23, 2026 · Version: 0.1.0 · Publisher: Ryan Zeng</p>
+      <p className="policy__date">Effective date: September 30, 2026 · Versions: 0.1.0–0.1.1 · Publisher: Ryan Zeng</p>
       <p className="policy__language">
         <Link href="./privacy.html">简体中文版</Link>
       </p>
@@ -181,6 +191,11 @@ function EnglishPolicy() {
             Filter activity: recorded only after content is veiled. It may include a content ID, a text preview of up to
             500 characters, author, post URL, surface, media type, filter time, device identifier, matched strategy, and
             reveal or incorrect status.
+          </li>
+          <li>
+            Feedback-derived user decisions: durable rules may retain normalized post text of up to 5,000 characters,
+            semantic tokens, post and author IDs, the decision, and a device ID. They are stored locally and included in
+            optional S3 sync; semantic embeddings stay local.
           </li>
           <li>
             Provider API Keys and optional S3 credentials: stored in the extension's <code>chrome.storage.local</code>{" "}
@@ -213,12 +228,14 @@ function EnglishPolicy() {
         <p>
           <strong>Your configured S3 Endpoint (optional).</strong>The extension reads or writes a sync document only
           after you configure a connection, grant access to the Endpoint, and enable sync. The document includes filter
-          configuration (including strategies and prompts), activity records, and statistics, so it may contain post
-          previews, authors, and post URLs. It excludes Provider API Keys, S3 access credentials, and Session Tokens.
-          Signed request headers give the Endpoint the Access Key ID and optional Session Token; the Secret Access Key
-          is used locally to create the signature and is not sent directly. Once enabled, sync is attempted after
-          configuration changes, at browser startup, and about every 15 minutes. Storage, backup, and retention depend
-          on the service and account you choose.
+          configuration (including strategies and prompts), activity records and statistics, and durable
+          feedback-derived user decisions. It may contain post previews, authors, post URLs, normalized post text,
+          semantic tokens, post and author IDs, decisions, and device IDs. Semantic embeddings stay local. The document
+          excludes Provider API Keys, S3 access credentials, and Session Tokens. Signed request headers give the
+          Endpoint the Access Key ID and optional Session Token; the Secret Access Key is used locally to create the
+          signature and is not sent directly. Once enabled, sync is attempted after configuration changes, at browser
+          startup, and about every 15 minutes. Storage, backup, and retention depend on the service and account you
+          choose.
         </p>
         <p>
           Apart from these necessary transfers, the XFlow project does not sell this data, use it for advertising, or
@@ -234,6 +251,13 @@ function EnglishPolicy() {
             Activity details are kept for about 30 days; then text previews, authors, URLs, and strategy details are
             removed. Content identities used for deduplication remain for up to about 12 weeks before being folded into
             per-device lifetime counts. This does not delete data held by third parties.
+          </li>
+          <li>
+            Feedback-derived user decisions have no automatic expiration in versions 0.1.0 and 0.1.1.{" "}
+            <strong>Clear logs</strong> and <strong>Clear Activity Data</strong> do not remove these separate records.
+            To remove local feedback records, uninstall the extension or clear its stored data in the browser. If S3
+            sync was enabled, first disable it on every device and delete the S3 object, including versions and backups;
+            otherwise a remaining copy can restore the records.
           </li>
           <li>
             Use <strong>Clear logs</strong> on the Dashboard's Log page to remove authors, text previews, original
@@ -263,11 +287,11 @@ function EnglishPolicy() {
           Provider Keys and S3 credentials are not exposed to Content Scripts on X pages and are not included in
           editable configuration JSON or new S3 sync documents. They receive no additional encryption at rest in{" "}
           <code>chrome.storage.local</code>; someone with access to your browser profile may be able to obtain this
-          local data. Provider connections and S3 endpoints use HTTPS, except that S3 endpoint validation allows HTTP
-          for <code>localhost</code> and <code>127.0.0.1</code> for local development. X / Twitter page access lets the
-          extension read posts for evaluation and display revealable veils. You grant access to an S3 host separately
-          when saving its Endpoint. The <code>storage</code> permission stores local data; <code>alarms</code> supports
-          scheduled sync after you enable S3.
+          local data. Production connections to Providers and S3 endpoints use HTTPS; local HTTP S3 testing is only
+          available in a development build. X / Twitter page access lets the extension read posts, apply ad and custom
+          content filtering policies, and show reversible results on the original page. You grant access to an S3 host
+          separately when saving its Endpoint. The <code>storage</code> permission stores local data;{" "}
+          <code>alarms</code> supports scheduled sync after you enable S3.
         </p>
       </section>
 

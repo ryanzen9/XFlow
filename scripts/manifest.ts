@@ -1,3 +1,4 @@
+import { crc32, inflateSync } from "node:zlib";
 import manifestJson from "../manifest.json";
 import packageJson from "../package.json";
 
@@ -91,9 +92,60 @@ export function readLocaleCatalog(locale: string): Promise<LocaleCatalog> {
 
 export function readPngDimensions(bytes: Uint8Array): { width: number; height: number } | null {
   const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-  if (bytes.byteLength < 24 || !signature.every((byte, index) => bytes[index] === byte)) return null;
+  if (bytes.byteLength < 57 || !signature.every((byte, index) => bytes[index] === byte)) return null;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  return { width: view.getUint32(16), height: view.getUint32(20) };
+  let offset = signature.length;
+  let width = 0;
+  let height = 0;
+  const imageData: Uint8Array[] = [];
+  while (offset + 12 <= bytes.byteLength) {
+    const length = view.getUint32(offset);
+    if (length > bytes.byteLength - offset - 12) return null;
+    const type = String.fromCharCode(...bytes.subarray(offset + 4, offset + 8));
+    const dataStart = offset + 8;
+    const next = dataStart + length + 4;
+    if (crc32(bytes.subarray(offset + 4, dataStart + length)) !== view.getUint32(dataStart + length)) {
+      return null;
+    }
+    if (offset === signature.length) {
+      if (type !== "IHDR" || length !== 13) return null;
+      width = view.getUint32(dataStart);
+      height = view.getUint32(dataStart + 4);
+      // The committed icon set is generated as 8-bit RGBA, non-interlaced PNG.
+      if (
+        width === 0 ||
+        height === 0 ||
+        width * height > 4_194_304 ||
+        bytes[dataStart + 8] !== 8 ||
+        bytes[dataStart + 9] !== 6 ||
+        bytes[dataStart + 10] !== 0 ||
+        bytes[dataStart + 11] !== 0 ||
+        bytes[dataStart + 12] !== 0
+      ) {
+        return null;
+      }
+    } else if (type === "IHDR") {
+      return null;
+    }
+    if (type === "IDAT") imageData.push(bytes.subarray(dataStart, dataStart + length));
+    if (type === "IEND") {
+      if (length !== 0 || imageData.length === 0 || next !== bytes.byteLength) return null;
+      const rowLength = width * 4 + 1;
+      const expectedLength = rowLength * height;
+      try {
+        const decoded = inflateSync(Buffer.concat(imageData), { maxOutputLength: expectedLength + 1 });
+        if (decoded.byteLength !== expectedLength) return null;
+        for (let row = 0; row < height; row += 1) {
+          if ((decoded[row * rowLength] ?? 255) > 4) return null;
+        }
+      } catch {
+        return null;
+      }
+      return { width, height };
+    }
+    offset = next;
+  }
+  return null;
 }
 
 /** Returns `path = value` for every manifest string that leaks a development origin. */
@@ -137,7 +189,8 @@ export function messageReferenceKeys(value: unknown): string[] {
 function resolveMessage(value: string, catalog: LocaleCatalog): string | null {
   const match = /^__MSG_([A-Za-z0-9_]+)__$/.exec(value);
   if (!match?.[1]) return value;
-  return catalog[match[1]]?.message ?? null;
+  const message = catalog[match[1]]?.message;
+  return typeof message === "string" && message.trim() ? message : null;
 }
 
 function sortedEquals(left: readonly string[], right: readonly string[]): boolean {
@@ -197,7 +250,10 @@ export function validateManifest(manifest: ExtensionManifest, defaultCatalog: Lo
   }
 
   for (const key of messageReferenceKeys(manifest)) {
-    if (!defaultCatalog[key]?.message) report("missing-message", `__MSG_${key}__ is not defined in ${DEFAULT_LOCALE}`);
+    const message = defaultCatalog[key]?.message;
+    if (typeof message !== "string" || !message.trim()) {
+      report("missing-message", `__MSG_${key}__ is not defined in ${DEFAULT_LOCALE}`);
+    }
   }
   const resolvedName = resolveMessage(manifest.name, defaultCatalog);
   const resolvedDescription = resolveMessage(manifest.description, defaultCatalog);
@@ -217,6 +273,9 @@ export function compareLocaleCatalogs(reference: LocaleCatalog, candidate: Local
   return {
     missing: referenceKeys.filter((key) => !candidateKeys.includes(key)),
     extra: candidateKeys.filter((key) => !referenceKeys.includes(key)),
-    empty: candidateKeys.filter((key) => !candidate[key]?.message),
+    empty: candidateKeys.filter((key) => {
+      const message = candidate[key]?.message;
+      return typeof message !== "string" || !message.trim();
+    }),
   };
 }

@@ -42,6 +42,13 @@ describe("UI internationalization", () => {
     );
   });
 
+  test("discloses synced feedback and its separate retention in both S3 notices", () => {
+    expect(translate("zh-CN", "data.privacyNotice")).toContain("用户反馈");
+    expect(translate("zh-CN", "data.privacyNotice")).toContain("清除 Activity 也不会删除");
+    expect(translate("en", "data.privacyNotice")).toContain("user feedback rules");
+    expect(translate("en", "data.privacyNotice")).toContain("clearing Activity does not remove");
+  });
+
   test("renders a keyboard-accessible language control", () => {
     const markup = renderToStaticMarkup(<LanguageToggle dense />);
     expect(markup).toContain("切换为英文");

@@ -4,7 +4,7 @@
     "description": "Extension name shown in chrome://extensions and the Chrome Web Store entry."
   },
   "appDescription": {
-    "message": "Filter X timelines and replies with your own Jev provider key, blurring the posts your rules flag.",
+    "message": "Jev For your X: Filter ads and other unwanted content in X timelines and replies with custom policies.",
     "description": "Extension description. Chrome allows at most 132 characters."
   },
   "actionTitle": {

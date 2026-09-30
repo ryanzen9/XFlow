@@ -1,6 +1,6 @@
 {
   "name": "xflow",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "A privacy-conscious Manifest V3 extension that filters X timelines and replies with Jev.",
   "type": "module",

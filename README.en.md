@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml"><img src="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <img src="https://img.shields.io/badge/version-0.1.0-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.0" />
+  <img src="https://img.shields.io/badge/version-0.1.1-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.1" />
   <img src="https://img.shields.io/badge/Manifest-V3-525252?style=flat-square&labelColor=0a0a0a" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/React-19-525252?style=flat-square&labelColor=0a0a0a" alt="React 19" />
   <img src="https://img.shields.io/badge/TypeScript-5-525252?style=flat-square&labelColor=0a0a0a" alt="TypeScript 5" />
@@ -17,30 +17,30 @@
 </p>
 
 <p align="center">
-  A policy-driven content filter for X / Twitter.<br />
-  XFlow does not remove posts or shift the feed. It quietly veils matched content and leaves reveal control with the reader.
+  Jev For your X: filter ads in X / Twitter and choose what else to filter with your own policies.<br />
+  Matching posts can be shown again whenever you choose.
 </p>
 
 <p align="center">
   <a href="https://ryanzen9.github.io/XFlow/">Project website</a> · <a href="https://ryanzen9.github.io/XFlow/privacy-en.html">Privacy policy</a>
 </p>
 
-> XFlow 0.1.0 is [public on the Chrome Web Store](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj). You need your own supported provider API key after installation; provider usage may incur third-party charges.
+> Chrome Web Store currently serves 0.1.0; this repository is preparing the 0.1.1 update. Install from the [XFlow store page](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj). You need your own supported provider API key after installation; provider usage may incur third-party charges.
 
 ## Preview
 
 <p align="center">
-  <img src="docs/assets/strategy-editor.webp" alt="XFlow policy editor and local Blur Veil preview in the dark theme" width="100%" />
+  <img src="docs/assets/strategy-editor.webp" alt="XFlow ad and custom content filtering strategy editor in the dark theme" width="100%" />
 </p>
 
 <table>
   <tr>
     <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="XFlow Activity heatmap, weekly review, and filtering controls in the dark theme" /></td>
-    <td width="28%"><img src="docs/assets/veil-preview.webp" alt="Local Blur Veil preview with hit-rate and threshold controls in the dark theme" /></td>
+    <td width="28%"><img src="docs/assets/veil-preview.webp" alt="Local filtering result preview with hit-rate and threshold controls in the dark theme" /></td>
   </tr>
   <tr>
     <td align="center"><sub>Local activity, 30-day history, and a 12-week trend</sub></td>
-    <td align="center"><sub>A live Blur Veil preview that never calls a model</sub></td>
+    <td align="center"><sub>A local filtering result preview that never calls a model</sub></td>
   </tr>
 </table>
 
@@ -48,15 +48,15 @@ The screenshots come from an isolated Dashboard mock store. They contain no real
 
 ## Why XFlow
 
-|      | Capability                | Current behavior                                                                                                               |
-| ---- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `01` | Policy engine             | Configure separate policy queues, prompts, Hit Rate thresholds, and P1 → Pn priorities for timelines and replies.              |
-| `02` | Blur Veil                 | Preserve the original post geometry while using a progressive veil, hover context, and click or keyboard reveal.               |
-| `03` | Multi-provider Jev        | Explicitly select OpenRouter, Vercel AI Gateway, or TypeSafe, with no silent provider fallback.                                |
-| `04` | Local-first activity      | Track deduplicated filter events locally with today/all-time counts, a heatmap, trend, weekly review, history, and page badge. |
-| `05` | Versioned S3 sync         | Optionally sync config and activity; config follows versions, events merge by stable ID, and tombstones protect cleared data.  |
-| `06` | Local credential boundary | Keep provider keys and S3 credentials in extension-local storage, outside Content Scripts, editable JSON, and S3 documents.    |
-| `07` | Token-driven UI           | Share one token system across Popup and Dashboard with high-contrast Light / Dark themes and reduced-motion support.           |
+|      | Capability                 | Current behavior                                                                                                               |
+| ---- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `01` | Ad and promotion filtering | Default strategies identify ads, promotions, spam, and scams; only content matching enabled policies is filtered.              |
+| `02` | Custom content policies    | Configure separate rules, prompts, Hit Rate thresholds, and P1 → Pn priorities for timelines and replies.                      |
+| `03` | Multi-provider Jev         | Explicitly select OpenRouter, Vercel AI Gateway, or TypeSafe, with no silent provider fallback.                                |
+| `04` | Local-first activity       | Track deduplicated filter events locally with today/all-time counts, a heatmap, trend, weekly review, history, and page badge. |
+| `05` | Versioned S3 sync          | Optionally sync config and activity; config follows versions, events merge by stable ID, and tombstones protect cleared data.  |
+| `06` | Local credential boundary  | Keep provider keys and S3 credentials in extension-local storage, outside Content Scripts, editable JSON, and S3 documents.    |
+| `07` | Reversible results         | Matching content is hidden on the original page and can be shown again; Popup and Dashboard support Light / Dark themes.       |
 
 ## How it works
 
@@ -163,6 +163,7 @@ See the full [XFlow Privacy Policy](https://ryanzen9.github.io/XFlow/privacy-en.
 - Only text extracted from enabled X surfaces is sent to the currently selected provider.
 - Provider API keys and S3 credentials live in `chrome.storage.local` without additional encryption.
 - Content Scripts can only read a secret-free settings mirror in `chrome.storage.session`.
+- Remote S3 documents may include configuration, Activity, and durable user feedback rules. The latter can contain normalized post text, semantic tokens, post and author IDs, decisions, and device IDs; clearing Activity does not remove these rules, and they do not expire automatically.
 - Editable configuration and remote S3 documents never include provider API keys or S3 credentials.
 - Activity stores a content ID, short text preview, author, corresponding X post URL, filter time, matched policy, and required state. It does not store HTML, DOM, cookies, sessions, media files, or a complete browsing path.
 - Fixed host permissions cover only X / Twitter and the three providers. An S3 endpoint receives optional access through an explicit user action.
@@ -249,7 +250,7 @@ Entry timestamps are pinned to 2020-01-01, entries are sorted by path, and the w
 - Both workflows use Bun only: `oven-sh/setup-bun` reads the version from `packageManager` in `package.json`, and dependencies are installed with `bun install --frozen-lockfile`.
 - Every action is pinned to a commit SHA with the matching version in a trailing comment, so a moved tag cannot change what runs.
 - The packaging job builds the archive twice and compares the bytes, so a dependency that embeds a timestamp or a random identifier fails CI instead of silently breaking reproducibility.
-- Pushing a tag such as `v0.1.0` opens a draft release with the ZIP, its `.sha256`, and its `.files.txt`; publishing stays a manual decision. A manual run only builds and verifies.
+- Pushing a tag such as `v0.1.1` opens a draft release with the ZIP, its `.sha256`, and its `.files.txt`; publishing stays a manual decision. A manual run only builds and verifies.
 - Manual runs (`workflow_dispatch`) require the workflow file to exist on the default branch, so `release.yml` becomes available for both tag pushes and manual runs once it is merged into `main`.
 
 See the [project website guide](docs/project-page.md) for local preview and GitHub Pages deployment details.

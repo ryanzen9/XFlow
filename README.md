@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml"><img src="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <img src="https://img.shields.io/badge/version-0.1.0-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.0" />
+  <img src="https://img.shields.io/badge/version-0.1.1-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.1" />
   <img src="https://img.shields.io/badge/Manifest-V3-525252?style=flat-square&labelColor=0a0a0a" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/React-19-525252?style=flat-square&labelColor=0a0a0a" alt="React 19" />
   <img src="https://img.shields.io/badge/TypeScript-5-525252?style=flat-square&labelColor=0a0a0a" alt="TypeScript 5" />
@@ -17,29 +17,29 @@
 </p>
 
 <p align="center">
-  一个面向 X / Twitter 的策略驱动内容过滤扩展。
+  Jev For your X：过滤 X / Twitter 中的广告，并自定义其他内容的过滤规则。
 </p>
 
 <p align="center">
   <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> · <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a>
 </p>
 
-> XFlow 0.1.0 已在 [Chrome Web Store](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj) 公开上架。安装后需要自行配置受支持 Provider 的 API Key；使用 Provider 可能产生第三方费用。
+> Chrome Web Store 当前公开版本为 0.1.0；本仓库正在准备 0.1.1 更新。可从 [XFlow 商店页面](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj)安装。安装后需要自行配置受支持 Provider 的 API Key；使用 Provider 可能产生第三方费用。
 
 ## 界面预览
 
 <p align="center">
-  <img src="docs/assets/strategy-editor.webp" alt="深色主题下的 XFlow 策略编辑器与本地 Blur Veil 实时预览" width="100%" />
+  <img src="docs/assets/strategy-editor.webp" alt="深色主题下的 XFlow 广告与自定义内容过滤策略编辑器" width="100%" />
 </p>
 
 <table>
   <tr>
     <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="深色主题下的 Activity 热力图、每周回顾和过滤范围" /></td>
-    <td width="28%"><img src="docs/assets/veil-preview.webp" alt="深色主题下的 Blur Veil 本地预览、命中率与阈值控制" /></td>
+    <td width="28%"><img src="docs/assets/veil-preview.webp" alt="深色主题下的过滤结果本机预览、命中率与阈值控制" /></td>
   </tr>
   <tr>
     <td align="center"><sub>本地 Activity、30 天历史与 12 周趋势</sub></td>
-    <td align="center"><sub>不调用模型的 Blur Veil 实时预览</sub></td>
+    <td align="center"><sub>不调用模型的过滤结果预览</sub></td>
   </tr>
 </table>
 
@@ -49,13 +49,13 @@
 
 |      | 能力                      | 当前行为                                                                                 |
 | ---- | ------------------------- | ---------------------------------------------------------------------------------------- |
-| `01` | Policy engine             | 为时间线和评论区分别配置多条策略、提示词、Hit Rate 与 P1 → Pn 优先级。                   |
-| `02` | Blur Veil                 | 保留帖子原始尺寸和 DOM，以模糊遮罩、Hover 信息及点击或键盘揭示降低干扰。                 |
+| `01` | 广告与推广过滤            | 默认策略识别广告、推广、垃圾信息及诈骗诱导；只处理命中启用策略的内容。                   |
+| `02` | 自定义内容策略            | 为时间线和评论区分别配置多条规则、提示词、Hit Rate 与 P1 → Pn 优先级。                   |
 | `03` | Multi-provider Jev        | 显式选择 OpenRouter、Vercel AI Gateway 或 TypeSafe；失败时不进行隐式渠道降级。           |
 | `04` | Local-first activity      | 在本机记录去重后的过滤事件，提供今日/累计计数、Heatmap、趋势、周报、历史与页面 Badge。   |
 | `05` | Versioned S3 sync         | 可选同步配置和 Activity；配置按版本决定方向，事件按稳定 ID 合并，清除状态由墓碑保护。    |
 | `06` | Local credential boundary | Provider Key 与 S3 凭据只留在扩展本机存储，不进入 Content Script、配置 JSON 或 S3 文档。 |
-| `07` | Token-driven UI           | Popup 与 Dashboard 使用同一套设计 token，支持高对比 Light / Dark 主题和 reduced motion。 |
+| `07` | 可恢复的过滤结果          | 命中内容在原页面中隐藏，用户可随时显示；Popup 与 Dashboard 支持 Light / Dark 主题。      |
 
 ## 工作方式
 
@@ -174,6 +174,7 @@ Background Worker 按“单条标注 → 作者规则 → 用户模板/语义规
 - 只有已启用范围内、从 X 页面提取的文本会发送到当前选中的 Provider。
 - Provider API Key 与 S3 凭据保存在 `chrome.storage.local`，目前没有额外加密。
 - Content Script 只能读取不含密钥的 `chrome.storage.session` 设置镜像。
+- 远程 S3 文档可包含配置、Activity 和用户反馈形成的长期判断规则；后者可能包含规范化帖子正文、语义词、帖子及作者 ID、判断结果和设备 ID。清除 Activity 不会清除这些规则，它们不会自动过期。
 - 配置 JSON 和远程 S3 文档不包含 Provider API Key 或 S3 凭据。
 - Activity 保存内容 ID、短文本预览、作者、对应 X 帖子 URL、过滤时间、命中策略和必要状态；不保存 HTML、DOM、Cookie、Session、媒体文件或完整浏览路径。
 - 固定主机权限仅包含 X / Twitter 与三个 Provider；S3 Endpoint 通过用户操作授予可选权限。
@@ -260,7 +261,7 @@ ZIP 内记录的时间戳固定为 2020-01-01，条目按路径排序，且只�
 - 两个工作流都只用 Bun：`oven-sh/setup-bun` 从 `package.json` 的 `packageManager` 读取版本，依赖用 `bun install --frozen-lockfile` 安装。
 - 所有 Action 固定到提交 SHA，并在行尾注释标注对应版本，避免可变标签被改写。
 - 打包任务连续打包两次并逐字节比较，任何引入时间戳或随机标识的依赖都会让 CI 失败。
-- 推送 `v0.1.0` 这类标签后会自动创建草稿 Release，附带 ZIP、`.sha256` 与 `.files.txt`；公开发布仍需人工确认。手动触发只构建与校验，不会创建 Release。
+- 推送 `v0.1.1` 这类标签后会自动创建草稿 Release，附带 ZIP、`.sha256` 与 `.files.txt`；公开发布仍需人工确认。手动触发只构建与校验，不会创建 Release。
 - 手动触发（`workflow_dispatch`）要求工作流文件已存在于默认分支，因此 `release.yml` 的标签触发与手动触发都在合并到 `main` 之后生效。
 
 项目官网预览与 GitHub Pages 发布方式见[官网说明](docs/project-page.md)。

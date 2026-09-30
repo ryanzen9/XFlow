@@ -1,6 +1,6 @@
 # XFlow architecture
 
-本文描述 MVP 当前实现。
+本文描述 MVP 当前实现。XFlow 的目标是按默认策略过滤广告与推广，并让用户自定义其他内容的过滤规则；Blur Veil 是命中结果在页面上的呈现机制。
 
 ## Runtime data flow
 

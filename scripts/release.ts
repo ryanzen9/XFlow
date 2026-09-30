@@ -2,7 +2,10 @@ import { mkdir, rm } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { createZip, readZipDirectory, readZipEntry, type ArchiveEntry } from "./archive";
 import {
+  ICON_SIZES,
   LOCALES,
+  compareLocaleCatalogs,
+  readPngDimensions,
   validateManifest,
   type ExtensionManifest,
   type LocaleCatalog,
@@ -272,12 +275,32 @@ export function planRelease(files: ArchiveEntry[]): ReleasePlan {
     const source = readText(`_locales/${locale}/messages.json`);
     if (source === null) continue;
     try {
-      catalogs.set(locale, JSON.parse(source) as LocaleCatalog);
+      const catalog: unknown = JSON.parse(source);
+      if (!catalog || typeof catalog !== "object" || Array.isArray(catalog)) {
+        issues.push({ code: "invalid-locale", detail: `_locales/${locale}/messages.json must be an object` });
+      } else {
+        catalogs.set(locale, catalog as LocaleCatalog);
+      }
     } catch {
       issues.push({ code: "invalid-locale", detail: `_locales/${locale}/messages.json is not valid JSON` });
     }
   }
-  issues.push(...validateManifest(manifest, catalogs.get(manifest.default_locale) ?? {}));
+  const defaultCatalog = catalogs.get(manifest.default_locale) ?? {};
+  issues.push(...validateManifest(manifest, defaultCatalog));
+  for (const locale of LOCALES) {
+    const catalog = catalogs.get(locale);
+    if (!catalog) continue;
+    const parity = compareLocaleCatalogs(defaultCatalog, catalog);
+    for (const key of parity.missing) {
+      issues.push({ code: "locale-missing-key", detail: `${locale}: ${key} is missing` });
+    }
+    for (const key of parity.extra) {
+      issues.push({ code: "locale-extra-key", detail: `${locale}: ${key} is not in ${manifest.default_locale}` });
+    }
+    for (const key of parity.empty) {
+      issues.push({ code: "locale-empty-message", detail: `${locale}: ${key} has no message` });
+    }
+  }
 
   const html = paths.filter((path) => path.endsWith(".html")).map((path) => ({ path, source: readText(path) ?? "" }));
   const css = paths.filter((path) => path.endsWith(".css")).map((path) => ({ path, source: readText(path) ?? "" }));
@@ -285,6 +308,15 @@ export function planRelease(files: ArchiveEntry[]): ReleasePlan {
 
   for (const path of required) {
     if (!byPath.has(path)) issues.push({ code: "missing-asset", detail: `${path} is referenced but not packaged` });
+  }
+  for (const size of ICON_SIZES) {
+    const path = manifest.icons[String(size)];
+    const icon = path ? byPath.get(path) : undefined;
+    if (!icon) continue;
+    const dimensions = readPngDimensions(icon.data);
+    if (!dimensions || dimensions.width !== size || dimensions.height !== size) {
+      issues.push({ code: "icon-dimensions", detail: `${path}: expected ${size}x${size} PNG` });
+    }
   }
   for (const path of paths) {
     if (!required.includes(path)) {

@@ -43,14 +43,15 @@ function HomePage() {
 
       <main className="landing">
         <section className="hero-copy" aria-labelledby="page-title">
-          <p className="eyebrow">X / 策略过滤扩展</p>
+          <p className="eyebrow">X / 广告与自定义内容过滤</p>
           <h1 id="page-title">
             <SplitTextReveal text="XFlow" />
             <br />
-            <SplitTextReveal text="让噪声退场。" />
+            <SplitTextReveal text="少看广告，多看想看。" />
           </h1>
           <p className="hero-summary">
-            XFlow 基于 Jev 与自定义规则过滤 X 帖子与评论。数据本地存储，高缓存优化，多渠道配置。
+            XFlow 用默认广告过滤策略和你自定义的规则筛选 X 首页与评论区。策略由你掌控，过滤判断由你选择的 Jev Provider
+            提供。
           </p>
           <div className="hero-actions">
             <ShimmerButton href="https://github.com/ryanzen9/XFlow" target="_blank" rel="noreferrer">
