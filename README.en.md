@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  A policy-driven content filter for X / Twitter.<br />
+  Jev For your X: veil X / Twitter content that matches your policies to reduce distractions.<br />
   XFlow does not remove posts or shift the feed. It quietly veils matched content and leaves reveal control with the reader.
 </p>
 

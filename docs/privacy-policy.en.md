@@ -1,16 +1,10 @@
----
-layout: default
-title: XFlow Privacy Policy
-permalink: /privacy-policy/
----
-
 # XFlow Privacy Policy
 
 **Effective date: September 30, 2026**<br />
 **Applies to: XFlow browser extension 0.1.0**<br />
 **Publisher: Ryan Zeng**
 
-[简体中文版](https://ryanzen9.github.io/XFlow/privacy-policy/zh-CN/)
+[简体中文版](https://ryanzen9.github.io/XFlow/privacy.html)
 
 XFlow helps you evaluate and veil content in X / Twitter timelines and replies using rules you create. This policy explains what the extension processes, where data goes, and how to delete it. The XFlow project does not operate a developer server that receives post content, filter activity, or credentials. The extension connects directly to the third-party services you choose.
 

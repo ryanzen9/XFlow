@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  一个面向 X / Twitter 的策略驱动内容过滤扩展。
+  Jev For your X：按自定义策略遮罩 X / Twitter 中命中的内容，减少推广等干扰。
 </p>
 
 <p align="center">

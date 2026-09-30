@@ -1,16 +1,10 @@
----
-layout: default
-title: XFlow 隐私政策
-permalink: /privacy-policy/zh-CN/
----
-
 # XFlow 隐私政策
 
 **生效日期：2026 年 9 月 30 日**<br />
 **适用范围：XFlow 浏览器扩展 0.1.0**<br />
 **发布者：Ryan Zeng**
 
-[English version](https://ryanzen9.github.io/XFlow/privacy-policy/)
+[English version](https://ryanzen9.github.io/XFlow/privacy-en.html)
 
 XFlow 帮助你在 X / Twitter 的时间线和评论区，按自己设定的策略判断并遮蔽内容。本政策说明扩展处理哪些数据、数据流向何处，以及如何删除这些数据。XFlow 项目没有用于接收帖子内容、过滤记录或凭据的开发者服务器；扩展会按你的设置直接连接所选第三方服务。
 

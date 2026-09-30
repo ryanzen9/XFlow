@@ -1,6 +1,6 @@
 # Chrome Web Store listing kit · XFlow 0.1.0
 
-This directory contains the store copy, icon, and promotional artwork prepared for PR #9, stage 3. The English listing is the primary draft; `listing.zh-CN.md` carries the equivalent Simplified Chinese copy. Final language, regions, and visibility are tracked as stage 0 decisions in [`../pull-request/9.md`](../pull-request/9.md).
+This directory contains the store copy, icon, and promotional artwork prepared for the initial `0.1.0` release and its metadata follow-up. The English and Simplified Chinese listings carry equivalent copy. Final language, regions, and visibility are tracked in [`../pull-request/9.md`](../pull-request/9.md).
 
 ## Copy into Developer Dashboard
 
@@ -12,7 +12,7 @@ This directory contains the store copy, icon, and promotional artwork prepared f
 | Privacy policy URL                                    | `https://ryanzen9.github.io/XFlow/privacy.html` |
 | Support URL                                           | `https://github.com/ryanzen9/XFlow/issues`      |
 
-The description is written for version `0.1.0`. The public listing currently shows only the short bilingual overview, so the detailed copy here remains a proposed Dashboard update. Recheck all copy against the released package before submitting a metadata change, especially if the version, providers, permissions, or S3 behavior changes.
+The descriptions are written for version `0.1.0`. Their short summaries match `_locales/en/messages.json` and `_locales/zh_CN/messages.json` for a future package; editing those source files does not change the already published extension. The publisher reported updating the Dashboard description on 2026-09-30, while an anonymous check of the public page still showed the previous short bilingual overview. Confirm the new copy is public after the metadata review before treating these listings as live. Recheck all copy against the released package whenever the version, providers, permissions, or S3 behavior changes.
 
 The exact release ZIP's unpacked-load, console, and packaged-byte scan results are recorded in [`stage-5-qa.md`](stage-5-qa.md).
 

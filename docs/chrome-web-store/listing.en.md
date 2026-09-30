@@ -6,11 +6,11 @@ XFlow
 
 ## Short description
 
-Filter distracting X posts and replies with your own rules and Jev provider. Reveal veiled content anytime.
+Jev For your X: Veil X posts and replies with custom policies to reduce promotions and shape your browsing experience.
 
 ## Detailed description
 
-XFlow helps you read X / Twitter with intention. It evaluates visible posts in the Home timeline and replies against filtering strategies you create. When a post matches, XFlow covers it with a veil that you can reveal.
+XFlow (Jev For your X) helps you read X / Twitter with intention. It evaluates visible posts in the Home timeline and replies against filtering strategies you create. When a post matches, XFlow covers it with a revealable veil, reducing distractions such as promotions without removing the post.
 
 Choose a Jev provider from OpenRouter, Vercel AI Gateway, or TypeSafe and supply your own API key. For a filtering decision, XFlow sends the post ID and text plus applicable strategy names and criteria to the selected provider. Provider use may incur third-party charges. Failed requests are not automatically forwarded to another provider.
 
@@ -32,7 +32,8 @@ Initial Chrome Web Store release: configurable Home and reply filtering, reveala
 
 ## Editorial checks
 
-- Short description: 107 characters, below the Chrome Web Store 132-character limit.
+- Short description: 118 characters, below the Chrome Web Store 132-character limit.
+- Promotion filtering depends on the user's strategies; the copy does not promise to remove every ad.
 - The copy describes only existing behavior; the local preview is identified as a simulation.
 - The provider key and potential third-party charges are explicit.
 - The independent-project disclaimer covers X Corp. and all three provider brands.
