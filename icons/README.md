@@ -26,5 +26,5 @@ for size in 16 32 48 128; do
 done
 ```
 
-`scripts/manifest.test.ts` 会读取每个 PNG 的 IHDR，断言实际像素尺寸与 manifest 中声明的
-尺寸一致，防止再次出现“用一张大图冒充全部尺寸”的情况。
+`scripts/manifest.test.ts` 与独立发布打包命令会校验每个图标的 PNG 分块、CRC、解压后的像素行、
+8 位 RGBA 格式和实际尺寸，防止损坏或错尺寸的图片进入商店包。

@@ -197,6 +197,18 @@ describe("release plan", () => {
     );
   });
 
+  test("rejects whitespace-only and non-string localized messages", async () => {
+    for (const message of ["   ", 42]) {
+      const files = await releaseFixture();
+      const locale = files.find((entry) => entry.path === "_locales/zh_CN/messages.json");
+      if (!locale) throw new Error("Chinese locale missing from fixture");
+      const catalog = JSON.parse(new TextDecoder().decode(locale.data));
+      catalog.appName.message = message;
+      locale.data = encoder.encode(JSON.stringify(catalog));
+      expect(codes(files)).toContain("locale-empty-message");
+    }
+  });
+
   test("rejects an icon whose packaged PNG dimensions do not match its manifest size", async () => {
     const files = await releaseFixture();
     const icon16 = files.find((entry) => entry.path === "icons/icon-16.png");
@@ -211,6 +223,19 @@ describe("release plan", () => {
     const icon = files.find((entry) => entry.path === "icons/icon-16.png");
     if (!icon) throw new Error("Icon fixture missing");
     icon.data = encoder.encode("not a PNG");
+    expect(codes(files)).toContain("icon-dimensions");
+  });
+
+  test("rejects a truncated PNG with a forged signature and dimensions", async () => {
+    const files = await releaseFixture();
+    const icon = files.find((entry) => entry.path === "icons/icon-16.png");
+    if (!icon) throw new Error("Icon fixture missing");
+    const forged = new Uint8Array(24);
+    forged.set(icon.data.subarray(0, 8));
+    const view = new DataView(forged.buffer);
+    view.setUint32(16, 16);
+    view.setUint32(20, 16);
+    icon.data = forged;
     expect(codes(files)).toContain("icon-dimensions");
   });
 
