@@ -218,7 +218,7 @@ const zh = {
   "data.writing": "写入中…",
   "data.apply": "应用到浏览器存储",
   "data.s3Title": "S3 配置同步",
-  "data.s3Description": "首次保存后，扩展自动比较并同步配置。",
+  "data.s3Description": "启用后，扩展自动比较并同步配置、过滤活动和用户反馈规则。",
   "data.syncEnabled": "自动同步已启用",
   "data.syncDisabled": "自动同步尚未启用",
   "data.syncEnabledHelp": "配置变更、浏览器启动与定时检查时自动运行",
@@ -226,7 +226,7 @@ const zh = {
   "data.bucketHelp":
     "Bucket 必须允许扩展来源进行 GET、PUT 和 CORS 预检。首次启用会请求该 Endpoint 的访问权限；Secret Access Key 保存在本机，请求头会发送 Access Key ID 和可选 Session Token。",
   "data.privacyNotice":
-    "启用 S3 后，策略配置和过滤活动会同步到你指定的 Endpoint；活动可能包含帖子预览、作者和 X 帖子 URL。Provider Key 和 S3 凭据不进入同步文档。停用同步不会删除已上传的对象。",
+    "启用 S3 后，配置、过滤活动和用户反馈形成的长期规则会同步到你指定的 Endpoint。反馈规则可能包含规范化帖子正文（最长 5,000 字符）、语义词、帖子及作者 ID、判断结果和设备 ID；规则不会自动过期，清除 Activity 也不会删除。删除本机规则需清除扩展存储或卸载；远程副本需在所有设备停用同步后删除 S3 对象及备份。Provider Key 和 S3 凭据不进入同步文档。",
   "data.disableSync": "停用自动同步",
   "data.saveSync": "保存自动同步配置",
   "data.enableSync": "保存并启用自动同步",
@@ -556,7 +556,7 @@ const en: Record<MessageKey, string> = {
   "data.writing": "Writing…",
   "data.apply": "Apply to browser storage",
   "data.s3Title": "S3 configuration sync",
-  "data.s3Description": "After the first save, the extension compares and syncs configuration automatically.",
+  "data.s3Description": "When enabled, the extension syncs configuration, filter activity, and user feedback rules.",
   "data.syncEnabled": "Automatic sync enabled",
   "data.syncDisabled": "Automatic sync not enabled",
   "data.syncEnabledHelp": "Runs after configuration changes, browser startup and scheduled checks",
@@ -564,7 +564,7 @@ const en: Record<MessageKey, string> = {
   "data.bucketHelp":
     "The Bucket must allow GET, PUT and CORS preflight requests from the extension origin. First-time setup requests access to the Endpoint. The Secret Access Key stays local; request headers send the Access Key ID and optional Session Token.",
   "data.privacyNotice":
-    "When S3 is enabled, strategy configuration and filter activity sync to your chosen Endpoint. Activity may include post previews, authors, and X post URLs. Provider Keys and S3 credentials are excluded from the sync document. Disabling sync does not delete an uploaded object.",
+    "When S3 is enabled, configuration, filter activity, and durable user feedback rules sync to your chosen Endpoint. Feedback rules may contain normalized post text (up to 5,000 characters), semantic tokens, post and author IDs, decisions, and device IDs. These rules do not expire automatically, and clearing Activity does not remove them. Clear extension storage or uninstall to remove local rules; after disabling sync on every device, delete the S3 object and backups to remove remote copies. Provider Keys and S3 credentials are excluded from the sync document.",
   "data.disableSync": "Disable automatic sync",
   "data.saveSync": "Save automatic sync settings",
   "data.enableSync": "Save and enable automatic sync",

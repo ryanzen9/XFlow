@@ -163,6 +163,7 @@ See the full [XFlow Privacy Policy](https://ryanzen9.github.io/XFlow/privacy-en.
 - Only text extracted from enabled X surfaces is sent to the currently selected provider.
 - Provider API keys and S3 credentials live in `chrome.storage.local` without additional encryption.
 - Content Scripts can only read a secret-free settings mirror in `chrome.storage.session`.
+- Remote S3 documents may include configuration, Activity, and durable user feedback rules. The latter can contain normalized post text, semantic tokens, post and author IDs, decisions, and device IDs; clearing Activity does not remove these rules, and they do not expire automatically.
 - Editable configuration and remote S3 documents never include provider API keys or S3 credentials.
 - Activity stores a content ID, short text preview, author, corresponding X post URL, filter time, matched policy, and required state. It does not store HTML, DOM, cookies, sessions, media files, or a complete browsing path.
 - Fixed host permissions cover only X / Twitter and the three providers. An S3 endpoint receives optional access through an explicit user action.
