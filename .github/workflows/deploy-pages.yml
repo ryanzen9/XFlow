@@ -7,7 +7,6 @@ on:
       - "src/site/**"
       - "src/themes/neutral/**"
       - "src/styles/figtree.css"
-      - "docs/assets/strategy-editor.webp"
       - "scripts/build-site.ts"
       - "package.json"
       - "bun.lock"

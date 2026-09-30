@@ -66,7 +66,7 @@ for (const page of pages) {
 }
 
 await Promise.all([
-  copyFile(resolve(repositoryRoot, "docs/assets/strategy-editor.webp"), resolve(assetsRoot, "strategy-editor.webp")),
+  copyFile(resolve(repositoryRoot, "src/site/assets/xflow-hero.webp"), resolve(assetsRoot, "xflow-hero.webp")),
   Bun.write(resolve(outputRoot, ".nojekyll"), ""),
 ]);
 
