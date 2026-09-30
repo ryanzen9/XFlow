@@ -1,71 +1,62 @@
 import { useState } from "react";
+import { Button } from "@astryxdesign/core/Button";
+import { Card } from "@astryxdesign/core/Card";
+import { Divider } from "@astryxdesign/core/Divider";
+import { HStack } from "@astryxdesign/core/HStack";
+
+import { VStack } from "@astryxdesign/core/VStack";
 import { ACTIVITY_HEATMAP_DAYS, ACTIVITY_TREND_DAYS, activityDays, weeklyActivity } from "../../shared";
-import { focusRing } from "../../ui/styles";
+import { useI18n } from "../../ui/i18n";
 import { useActivity } from "../hooks/use-activity";
+import { SectionIntro, StatusMessage, Status } from "./DashboardUI";
 import { ActivityHeatmap } from "./activity/ActivityHeatmap";
 import { ActivityTrend } from "./activity/ActivityTrend";
 import { ClearActivityDialog } from "./activity/ClearActivityDialog";
 import { WeeklyReview } from "./activity/WeeklyReview";
-import { useI18n } from "../../ui/i18n";
 
 export function ActivityPanel() {
   const { t } = useI18n();
   const [view, setView] = useState<"daily" | "trend">("daily");
   const activity = useActivity();
-  const now = activity.now;
-  const heatmap = activityDays(activity.data, ACTIVITY_HEATMAP_DAYS, now);
-  const trend = activityDays(activity.data, ACTIVITY_TREND_DAYS, now);
-  const weekly = weeklyActivity(activity.data, now);
-
+  const heatmap = activityDays(activity.data, ACTIVITY_HEATMAP_DAYS, activity.now);
+  const trend = activityDays(activity.data, ACTIVITY_TREND_DAYS, activity.now);
+  const weekly = weeklyActivity(activity.data, activity.now);
   return (
-    <div className="grid gap-[22px]" aria-busy={activity.loading || activity.busy}>
-      <section className="rounded-xl border border-line bg-surface p-[18px]" aria-labelledby="activity-title">
-        <div className="mb-5 flex items-start justify-between gap-3">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 id="activity-title" className="text-sm font-semibold">
-                {t("general.activity")}
-              </h2>
-              <span className="rounded-full bg-selected px-2 py-1 font-mono text-caption font-semibold text-ink">
-                {t("general.localFirst")}
-              </span>
-            </div>
-            <p className="mt-1 text-meta text-muted">{t("general.activityPrivacy")}</p>
-          </div>
-          <button
-            className={`${focusRing} flex min-h-(--control-height) shrink-0 items-center gap-2 rounded-md border border-line-strong bg-surface px-3 text-label text-ink transition-colors hover:bg-hover`}
-            type="button"
-            aria-controls="activity-visualization"
-            onClick={() => setView((current) => (current === "daily" ? "trend" : "daily"))}
+    <VStack gap={5} aria-busy={activity.loading || activity.busy}>
+      <Card padding={5} aria-labelledby="activity-title">
+        <VStack gap={4}>
+          <HStack hAlign="between" vAlign="start" gap={3} wrap="wrap">
+            <VStack gap={2}>
+              <SectionIntro
+                id="activity-title"
+                title={t("general.activity")}
+                description={t("general.activityPrivacy")}
+              />
+              <Status variant="neutral" label={t("general.localFirst")} />
+            </VStack>
+            <Button
+              variant="secondary"
+              label={t(view === "daily" ? "activity.showTrend" : "activity.showDaily")}
+              aria-controls="activity-visualization"
+              onClick={() => setView((current) => (current === "daily" ? "trend" : "daily"))}
+            />
+          </HStack>
+          <Divider />
+          <VStack
+            id="activity-visualization"
+            role="region"
+            aria-label={t(view === "daily" ? "activity.heatmap" : "activity.trend")}
           >
-            <span aria-hidden="true">{view === "daily" ? "⌁" : "▦"}</span>
-            {view === "daily" ? t("activity.showTrend") : t("activity.showDaily")}
-          </button>
-        </div>
-        <div
-          id="activity-visualization"
-          className="min-h-48 border-t border-line pt-5"
-          role="region"
-          aria-label={view === "daily" ? t("activity.heatmap") : t("activity.trend")}
-        >
-          {view === "daily" ? <ActivityHeatmap days={heatmap} /> : <ActivityTrend days={trend} />}
-        </div>
-      </section>
-
+            {view === "daily" ? <ActivityHeatmap days={heatmap} /> : <ActivityTrend days={trend} />}
+          </VStack>
+        </VStack>
+      </Card>
       <WeeklyReview weekly={weekly} />
-
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-surface p-[18px]">
-        <div>
-          <h2 className="text-sm font-semibold">{t("activity.privacy")}</h2>
-          <p className="mt-1 max-w-xl text-meta leading-relaxed text-muted">{t("activity.privacyDescription")}</p>
-        </div>
+      <HStack gap={4} hAlign="between" wrap="wrap">
+        <SectionIntro title={t("activity.privacy")} description={t("activity.privacyDescription")} />
         <ClearActivityDialog busy={activity.busy} onClear={activity.clear} />
-      </section>
-      {activity.error && (
-        <p className="text-xs text-danger" role="alert">
-          {activity.error}
-        </p>
-      )}
-    </div>
+      </HStack>
+      <StatusMessage message={activity.error} error />
+    </VStack>
   );
 }

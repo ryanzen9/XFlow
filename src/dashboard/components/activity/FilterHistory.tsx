@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { addLocalDays, localDayKey, startOfLocalDay, type ActivityEvent, type ActivityStatus } from "../../../shared";
 import { useI18n } from "../../../ui/i18n";
-import { focusRing } from "../../../ui/styles";
+import { Badge } from "@astryxdesign/core/Badge";
+import { Button } from "@astryxdesign/core/Button";
+import { Collapsible, CollapsibleGroup } from "@astryxdesign/core/Collapsible";
+import { Divider } from "@astryxdesign/core/Divider";
+import { EmptyState } from "@astryxdesign/core/EmptyState";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Link } from "@astryxdesign/core/Link";
+
+import { Text } from "@astryxdesign/core/Text";
+import { VStack } from "@astryxdesign/core/VStack";
+import { LabeledValue, Panel, SectionIntro, Status } from "../DashboardUI";
 
 export const HISTORY_PAGE_SIZE = 10;
 
@@ -19,65 +29,57 @@ function HistoryItem({ item, busy, onIncorrect }: { item: ActivityEvent; busy: b
     incorrect: t("history.incorrect"),
   };
   return (
-    <details className="group border-b border-line">
-      <summary className="grid min-h-13 cursor-pointer list-none grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md py-2 focus-visible:outline-(length:--focus-ring-width) focus-visible:outline-offset-(--focus-ring-offset) focus-visible:outline-focus sm:grid-cols-[auto_minmax(0,1fr)_minmax(5rem,7rem)_minmax(6rem,8rem)_auto]">
-        <time
-          className="font-mono text-caption whitespace-nowrap text-muted"
-          dateTime={new Date(item.filteredAt).toISOString()}
-        >
-          {timeFormatter.format(item.filteredAt)}
-        </time>
-        <span className="min-w-0 truncate text-xs text-ink">{item.preview || t("history.contentUnavailable")}</span>
-        <span className="hidden truncate text-meta text-muted sm:block">
-          {item.author || t("history.unknownAuthor")}
-        </span>
-        <span className="hidden truncate text-meta text-muted sm:block">
-          {item.policyName || t("history.policyUnavailable")}
-        </span>
-        <span className="text-caption whitespace-nowrap text-muted group-open:text-ink">
-          {statusLabel[item.status]} <span aria-hidden="true">⌄</span>
-        </span>
-      </summary>
-      <div className="mt-3 rounded-lg border border-line bg-canvas/50 p-3 text-meta leading-[1.7] text-muted">
-        <p className="whitespace-pre-wrap text-ink">{item.preview || t("history.contentUnavailable")}</p>
-        <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-          <dt>{t("history.filteredAt")}</dt>
-          <dd>{new Date(item.filteredAt).toLocaleString(locale)}</dd>
-          <dt>{t("history.matchedPolicy")}</dt>
-          <dd>{item.policyName || t("common.unavailable")}</dd>
-          <dt>{t("history.author")}</dt>
-          <dd>{item.author || t("history.unknownAuthor")}</dd>
-          {item.mediaType && (
-            <>
-              <dt>{t("history.mediaType")}</dt>
-              <dd className="capitalize">{item.mediaType}</dd>
-            </>
-          )}
-        </dl>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
+    <Collapsible
+      value={item.id}
+      defaultIsOpen={false}
+      trigger={
+        <HStack gap={3} hAlign="between" wrap="wrap">
+          <VStack gap={1}>
+            <Text weight="semibold" maxLines={1}>
+              {item.preview || t("history.contentUnavailable")}
+            </Text>
+            <Text type="supporting">
+              {[
+                timeFormatter.format(item.filteredAt),
+                item.author || t("history.unknownAuthor"),
+                item.policyName || t("history.policyUnavailable"),
+              ].join(" · ")}
+            </Text>
+          </VStack>
+          <Status variant={item.status === "incorrect" ? "warning" : "neutral"} label={statusLabel[item.status]} />
+        </HStack>
+      }
+    >
+      <VStack gap={4} paddingBlock={3}>
+        <Text as="p" className="whitespace-pre-wrap">
+          {item.preview || t("history.contentUnavailable")}
+        </Text>
+        <HStack gap={6} wrap="wrap" vAlign="start">
+          <LabeledValue label={t("history.filteredAt")}>
+            {new Date(item.filteredAt).toLocaleString(locale)}
+          </LabeledValue>
+          <LabeledValue label={t("history.matchedPolicy")}>{item.policyName || t("common.unavailable")}</LabeledValue>
+          <LabeledValue label={t("history.author")}>{item.author || t("history.unknownAuthor")}</LabeledValue>
+          {item.mediaType && <LabeledValue label={t("history.mediaType")}>{item.mediaType}</LabeledValue>}
+        </HStack>
+        <HStack gap={3} wrap="wrap">
           {item.url && (
-            <a
-              className="font-semibold text-ink underline-offset-2 hover:underline"
-              href={item.url}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <Link href={item.url} isExternalLink>
               {t("history.viewOriginal")}
-            </a>
+            </Link>
           )}
           {item.status !== "incorrect" && (
-            <button
-              className="font-semibold text-danger hover:underline disabled:opacity-50"
-              type="button"
-              disabled={busy}
+            <Button
+              label={t("history.markIncorrect")}
+              variant="ghost"
+              size="sm"
+              isDisabled={busy}
               onClick={onIncorrect}
-            >
-              {t("history.markIncorrect")}
-            </button>
+            />
           )}
-        </div>
-      </div>
-    </details>
+        </HStack>
+      </VStack>
+    </Collapsible>
   );
 }
 
@@ -113,71 +115,70 @@ export function FilterHistory({
         : new Date(`${day}T12:00:00`).toLocaleDateString(locale, { month: "long", day: "numeric" });
 
   return (
-    <section aria-labelledby="history-title">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <div>
-          <h2 id="history-title" className="text-sm font-semibold">
-            {t("history.title")}
-          </h2>
-          <p className="mt-1 text-meta text-muted">{t("history.subtitle")}</p>
-        </div>
-        <span className="font-mono text-caption text-muted">
-          {t("history.records", { count: number.format(history.length) })}
-        </span>
-      </div>
+    <Panel id="history-title" title={t("history.title")} description={t("history.subtitle")}>
+      <Text type="supporting">{t("history.records", { count: number.format(history.length) })}</Text>
       {history.length === 0 ? (
-        <p className="border-t border-line py-6 text-center text-xs text-muted">{t("history.empty")}</p>
+        <EmptyState title={t("history.empty")} />
       ) : (
         <>
-          <div className="border-t border-line">
+          <VStack gap={5}>
             {[...groups].map(([day, items]) => (
-              <div key={day} className="mt-5 first:mt-3">
-                <div className="flex items-baseline justify-between gap-3 pb-2">
-                  <h3 className="font-mono text-caption font-semibold text-ink">{groupLabel(day)}</h3>
-                  <span className="font-mono text-caption text-muted">
-                    {t("history.records", { count: number.format(dayCounts.get(day) ?? 0) })}
-                  </span>
-                </div>
-                {items.map((item) => (
-                  <HistoryItem key={item.id} item={item} busy={busy} onIncorrect={() => onIncorrect(item.id)} />
-                ))}
-              </div>
+              <VStack key={day} gap={2}>
+                <HStack hAlign="between" gap={3}>
+                  <SectionIntro level={3} title={groupLabel(day)} />
+                  <Badge
+                    variant="neutral"
+                    label={number.format(dayCounts.get(day) ?? 0)}
+                    aria-label={t("history.records", { count: number.format(dayCounts.get(day) ?? 0) })}
+                  />
+                </HStack>
+                <CollapsibleGroup
+                  key={`${day}-${page}`}
+                  type="multiple"
+                  hasDividers
+                  density="compact"
+                  defaultValue={[]}
+                >
+                  {items.map((item) => (
+                    <HistoryItem key={item.id} item={item} busy={busy} onIncorrect={() => onIncorrect(item.id)} />
+                  ))}
+                </CollapsibleGroup>
+              </VStack>
             ))}
-          </div>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-            <p className="font-mono text-caption text-muted" aria-live="polite">
+          </VStack>
+          <Divider />
+          <HStack hAlign="between" gap={3} wrap="wrap">
+            <Text type="supporting" aria-live="polite">
               {t("history.range", {
                 start: number.format(pageStart + 1),
                 end: number.format(Math.min(pageStart + HISTORY_PAGE_SIZE, history.length)),
                 total: number.format(history.length),
               })}
-            </p>
+            </Text>
             {totalPages > 1 && (
-              <nav className="flex items-center gap-2" aria-label={t("history.pagination")}>
-                <button
-                  className={`${focusRing} min-h-(--control-height) rounded-md border border-line-strong bg-surface px-3 text-label text-ink transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-55`}
-                  type="button"
-                  disabled={page === 1}
+              <HStack as="nav" gap={2} aria-label={t("history.pagination")}>
+                <Button
+                  label={t("history.previous")}
+                  variant="secondary"
+                  size="sm"
+                  isDisabled={page === 1}
                   onClick={() => setRequestedPage((current) => stepHistoryPage(current, totalPages, -1))}
-                >
-                  {t("history.previous")}
-                </button>
-                <span className="min-w-20 text-center font-mono text-caption text-muted">
+                />
+                <Text type="code">
                   {t("history.page", { current: number.format(page), total: number.format(totalPages) })}
-                </span>
-                <button
-                  className={`${focusRing} min-h-(--control-height) rounded-md border border-line-strong bg-surface px-3 text-label text-ink transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-55`}
-                  type="button"
-                  disabled={page === totalPages}
+                </Text>
+                <Button
+                  label={t("history.next")}
+                  variant="secondary"
+                  size="sm"
+                  isDisabled={page === totalPages}
                   onClick={() => setRequestedPage((current) => stepHistoryPage(current, totalPages, 1))}
-                >
-                  {t("history.next")}
-                </button>
-              </nav>
+                />
+              </HStack>
             )}
-          </div>
+          </HStack>
         </>
       )}
-    </section>
+    </Panel>
   );
 }

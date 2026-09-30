@@ -428,10 +428,8 @@ export const neutralTheme = {
         "--color-overlay-pressed": "var(--astryx-theme-neutral-color-on-tint-overlay-pressed)"
       },
       "status:info": {
-        "--color-accent-muted": "var(--astryx-theme-neutral-color-status-muted-accent)",
-        "--color-text-primary": "var(--color-text-blue)",
-        "--color-text-secondary": "var(--color-text-blue)",
-        "--color-accent": "var(--color-text-blue)"
+        "--color-accent-muted": "var(--color-background-muted)",
+        "--color-accent": "var(--color-text-primary)"
       },
       "status:success": {
         "--color-text-primary": "var(--color-text-green)",

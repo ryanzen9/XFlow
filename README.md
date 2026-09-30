@@ -46,15 +46,15 @@
 
 ## 为什么是 XFlow
 
-|      | 能力                      | 当前行为                                                                                 |
-| ---- | ------------------------- | ---------------------------------------------------------------------------------------- |
-| `01` | Policy engine             | 为时间线和评论区分别配置多条策略、提示词、Hit Rate 与 P1 → Pn 优先级。                   |
-| `02` | Blur Veil                 | 保留帖子原始尺寸和 DOM，以模糊遮罩、Hover 信息及点击或键盘揭示降低干扰。                 |
-| `03` | Multi-provider Jev        | 显式选择 OpenRouter、Vercel AI Gateway 或 TypeSafe；失败时不进行隐式渠道降级。           |
-| `04` | Local-first activity      | 在本机记录去重后的过滤事件，提供今日/累计计数、Heatmap、趋势、周报、历史与页面 Badge。   |
-| `05` | Versioned S3 sync         | 可选同步配置和 Activity；配置按版本决定方向，事件按稳定 ID 合并，清除状态由墓碑保护。    |
-| `06` | Local credential boundary | Provider Key 与 S3 凭据只留在扩展本机存储，不进入 Content Script、配置 JSON 或 S3 文档。 |
-| `07` | Token-driven UI           | Popup 与 Dashboard 使用同一套设计 token，支持高对比 Light / Dark 主题和 reduced motion。 |
+|      | 能力                      | 当前行为                                                                                                                   |
+| ---- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `01` | Policy engine             | 为时间线和评论区分别配置多条策略、提示词、Hit Rate 与 P1 → Pn 优先级。                                                     |
+| `02` | Blur Veil                 | 保留帖子原始尺寸和 DOM，以模糊遮罩、Hover 信息及点击或键盘揭示降低干扰。                                                   |
+| `03` | Multi-provider Jev        | 显式选择 OpenRouter、Vercel AI Gateway 或 TypeSafe；失败时不进行隐式渠道降级。                                             |
+| `04` | Local-first activity      | 在本机记录去重后的过滤事件，提供今日/累计计数、Heatmap、趋势、周报、历史与页面 Badge。                                     |
+| `05` | Versioned S3 sync         | 可选同步配置和 Activity；配置按版本决定方向，事件按稳定 ID 合并，清除状态由墓碑保护。                                      |
+| `06` | Local credential boundary | Provider Key 与 S3 凭据只留在扩展本机存储，不进入 Content Script、配置 JSON 或 S3 文档。                                   |
+| `07` | Token-driven UI           | Dashboard 使用 Astryx Neutral 组件与 Figtree 字体；Popup 保留原有 token。两者共享 Light / Dark 设置并支持 reduced motion。 |
 
 ## 工作方式
 

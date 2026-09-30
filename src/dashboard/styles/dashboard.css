@@ -7,7 +7,6 @@
 @import "../../themes/neutral/neutral.css";
 @import "../../styles/figtree.css";
 @import "@astryxdesign/core/tailwind-theme.css";
-@import "../../styles/theme.css";
 @import "../../content/content.css" layer(components);
 @import "tailwindcss/utilities.css" layer(utilities);
 @source "../";

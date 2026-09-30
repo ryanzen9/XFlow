@@ -1,3 +1,8 @@
+import { Divider } from "@astryxdesign/core/Divider";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Text } from "@astryxdesign/core/Text";
+import { VStack } from "@astryxdesign/core/VStack";
+import { SectionIntro, StatusMessage } from "./DashboardUI";
 import { ACTIVITY_HISTORY_DAYS, activityDays, activityHistory, type ActivityDay } from "../../shared";
 import { useI18n } from "../../ui/i18n";
 import { useActivity } from "../hooks/use-activity";
@@ -19,23 +24,28 @@ export function LogOverview({ days }: { days: ActivityDay[] }) {
   ];
 
   return (
-    <div className="p-[18px] sm:p-6">
-      <div className="mb-6">
-        <h2 id="log-overview-title" className="text-heading text-ink">
-          {t("history.overview")}
-        </h2>
-        <p className="mt-1 text-meta text-muted">{t("history.overviewDescription")}</p>
-      </div>
-      <dl className="mb-7 grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
+    <VStack gap={5}>
+      <SectionIntro
+        id="log-overview-title"
+        title={t("history.overview")}
+        description={t("history.overviewDescription")}
+      />
+      <HStack as="dl" gap={8} wrap="wrap" hAlign="between">
         {stats.map((stat) => (
-          <div key={stat.label}>
-            <dt className="text-label text-muted">{stat.label}</dt>
-            <dd className="mt-1 font-mono text-title text-ink tabular-nums">{stat.value}</dd>
-          </div>
+          <VStack key={stat.label} gap={1}>
+            <dt>
+              <Text type="supporting">{stat.label}</Text>
+            </dt>
+            <dd>
+              <Text type="display-1" hasTabularNumbers>
+                {stat.value}
+              </Text>
+            </dd>
+          </VStack>
         ))}
-      </dl>
+      </HStack>
       <DailyBlockedChart days={days} />
-    </div>
+    </VStack>
   );
 }
 
@@ -46,35 +56,24 @@ export function LogPanel() {
   const days = activityDays(activity.data, ACTIVITY_HISTORY_DAYS, activity.now);
 
   return (
-    <div className="grid max-w-[1180px] content-start gap-4" aria-busy={activity.loading || activity.busy}>
-      <section
-        className="overflow-hidden rounded-xl border border-line bg-surface"
-        aria-labelledby="log-overview-title"
-      >
-        <LogOverview days={days} />
-        <div className="border-t border-line p-[18px] sm:p-6">
-          <FilterHistory
-            history={history}
-            now={activity.now}
-            busy={activity.busy}
-            onIncorrect={(id) => void activity.markIncorrect(id)}
-          />
-        </div>
-        <div className="border-t border-line p-[18px] sm:p-6">
-          <LogStorageSummary
-            bytesInUse={activity.bytesInUse}
-            storageLimit={activity.storageLimit}
-            recordCount={history.length}
-            busy={activity.busy}
-            onClear={activity.clearHistory}
-          />
-        </div>
-      </section>
-      {activity.error && (
-        <p className="text-xs text-danger" role="alert">
-          {activity.error}
-        </p>
-      )}
-    </div>
+    <VStack gap={6} aria-busy={activity.loading || activity.busy}>
+      <LogOverview days={days} />
+      <Divider />
+      <FilterHistory
+        history={history}
+        now={activity.now}
+        busy={activity.busy}
+        onIncorrect={(id) => void activity.markIncorrect(id)}
+      />
+      <Divider />
+      <LogStorageSummary
+        bytesInUse={activity.bytesInUse}
+        storageLimit={activity.storageLimit}
+        recordCount={history.length}
+        busy={activity.busy}
+        onClear={activity.clearHistory}
+      />
+      <StatusMessage message={activity.error} error />
+    </VStack>
   );
 }
