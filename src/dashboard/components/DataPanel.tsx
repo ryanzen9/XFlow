@@ -10,23 +10,18 @@ import {
   type AppSettings,
   type S3SyncSettings,
 } from "../../shared";
-import { cn } from "../../ui/cn";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Divider } from "@astryxdesign/core/Divider";
+import { FormLayout } from "@astryxdesign/core/FormLayout";
+import { Grid } from "@astryxdesign/core/Grid";
+import { Spinner } from "@astryxdesign/core/Spinner";
+import { Text } from "@astryxdesign/core/Text";
+import { TextArea } from "@astryxdesign/core/TextArea";
+import { TextInput } from "@astryxdesign/core/TextInput";
+import { VStack } from "@astryxdesign/core/VStack";
+import { Actions, Panel, StatusMessage, Status } from "./DashboardUI";
 import { localizeError, useI18n } from "../../ui/i18n";
-import {
-  card,
-  control,
-  field,
-  fieldHelp,
-  fieldLabel,
-  primaryButton,
-  secondaryButton,
-  sectionDescription,
-  sectionHeading,
-  sectionIcon,
-  sectionTitle,
-  textButton,
-  textarea,
-} from "../../ui/styles";
 
 type PanelStatus = { message: string; error: boolean };
 
@@ -146,203 +141,130 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
 
   if (!config || !s3)
     return (
-      <div className={card} role="status">
-        {t("data.loading")}
-      </div>
+      <VStack gap={4}>
+        <Spinner label={t("data.loading")} />
+        <StatusMessage {...status} />
+      </VStack>
     );
 
   return (
-    <div className="grid items-start gap-6 min-[961px]:grid-cols-[minmax(0,1.2fr)_minmax(330px,.8fr)]">
-      <section className="min-w-0" aria-labelledby="config-title">
-        <div className={`${card} min-w-0`}>
-          <div className={sectionTitle}>
-            <span className={sectionIcon} aria-hidden="true">
-              {"{}"}
-            </span>
-            <div>
-              <h2 className={sectionHeading} id="config-title">
-                {t("data.configTitle")}
-              </h2>
-              <p className={sectionDescription}>{t("data.configDescription")}</p>
-            </div>
-          </div>
-          <label className={field} htmlFor="config-json">
-            <span className={fieldLabel}>
-              Config <small className={fieldHelp}>{t("data.characters", { count: source.length })}</small>
-            </span>
-            <textarea
-              id="config-json"
-              className={`${textarea} min-h-[430px] overflow-auto bg-inset font-mono text-meta leading-[1.75] whitespace-pre text-ink caret-live sm:min-h-[520px] sm:text-xs`}
-              spellCheck={false}
-              value={source}
-              onChange={(event) => {
-                setSource(event.target.value);
-                setStatus({ message: "", error: false });
-              }}
-              aria-describedby="config-help"
+    <VStack gap={6}>
+      <Grid columns={{ minWidth: 320, max: 2 }} gap={8} align="start">
+        <Panel title={t("data.configTitle")} description={t("data.configDescription")} id="config-title">
+          <TextArea
+            data-field="config-json"
+            label="Config"
+            description={t("data.characters", { count: source.length })}
+            rows={22}
+            className="font-mono"
+            hasSpellCheck={false}
+            value={source}
+            isDisabled={busy}
+            onChange={(value) => {
+              setSource(value);
+              setStatus({ message: "", error: false });
+            }}
+          />
+          <Banner status="warning" title={t("data.note")} description={t("data.keySeparated")} container="section" />
+          <Actions>
+            <Button label={t("data.format")} onClick={formatJson} isDisabled={busy} />
+            <Button label={t("data.discard")} onClick={() => void load()} isDisabled={busy} />
+            <Button variant="primary" label={t("data.apply")} isLoading={busy} onClick={() => void applyJson()} />
+          </Actions>
+        </Panel>
+        <VStack as="form" gap={4} onSubmit={(event) => void saveAndEnableSync(event)}>
+          <Panel title={t("data.s3Title")} description={t("data.s3Description")} id="s3-title">
+            <Status
+              variant={s3.autoSyncEnabled ? "success" : "neutral"}
+              label={t(s3.autoSyncEnabled ? "data.syncEnabled" : "data.syncDisabled")}
             />
-          </label>
-          <p
-            id="config-help"
-            className="mt-3.5 border-l-[3px] border-warn bg-warn-soft px-[13px] py-[11px] text-meta leading-[1.7] text-warn"
-          >
-            <strong>{t("data.note")}</strong>
-            {t("data.keySeparated")}
-          </p>
-          <div className="mt-[18px] flex flex-col justify-end gap-2 min-[601px]:flex-row min-[601px]:flex-wrap">
-            <button type="button" className={secondaryButton} onClick={formatJson} disabled={busy}>
-              {t("data.format")}
-            </button>
-            <button type="button" className={secondaryButton} onClick={() => void load()} disabled={busy}>
-              {t("data.discard")}
-            </button>
-            <button type="button" className={primaryButton} onClick={() => void applyJson()} disabled={busy}>
-              {busy ? t("data.writing") : t("data.apply")}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <aside className="min-w-0 min-[961px]:sticky min-[961px]:top-6" aria-labelledby="s3-title">
-        <form className={card} onSubmit={(event) => void saveAndEnableSync(event)}>
-          <div className={sectionTitle}>
-            <span className={sectionIcon} aria-hidden="true">
-              ⇅
-            </span>
-            <div>
-              <h2 className={sectionHeading} id="s3-title">
-                {t("data.s3Title")}
-              </h2>
-              <p className={sectionDescription}>{t("data.s3Description")}</p>
-            </div>
-          </div>
-          <div
-            className="my-[18px] mb-1 flex items-center gap-2.5 rounded-md border border-line bg-canvas/45 px-3 py-[11px]"
-            role="status"
-          >
-            <span
-              className={cn(
-                "size-2 shrink-0 rounded-full bg-faint shadow-[0_0_0_4px_color-mix(in_srgb,var(--fg-4)_14%,transparent)]",
-                s3.autoSyncEnabled && "bg-live shadow-[0_0_0_4px_var(--live-glow)]",
-              )}
-              aria-hidden="true"
-            />
-            <div className="grid gap-0.5">
-              <strong className="text-xs text-ink">
-                {t(s3.autoSyncEnabled ? "data.syncEnabled" : "data.syncDisabled")}
-              </strong>
-              <small className="text-caption leading-normal text-muted">
-                {s3.autoSyncEnabled ? t("data.syncEnabledHelp") : t("data.syncDisabledHelp")}
-              </small>
-            </div>
-          </div>
-          <label className={`${field} mt-[15px]`} htmlFor="s3-endpoint">
-            <span className={fieldLabel}>Endpoint</span>
-            <input
-              className={control}
-              id="s3-endpoint"
-              type="url"
-              placeholder="https://s3.us-east-1.amazonaws.com"
-              value={s3.endpoint}
-              onChange={(event) => updateS3({ endpoint: event.target.value })}
-            />
-          </label>
-          <div className="grid gap-0 min-[601px]:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)] min-[601px]:gap-2.5">
-            <label className={`${field} mt-[15px]`} htmlFor="s3-region">
-              <span className={fieldLabel}>Region</span>
-              <input
-                className={control}
-                id="s3-region"
+            <Text as="p" color="secondary">
+              {t(s3.autoSyncEnabled ? "data.syncEnabledHelp" : "data.syncDisabledHelp")}
+            </Text>
+            <FormLayout>
+              <TextInput
+                data-field="s3-endpoint"
+                label="Endpoint"
+                placeholder="https://s3.us-east-1.amazonaws.com"
+                value={s3.endpoint}
+                isDisabled={busy}
+                onChange={(endpoint) => updateS3({ endpoint })}
+              />
+              <TextInput
+                data-field="s3-region"
+                label="Region"
                 value={s3.region}
-                onChange={(event) => updateS3({ region: event.target.value })}
+                isDisabled={busy}
+                onChange={(region) => updateS3({ region })}
               />
-            </label>
-            <label className={`${field} mt-[15px]`} htmlFor="s3-bucket">
-              <span className={fieldLabel}>Bucket</span>
-              <input
-                className={control}
-                id="s3-bucket"
+              <TextInput
+                data-field="s3-bucket"
+                label="Bucket"
                 value={s3.bucket}
-                onChange={(event) => updateS3({ bucket: event.target.value })}
+                isDisabled={busy}
+                onChange={(bucket) => updateS3({ bucket })}
               />
-            </label>
-          </div>
-          <label className={`${field} mt-[15px]`} htmlFor="s3-object-key">
-            <span className={fieldLabel}>Object Key</span>
-            <input
-              className={control}
-              id="s3-object-key"
-              value={s3.objectKey}
-              onChange={(event) => updateS3({ objectKey: event.target.value })}
-            />
-          </label>
-          <label className={`${field} mt-[15px]`} htmlFor="s3-access-key">
-            <span className={fieldLabel}>Access Key ID</span>
-            <input
-              className={control}
-              id="s3-access-key"
-              autoComplete="off"
-              value={s3.accessKeyId}
-              onChange={(event) => updateS3({ accessKeyId: event.target.value })}
-            />
-          </label>
-          <label className={`${field} mt-[15px]`} htmlFor="s3-secret-key">
-            <span className={fieldLabel}>
-              Secret Access Key{" "}
-              <button
-                type="button"
-                className={textButton}
+              <TextInput
+                data-field="s3-object-key"
+                label="Object Key"
+                value={s3.objectKey}
+                isDisabled={busy}
+                onChange={(objectKey) => updateS3({ objectKey })}
+              />
+              <TextInput
+                data-field="s3-access-key"
+                label="Access Key ID"
+                autoComplete="off"
+                value={s3.accessKeyId}
+                isDisabled={busy}
+                onChange={(accessKeyId) => updateS3({ accessKeyId })}
+              />
+              <TextInput
+                data-field="s3-secret-key"
+                label="Secret Access Key"
+                type={showSecret ? "text" : "password"}
+                autoComplete="off"
+                value={s3.secretAccessKey}
+                isDisabled={busy}
+                onChange={(secretAccessKey) => updateS3({ secretAccessKey })}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                label={`${t(showSecret ? "common.hide" : "common.show")} Secret Access Key`}
                 aria-pressed={showSecret}
+                isDisabled={busy}
                 onClick={() => setShowSecret((value) => !value)}
-              >
-                {t(showSecret ? "common.hide" : "common.show")}
-              </button>
-            </span>
-            <input
-              className={control}
-              id="s3-secret-key"
-              type={showSecret ? "text" : "password"}
-              autoComplete="off"
-              value={s3.secretAccessKey}
-              onChange={(event) => updateS3({ secretAccessKey: event.target.value })}
-            />
-          </label>
-          <label className={`${field} mt-[15px]`} htmlFor="s3-session-token">
-            <span className={fieldLabel}>
-              Session Token <small className={fieldHelp}>{t("common.optional")}</small>
-            </span>
-            <textarea
-              className={textarea}
-              id="s3-session-token"
-              rows={2}
-              value={s3.sessionToken}
-              onChange={(event) => updateS3({ sessionToken: event.target.value })}
-            />
-          </label>
-          <p className={`${fieldHelp} mt-4 border-t border-line pt-3.5`}>{t("data.bucketHelp")}</p>
-          <div className="mt-[18px] flex flex-col justify-end gap-2 min-[601px]:flex-row min-[601px]:flex-wrap">
-            {s3.autoSyncEnabled && (
-              <button type="button" className={secondaryButton} disabled={busy} onClick={() => void disableSync()}>
-                {t("data.disableSync")}
-              </button>
-            )}
-            <button type="submit" className={primaryButton} disabled={busy}>
-              {busy ? t("common.saving") : t(s3.autoSyncEnabled ? "data.saveSync" : "data.enableSync")}
-            </button>
-          </div>
-        </form>
-      </aside>
-      {status.message && (
-        <div
-          className={cn(
-            "col-[1/-1] min-h-[38px] rounded-lg bg-selected px-3 py-[9px] text-xs text-ink",
-            status.error && "bg-danger-soft text-danger",
-          )}
-          role={status.error ? "alert" : "status"}
-        >
-          {status.message}
-        </div>
-      )}
-    </div>
+              />
+              <TextArea
+                data-field="s3-session-token"
+                label="Session Token"
+                isOptional
+                rows={2}
+                value={s3.sessionToken}
+                isDisabled={busy}
+                onChange={(sessionToken) => updateS3({ sessionToken })}
+              />
+            </FormLayout>
+            <Divider />
+            <Text as="p" color="secondary">
+              {t("data.bucketHelp")}
+            </Text>
+            <Actions>
+              {s3.autoSyncEnabled && (
+                <Button label={t("data.disableSync")} isDisabled={busy} onClick={() => void disableSync()} />
+              )}
+              <Button
+                type="submit"
+                variant="primary"
+                label={t(s3.autoSyncEnabled ? "data.saveSync" : "data.enableSync")}
+                isLoading={busy}
+              />
+            </Actions>
+          </Panel>
+        </VStack>
+      </Grid>
+      <StatusMessage {...status} />
+    </VStack>
   );
 }

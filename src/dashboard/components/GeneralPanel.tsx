@@ -1,21 +1,14 @@
-import type { FormEvent } from "react";
+import { Button } from "@astryxdesign/core/Button";
+import { Divider } from "@astryxdesign/core/Divider";
+import { FormLayout } from "@astryxdesign/core/FormLayout";
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
+import { VStack } from "@astryxdesign/core/VStack";
 import { PROVIDERS, type AppSettings } from "../../shared";
-import { Toggle } from "./Toggle";
-import { ActivityPanel } from "./ActivityPanel";
-import {
-  card,
-  control,
-  field,
-  fieldHelp,
-  fieldLabel,
-  primaryButton,
-  sectionDescription,
-  sectionHeading,
-  sectionIcon,
-  sectionTitle,
-  tag,
-} from "../../ui/styles";
 import { providerLabel, useI18n } from "../../ui/i18n";
+import { ActivityPanel } from "./ActivityPanel";
+import { Actions, Panel } from "./DashboardUI";
+import { Toggle } from "./Toggle";
 
 interface Props {
   settings: AppSettings;
@@ -27,24 +20,11 @@ interface Props {
 
 export function GeneralPanel({ settings, busy, onChange, onToggle, onSave }: Props) {
   const { locale, t } = useI18n();
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    onSave();
-  };
   return (
-    <div className="grid max-w-[980px] content-start gap-[22px]">
+    <VStack gap={8}>
       <ActivityPanel />
-      <section className={card}>
-        <div className={sectionTitle}>
-          <span className={sectionIcon} aria-hidden="true">
-            ◎
-          </span>
-          <div>
-            <h2 className={sectionHeading}>{t("general.scope")}</h2>
-            <p className={sectionDescription}>{t("general.scopeDescription")}</p>
-          </div>
-          <span className={`${tag} ml-auto max-[600px]:hidden`}>{t("general.live")}</span>
-        </div>
+      <Divider />
+      <Panel title={t("general.scope")} description={t("general.scopeDescription")}>
         <Toggle
           label={t("general.homeTimeline")}
           description={t("general.homeDescription")}
@@ -59,44 +39,40 @@ export function GeneralPanel({ settings, busy, onChange, onToggle, onSave }: Pro
           disabled={busy}
           onChange={(checked) => onToggle("commentsEnabled", checked)}
         />
-        <p className="pt-4 text-xs text-muted">{t("general.pauseHelp")}</p>
-      </section>
-      <form onSubmit={submit}>
-        <fieldset disabled={busy} className={card}>
-          <div className={sectionTitle}>
-            <span className={sectionIcon} aria-hidden="true">
-              ↗
-            </span>
-            <div>
-              <h2 className={sectionHeading}>{t("general.modelDisplay")}</h2>
-              <p className={sectionDescription}>{t("general.modelDisplayDescription")}</p>
-            </div>
-          </div>
-          <label className={field} htmlFor="model-nickname">
-            <span className={fieldLabel}>{t("general.modelNickname")}</span>
-            <input
-              className={control}
-              id="model-nickname"
-              required
-              maxLength={40}
+        <Text as="p" color="secondary">
+          {t("general.pauseHelp")}
+        </Text>
+      </Panel>
+      <Divider />
+      <VStack
+        as="form"
+        gap={4}
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSave();
+        }}
+      >
+        <Panel title={t("general.modelDisplay")} description={t("general.modelDisplayDescription")}>
+          <FormLayout>
+            <TextInput
+              data-field="model-nickname"
+              label={t("general.modelNickname")}
+              description={t("general.modelNicknameHelp")}
               value={settings.modelNickname}
-              onChange={(event) => onChange({ modelNickname: event.target.value })}
+              isRequired
+              isDisabled={busy}
+              onChange={(value) => onChange({ modelNickname: value.slice(0, 40) })}
             />
-            <small className={fieldHelp}>{t("general.modelNicknameHelp")}</small>
-          </label>
-          <div className="mt-[18px] flex flex-wrap items-center gap-3 border-t border-line py-3.5 text-xs text-muted">
-            <span>{t("general.currentModel")}</span>
-            <code className="font-mono text-ink">{PROVIDERS[settings.activeProvider].modelId}</code>
-            <span>{providerLabel(settings.activeProvider, locale)}</span>
-            <span className={tag}>Jev decision</span>
-          </div>
-          <div className="mt-2 flex justify-end">
-            <button className={primaryButton} type="submit">
-              {busy ? t("common.saving") : t("general.save")}
-            </button>
-          </div>
-        </fieldset>
-      </form>
-    </div>
+          </FormLayout>
+          <Text as="p" color="secondary">
+            {t("general.currentModel")} · {providerLabel(settings.activeProvider, locale)}
+          </Text>
+          <Text type="code">{PROVIDERS[settings.activeProvider].modelId}</Text>
+          <Actions>
+            <Button type="submit" variant="primary" label={t("general.save")} isLoading={busy} />
+          </Actions>
+        </Panel>
+      </VStack>
+    </VStack>
   );
 }

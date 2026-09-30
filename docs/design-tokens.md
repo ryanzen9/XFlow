@@ -1,9 +1,17 @@
 # Design tokens
 
-`src/styles/token.css` is the source of truth for the current Popup and Dashboard Tailwind UI.
-`src/styles/theme.css` maps those tokens onto Tailwind utilities. Astryx components use the editable
-`src/themes/neutral/neutralTheme.ts` and its generated CSS/JS instead. Components consume utilities or tokens —
-never literal colours, radii, durations or font sizes.
+Dashboard uses Astryx components and the editable `src/themes/neutral/neutralTheme.ts`, with generated CSS/JS.
+Its Tailwind utilities come from `@astryxdesign/core/tailwind-theme.css` (`bg-surface`, `text-primary`, etc.).
+The self-hosted Figtree font, spacing, shape and motion resolve through that theme in both modes.
+Dashboard does not import the legacy Tailwind bridge, so its controls keep Astryx typography and casing.
+
+`src/styles/token.css` remains the source of truth for the Popup and legacy UI.
+`src/styles/theme.css` maps those tokens onto legacy Tailwind utilities. The reference tables below describe
+that legacy system. Components consume utilities or tokens — never literal colours, radii, durations or font sizes.
+
+The Dashboard's SVG plots use Astryx colour and typography tokens; their numeric coordinates represent chart
+geometry. `XPostPreview.tsx` keeps X's foreign palette to judge the shared content veil in its host context.
+Dashboard controls around that preview still use Astryx.
 
 ```
 token.css   primitives → semantic roles (light/dark) → keyframes

@@ -65,7 +65,7 @@ Policy 指纹包含 surface、Provider、策略 ID、启用状态、优先级、
 | `src/ui` / `src/styles` | 跨入口 UI utility、主题与国际化逻辑和 Tailwind token                           |
 | `src/themes/neutral`    | 可编辑的 Astryx Neutral 主题源码与由 CLI 生成的 CSS/JS                         |
 
-Popup 与 Dashboard 的入口均由 `AstryxThemeRoot` 包裹。它通过 `src/ui/theme-mode.ts` 订阅现有的 Light / Dark 设置；`applyTheme()` 更新浏览器根节点和订阅者，因此两套界面使用同一个模式。Astryx 组件读取 `src/themes/neutral/neutralTheme.ts` 定义的 token；尚未迁移的界面继续读取 `src/styles/token.css` 和 Tailwind bridge。两个入口的 CSS 显式声明 reset、Tailwind 与 Astryx 的层顺序。`src/styles/figtree.css` 把 Neutral 主题声明的 Figtree 指向扩展内的字体文件；构建脚本从安装包复制字体与 OFL 许可证到 `dist/fonts/`。本地预览服务另提供 `/__preview__/foundation.html` 验证 Astryx 控件，不将该页面打入扩展。
+Popup 与 Dashboard 的入口均由 `AstryxThemeRoot` 包裹。它通过 `src/ui/theme-mode.ts` 订阅现有的 Light / Dark 设置；`applyTheme()` 更新浏览器根节点和订阅者，因此两套界面使用同一个模式。Astryx 组件读取 `src/themes/neutral/neutralTheme.ts` 定义的 token；尚未迁移的界面继续读取 `src/styles/token.css` 和 Tailwind bridge。Dashboard 已迁移到 Astryx：AppShell / SideNav 管理导航和窄屏抽屉，Layout 管理页面区域，Table 与 CollapsibleGroup 呈现策略和日志，AlertDialog 管理清理确认与焦点恢复。Dashboard 的样式只使用 Neutral 主题和 Astryx Tailwind bridge；Popup 继续使用原有 token bridge。两个入口的 CSS 显式声明 reset、Tailwind 与 Astryx 的层顺序。`src/styles/figtree.css` 把 Neutral 主题声明的 Figtree 指向扩展内的字体文件；构建脚本从安装包复制字体与 OFL 许可证到 `dist/fonts/`。本地预览服务另提供 `/__preview__/foundation.html` 验证 Astryx 控件，不将该页面打入扩展。
 
 ## Review and provider layers
 
@@ -112,7 +112,7 @@ ConfigurationDocument
 
 运行时以 IndexedDB `xflow-decisions` 为本机判定数据源，包含 `userDecisions`、`exactCache`、`normalizedCache`、`templateCache` 和 `semanticCache`；其前方保留 300 条进程内热数据以减少重复 IndexedDB 查询。`semanticCache` 通过 `[policyVersion, language]` 复合索引预筛候选，不扫描其他 Policy 或语言分区。普通缓存 TTL 为 7 天，并按 LRU 控制总量；只将单条标注、用户模板/语义规则和作者规则镜像到版本化配置文档。启用 S3 同步后，长期知识按 ID 合并，同一对象执行确定性的 Last Write Wins；配置版本和知识修订使用独立时钟，并通过跨扩展上下文锁串行化合并写入；向量在目标设备由同步样本重建，Exact、Template、Semantic 运行缓存不会上传。Endpoint 权限只在用户保存 S3 设置时申请；启动和定时后台同步不会弹出权限请求，S3 不参与逐条内容的实时判定。
 
-Popup 与 Dashboard 的界面语言使用独立的本机键 `xflow.uiLocale`。它只控制静态标签、状态提示、日期与数字格式，不翻译或改写策略名称、提示词、Hover 模板、CSS、模型昵称和配置 JSON 等用户内容。该键不属于 `AppSettings`，因此不会增加 `configVersion`，也不会进入可编辑配置、S3 文档或 Content Script 的安全设置镜像。
+Popup 与 Dashboard 的界面语言使用独立的本机键 `xflow.uiLocale`。它只控制静态标签、状态提示、日期与数字格式，不翻译或改写策略名称、提示词、Hover 模板、CSS、模型昵称和配置 JSON 等用户内容。Dashboard 的 `DashboardLocale` 将现有语言状态传给 Astryx InternationalizationProvider，并提供实际使用的控件辅助标签翻译。Astryx 拥有字段的生成 ID 与 label 关联，业务校验用 `data-field` 定位输入框以恢复焦点。该键不属于 `AppSettings`，因此不会增加 `configVersion`，也不会进入可编辑配置、S3 文档或 Content Script 的安全设置镜像。
 
 语言切换只重新渲染界面文案，不触发配置或 S3 的重新读取，因此 Data 页面中的未保存草稿保持原样。共享校验器和后台服务可以保留内部错误语义，但 UI 必须通过已知错误映射或 locale-neutral code 选择当前语言的用户文案；不得直接显示后台返回的中文错误字符串。
 

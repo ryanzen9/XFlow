@@ -22,7 +22,7 @@
 ## Design
 
 - Please refer to [design guidelines](./design.md) for the visual and interaction principles.
-- Design tokens live in `src/styles/token.css`; `src/styles/theme.css` is the Tailwind bridge over them. Components must not hardcode colours, radii, durations or type sizes — see [design tokens](./docs/design-tokens.md). Preview both themes with `bun run preview:tokens`.
+- Dashboard uses Astryx components and the editable `src/themes/neutral/neutralTheme.ts`, with Astryx's Tailwind bridge. Popup tokens live in `src/styles/token.css`; `src/styles/theme.css` is their legacy bridge. Components must not hardcode colours, radii, durations or type sizes — see [design tokens](./docs/design-tokens.md). Preview legacy tokens with `bun run preview:tokens` and Dashboard with `bun run preview:dashboard`.
 
 ## Skills
 

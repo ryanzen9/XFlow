@@ -5,7 +5,7 @@
   "singleQuote": false,
   "sortPackageJson": true,
   "sortTailwindcss": {
-    "stylesheet": "./src/dashboard/styles/dashboard.css",
+    "stylesheet": "./src/popup/popup.css",
     "functions": ["cn"]
   },
   "ignorePatterns": [

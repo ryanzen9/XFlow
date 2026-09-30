@@ -45,8 +45,8 @@ test("log overview uses populated daily counts, including cleared record details
   );
   const markup = renderToStaticMarkup(<LogOverview days={days} />);
 
-  expect(markup).toMatch(/今日屏蔽<\/dt><dd[^>]*>2<\/dd>/);
-  expect(markup).toMatch(/30 天屏蔽<\/dt><dd[^>]*>3<\/dd>/);
-  expect(markup).toMatch(/日均屏蔽<\/dt><dd[^>]*>0\.1<\/dd>/);
-  expect(markup).toMatch(/单日峰值<\/dt><dd[^>]*>2<\/dd>/);
+  expect(markup).toMatch(/今日屏蔽<\/span><\/dt><dd><span[^>]*>2<\/span><\/dd>/);
+  expect(markup).toMatch(/30 天屏蔽<\/span><\/dt><dd><span[^>]*>3<\/span><\/dd>/);
+  expect(markup).toMatch(/日均屏蔽<\/span><\/dt><dd><span[^>]*>0\.1<\/span><\/dd>/);
+  expect(markup).toMatch(/单日峰值<\/span><\/dt><dd><span[^>]*>2<\/span><\/dd>/);
 });
