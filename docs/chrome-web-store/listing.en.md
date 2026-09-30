@@ -6,7 +6,7 @@ XFlow
 
 ## Short description
 
-Jev For your X: Filter ads and other unwanted content in X timelines and replies with custom policies.
+Use Jev to automate content filtering on X, creating a customized, comfortable, and refreshing browsing experience.
 
 ## Detailed description
 
