@@ -557,7 +557,7 @@
   }
 
   .astryx-segmented-control-item[data-size="md"] {
-    height: calc(var(--size-element-md) - 8px);
+    height: var(--size-element-md);
   }
 
   .astryx-segmented-control-item[data-size="lg"] {

@@ -93,6 +93,7 @@ export function StrategyPanel({
           tooltip={t("strategy.back", { surface: surfaceName })}
           icon={<Icon icon={ArrowLeft} size="sm" />}
           variant="ghost"
+          className="min-h-11 min-w-11 shrink-0"
           onClick={onBack}
         />
         <Status
@@ -100,7 +101,7 @@ export function StrategyPanel({
           label={`P${strategy.priority} · ${t(strategy.enabled ? "common.enabled" : "common.disabled")}`}
         />
       </HStack>
-      <Grid columns={{ minWidth: 360, max: 2 }} gap={8} align="start">
+      <Grid columns={{ minWidth: 420, max: 2 }} gap={8} align="start">
         <VStack
           as="form"
           id="strategy-settings"
@@ -132,6 +133,7 @@ export function StrategyPanel({
                 onChange={(value) => onPriorityChange(Number(value))}
               />
               <Switch
+                className="flex min-h-11 items-center [&_input]:min-h-11"
                 label={t("strategy.enableStrategy")}
                 value={strategy.enabled}
                 isDisabled={busy}
@@ -188,7 +190,11 @@ export function StrategyPanel({
             </FormLayout>
           </Panel>
           <Divider />
-          <Collapsible trigger={t("strategy.hoverTitle")} defaultIsOpen={Boolean(cssError || templateError)}>
+          <Collapsible
+            className="[&>.astryx-collapsible-trigger]:min-h-11"
+            trigger={t("strategy.hoverTitle")}
+            defaultIsOpen={Boolean(cssError || templateError)}
+          >
             <VStack gap={4}>
               <TextArea
                 data-field="hover-template"
@@ -207,7 +213,7 @@ export function StrategyPanel({
                 {HOVER_VARIABLES.map((variable) => (
                   <Button
                     key={variable}
-                    size="sm"
+                    className="min-h-10 shrink-0"
                     label={t("strategy.insert", { variable })}
                     isDisabled={busy}
                     onClick={() => {
@@ -254,7 +260,11 @@ export function StrategyPanel({
                 isDisabled={busy}
                 onClick={() => update({ hoverCss: DEFAULT_HOVER_CSS })}
               />
-              <Collapsible trigger={t("strategy.cssDetails")} defaultIsOpen={false}>
+              <Collapsible
+                className="[&>.astryx-collapsible-trigger]:min-h-11"
+                trigger={t("strategy.cssDetails")}
+                defaultIsOpen={false}
+              >
                 <VStack gap={3}>
                   <Text as="p" color="secondary">
                     {t("strategy.cssSelectors")}

@@ -320,8 +320,7 @@ export const neutralTheme = defineTheme({
       "variant:error": { backgroundColor: statusFill.error },
     },
 
-    // Give the Neutral segmented control a roomier inset without changing its
-    // outside height. The selected item stays flat against the tinted track.
+    // Keep a full control-height target for medium segments used in settings.
     "segmented-control": {
       base: {
         padding: "var(--spacing-1)",
@@ -332,7 +331,7 @@ export const neutralTheme = defineTheme({
         height: "calc(var(--size-element-sm) - 8px)",
       },
       "size:md": {
-        height: "calc(var(--size-element-md) - 8px)",
+        height: "var(--size-element-md)",
       },
       "size:lg": {
         height: "calc(var(--size-element-lg) - 8px)",

@@ -58,6 +58,7 @@ export function CollectionFilters({
             />
           </VStack>
           <Badge
+            role="status"
             label={resultCount}
             variant="neutral"
             aria-label={t("collection.results", { count: resultCount })}

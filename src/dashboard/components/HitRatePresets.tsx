@@ -1,4 +1,6 @@
 import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
+import { useMediaQuery } from "@astryxdesign/core/hooks";
+import { Tooltip } from "@astryxdesign/core/Tooltip";
 import { sensitivityForHitRate } from "../../shared";
 import { useI18n } from "../../ui/i18n";
 
@@ -20,21 +22,27 @@ export function HitRatePresets({
   onChange: (sensitivity: number) => void;
 }) {
   const { t } = useI18n();
+  const isWide = useMediaQuery("(min-width: 768px)");
   return (
     <SegmentedControl
       label={t("strategy.hitRateFor", { name })}
-      size="sm"
+      size="md"
+      layout="fill"
       value={presets.some((preset) => preset.hitRate === hitRate) ? String(hitRate) : ""}
       isDisabled={disabled}
       onChange={(value) => onChange(sensitivityForHitRate(Number(value)))}
     >
       {presets.map(({ id, hitRate: value }) => (
-        <SegmentedControlItem
+        <Tooltip
           key={id}
-          value={String(value)}
-          label={`${t(`strategy.hitRate.${id}`)} ${value}%`}
-          aria-label={t("strategy.hitRatePreset", { name, level: t(`strategy.hitRate.${id}`), value })}
-        />
+          content={t("strategy.hitRatePreset", { name, level: t(`strategy.hitRate.${id}`), value })}
+          isEnabled={!disabled}
+        >
+          <SegmentedControlItem
+            value={String(value)}
+            label={isWide ? `${t(`strategy.hitRate.${id}`)} ${value}%` : `${value}%`}
+          />
+        </Tooltip>
       ))}
     </SegmentedControl>
   );

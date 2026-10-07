@@ -416,7 +416,7 @@ export const neutralTheme = {
         "height": "calc(var(--size-element-sm) - 8px)"
       },
       "size:md": {
-        "height": "calc(var(--size-element-md) - 8px)"
+        "height": "var(--size-element-md)"
       },
       "size:lg": {
         "height": "calc(var(--size-element-lg) - 8px)"
