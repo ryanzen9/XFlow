@@ -8,6 +8,7 @@ import { Divider } from "@astryxdesign/core/Divider";
 import { EmptyState } from "@astryxdesign/core/EmptyState";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Link } from "@astryxdesign/core/Link";
+import { StackItem } from "@astryxdesign/core/Stack";
 
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
@@ -33,25 +34,27 @@ function HistoryItem({ item, busy, onIncorrect }: { item: ActivityEvent; busy: b
       value={item.id}
       defaultIsOpen={false}
       trigger={
-        <HStack gap={3} hAlign="between" wrap="wrap">
-          <VStack gap={1}>
-            <Text weight="semibold" maxLines={1}>
-              {item.preview || t("history.contentUnavailable")}
-            </Text>
-            <Text type="supporting">
-              {[
-                timeFormatter.format(item.filteredAt),
-                item.author || t("history.unknownAuthor"),
-                item.policyName || t("history.policyUnavailable"),
-              ].join(" · ")}
-            </Text>
-          </VStack>
+        <HStack gap={3} hAlign="between">
+          <StackItem size="fill">
+            <VStack gap={1}>
+              <Text weight="semibold" maxLines={1}>
+                {item.preview || t("history.contentUnavailable")}
+              </Text>
+              <Text type="supporting" maxLines={1}>
+                {[
+                  timeFormatter.format(item.filteredAt),
+                  item.author || t("history.unknownAuthor"),
+                  item.policyName || t("history.policyUnavailable"),
+                ].join(" · ")}
+              </Text>
+            </VStack>
+          </StackItem>
           <Status variant={item.status === "incorrect" ? "warning" : "neutral"} label={statusLabel[item.status]} />
         </HStack>
       }
     >
       <VStack gap={4} paddingBlock={3}>
-        <Text as="p" className="whitespace-pre-wrap">
+        <Text as="p" className="wrap-anywhere whitespace-pre-wrap">
           {item.preview || t("history.contentUnavailable")}
         </Text>
         <HStack gap={6} wrap="wrap" vAlign="start">

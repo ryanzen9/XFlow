@@ -36,7 +36,7 @@ export function ThemeToggle({ value, disabled, compact = false, dense = false, o
     <button
       type="button"
       className={cn(
-        "group inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-2.5 text-xs font-semibold text-muted transition hover:border-line-strong hover:bg-hover hover:text-ink disabled:cursor-not-allowed disabled:opacity-55",
+        "group border-line hover:border-line-strong hover:bg-hover hover:text-ink inline-flex min-h-11 items-center gap-2 rounded-full border bg-surface px-2.5 text-xs font-semibold text-muted transition disabled:cursor-not-allowed disabled:opacity-55",
         focusRing,
         iconOnly && "justify-center px-0",
         compact && "size-11",
@@ -50,7 +50,7 @@ export function ThemeToggle({ value, disabled, compact = false, dense = false, o
     >
       <span
         className={cn(
-          "relative grid size-6 place-items-center overflow-hidden rounded-full bg-selected text-sm text-ink",
+          "bg-selected text-ink relative grid size-6 place-items-center overflow-hidden rounded-full text-sm",
           dense && "size-5 text-xs",
         )}
         aria-hidden="true"

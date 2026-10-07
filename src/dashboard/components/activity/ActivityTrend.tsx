@@ -21,7 +21,7 @@ export function ActivityTrend({ days }: { days: ActivityDay[] }) {
     <VStack gap={3}>
       <SectionIntro title={t("activity.trend")} description={t("activity.last7Days")} level={3} />
       <svg
-        className="h-auto w-full overflow-visible"
+        className="h-60 w-full overflow-visible"
         viewBox="0 0 516 150"
         role="img"
         aria-label={t("activity.trendAria")}

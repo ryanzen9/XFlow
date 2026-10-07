@@ -250,9 +250,9 @@ export function App() {
           header={
             <LayoutHeader hasDivider>
               <HStack gap={4} hAlign="between" vAlign="start" wrap="wrap">
-                <VStack gap={1}>
+                <VStack gap={1} className="min-w-0 flex-1">
                   <Heading level={1}>{page.title}</Heading>
-                  <Text as="p" color="secondary">
+                  <Text as="p" color="secondary" maxLines={1}>
                     {page.description}
                   </Text>
                 </VStack>

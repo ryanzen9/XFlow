@@ -1,11 +1,17 @@
 # Design tokens
 
-Dashboard uses Astryx components and the editable `src/themes/neutral/neutralTheme.ts`, with generated CSS/JS.
+Dashboard and Popup use Astryx components and the editable `src/themes/neutral/neutralTheme.ts`, with generated CSS/JS.
 Its Tailwind utilities come from `@astryxdesign/core/tailwind-theme.css` (`bg-surface`, `text-primary`, etc.).
 The self-hosted Figtree font, spacing, shape and motion resolve through that theme in both modes.
-Dashboard does not import the legacy Tailwind bridge, so its controls keep Astryx typography and casing.
+Neither imports the legacy Tailwind bridge, so their controls keep Astryx typography and casing.
+Popup width and minimum height are defined by the theme's `--xflow-popup-width` and `--xflow-popup-height` tokens.
+Its monitoring rows use Item and Switch, including native labels, loading feedback and reduced-motion support.
+Dashboard confirmations use Astryx Toast; errors remain inline. Chart switching reserves the same plot region,
+tables keep a readable minimum name column, and API provider details stack below 1280px.
+Strategy preview edits update without replaying the full veil entrance; the explicit pointer replay action
+demonstrates that motion. The renderer continues to honor reduced motion.
 
-`src/styles/token.css` remains the source of truth for the Popup and legacy UI.
+`src/styles/token.css` remains the source of truth for legacy UI and the token reference preview.
 `src/styles/theme.css` maps those tokens onto legacy Tailwind utilities. The reference tables below describe
 that legacy system. Components consume utilities or tokens — never literal colours, radii, durations or font sizes.
 

@@ -1,48 +1,29 @@
 import { StatusDot, type StatusDotProps } from "@astryxdesign/core/StatusDot";
-import type { ReactNode } from "react";
-import { InternationalizationProvider } from "@astryxdesign/core/i18n";
+import { useEffect, type ReactNode } from "react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
+import { LayerProvider } from "@astryxdesign/core/Layer";
 import { Text } from "@astryxdesign/core/Text";
+import { useToast } from "@astryxdesign/core/Toast";
 import { VStack } from "@astryxdesign/core/VStack";
 import type { Theme } from "../../shared";
 import { useI18n } from "../../ui/i18n";
-
-const chineseControls = {
-  "@astryx.appShell.mobileNavigation": "菜单",
-  "@astryx.appShell.skipToContent": "跳至内容",
-  "@astryx.mobileNav.closeNavigation": "关闭菜单",
-  "@astryx.mobileNav.toggle.open": "打开菜单",
-  "@astryx.mobileNav.navigation": "导航",
-  "@astryx.dialog.close": "关闭",
-  "@astryx.field.optional": "选填",
-  "@astryx.field.required": "必填",
-  "@astryx.button.loading": "处理中",
-  "@astryx.spinner.loading": "加载中",
-  "@astryx.numberInput.decrementLabel": "减少 {label}",
-  "@astryx.numberInput.incrementLabel": "增加 {label}",
-  "@astryx.selector.placeholder": "请选择…",
-  "@astryx.selector.empty": "暂无选项",
-  "@astryx.link.newTab": "（在新标签页打开）",
-  "@astryx.table.label": "可横向滚动的策略表格",
-  "@astryx.keyboardHint.toNavigate": "切换标签",
-};
+import { AstryxLocale } from "../../ui/AstryxLocale";
 
 export function DashboardLocale({ children }: { children: ReactNode }) {
-  const { locale } = useI18n();
   return (
-    <InternationalizationProvider locale={locale} overrides={{ "zh-CN": chineseControls }}>
-      {children}
-    </InternationalizationProvider>
+    <AstryxLocale>
+      <LayerProvider>{children}</LayerProvider>
+    </AstryxLocale>
   );
 }
 
 /** Always pair the non-colour status label with the dot. */
 export function Status({ label, variant = "neutral" }: Pick<StatusDotProps, "label" | "variant">) {
   return (
-    <HStack gap={2}>
+    <HStack gap={2} className="shrink-0">
       <StatusDot label={label} variant={variant} aria-hidden="true" />
       <Text type="supporting">{label}</Text>
     </HStack>
@@ -61,7 +42,7 @@ export function SectionIntro({
   level?: 2 | 3;
 }) {
   return (
-    <VStack gap={1}>
+    <VStack gap={1} className="min-w-0">
       <Heading level={level} id={id}>
         {title}
       </Heading>
@@ -102,17 +83,20 @@ export function Actions({ children }: { children: ReactNode }) {
 }
 
 export function StatusMessage({ message, error = false }: { message: string; error?: boolean }) {
-  if (!message) return null;
-  return (
-    <Banner status={error ? "error" : "info"} title={message} role={error ? "alert" : "status"} container="section" />
-  );
+  const toast = useToast();
+  useEffect(() => {
+    if (!message || error) return;
+    return toast({ body: message, uniqueID: "xflow-feedback" });
+  }, [message, error, toast]);
+  if (!message || !error) return null;
+  return <Banner status="error" title={message} role="alert" container="section" />;
 }
 
 export function LabeledValue({ label, children }: { label: string; children: ReactNode }) {
   return (
     <VStack gap={1}>
       <Text type="supporting">{label}</Text>
-      <Text>{children}</Text>
+      <Text className="wrap-anywhere">{children}</Text>
     </VStack>
   );
 }

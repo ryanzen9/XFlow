@@ -32,6 +32,7 @@ export function StrategyPreview({
   const sample = t("preview.sample");
   const articleRef = useRef<HTMLElement>(null);
   const presentation = useRef<PostVeilPresentation | null>(null);
+  const animateReplay = useRef(false);
   const [probability, setProbability] = useState(0.86);
   const [text, setText] = useState(sample);
   const previousSample = useRef(sample);
@@ -61,8 +62,10 @@ export function StrategyPreview({
     const frame = requestAnimationFrame(() => {
       setRevealed(false);
       if (!hit) return;
+      const animate = animateReplay.current;
+      animateReplay.current = false;
       presentation.current = mountPostVeil(article, {
-        animate: true,
+        animate,
         probability,
         details,
         onReveal: () => {
@@ -81,7 +84,7 @@ export function StrategyPreview({
   }, [details, probability, cycle, theme, hit]);
 
   return (
-    <VStack as="aside" aria-label={t("preview.aria")} className="lg:sticky lg:top-6">
+    <VStack as="aside" aria-label={t("preview.aria")}>
       <Card padding={5}>
         <VStack gap={4}>
           <HStack gap={3} hAlign="between" wrap="wrap">
@@ -109,7 +112,10 @@ export function StrategyPreview({
               label={t("preview.replay")}
               size="sm"
               variant="ghost"
-              onClick={() => setCycle((value) => value + 1)}
+              onClick={(event) => {
+                animateReplay.current = event.detail > 0;
+                setCycle((value) => value + 1);
+              }}
               isDisabled={!hit}
             />
           </HStack>

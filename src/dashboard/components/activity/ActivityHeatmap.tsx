@@ -40,7 +40,7 @@ export function ActivityHeatmap({ days }: { days: ActivityDay[] }) {
                     size="sm"
                     variant="ghost"
                     data-level={intensity}
-                    className={colors[intensity]}
+                    className={`size-6 min-h-6 rounded-sm ${colors[intensity]}`}
                   />
                 );
               })}

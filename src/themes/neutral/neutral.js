@@ -190,6 +190,8 @@ export const neutralTheme = {
     "--shadow-inset-error": "inset 0px 0px 0px 2px #de47454D"
   },
   localTokens: {
+    "--xflow-popup-width": "320px",
+    "--xflow-popup-height": "480px",
     "--astryx-theme-neutral-color-status-fill-accent": "light-dark(#0074e2, #6d9cfe)",
     "--astryx-theme-neutral-color-status-fill-success": "light-dark(#198100, #64af4c)",
     "--astryx-theme-neutral-color-status-fill-warning": "#ffce2f",
@@ -202,6 +204,8 @@ export const neutralTheme = {
     "--astryx-theme-neutral-color-destructive-overlay-pressed": "light-dark(#ff7f771A, #ee736c1A)"
   },
   __localTokenOwners: {
+    "--xflow-popup-width": "neutral",
+    "--xflow-popup-height": "neutral",
     "--astryx-theme-neutral-color-status-fill-accent": "neutral",
     "--astryx-theme-neutral-color-status-fill-success": "neutral",
     "--astryx-theme-neutral-color-status-fill-warning": "neutral",

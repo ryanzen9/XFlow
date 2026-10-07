@@ -48,6 +48,7 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
           <IconButton
             size="sm"
             variant="ghost"
+            className="px-0"
             label={t("strategy.raise", { name: strategy.name })}
             tooltip={t("strategy.raiseTitle")}
             icon={<Icon icon="arrowUp" size="sm" />}
@@ -69,9 +70,9 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
     {
       key: "name",
       header: t("strategy.name"),
-      width: proportional(2),
+      width: proportional(2, { minWidth: 280 }),
       renderCell: (strategy) => (
-        <VStack gap={1}>
+        <VStack gap={1} hAlign="start">
           <Button
             size="sm"
             variant="ghost"
@@ -80,7 +81,7 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
           >
             {strategy.name}
           </Button>
-          <Text type="supporting" maxLines={2}>
+          <Text type="supporting" maxLines={2} className="wrap-anywhere">
             {strategy.prompt}
           </Text>
         </VStack>

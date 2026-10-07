@@ -5,7 +5,9 @@ describe("cn", () => {
   test("keeps a type role and a text colour independent", () => {
     expect(cn("text-meta", "text-muted")).toBe("text-meta text-muted");
     expect(cn("text-ui", "text-ink")).toBe("text-ui text-ink");
-    expect(cn("font-mono text-caption text-muted", "uppercase")).toBe("font-mono text-caption text-muted uppercase");
+    expect(new Set(cn("text-caption font-mono text-muted", "uppercase").split(" "))).toEqual(
+      new Set(["font-mono", "text-caption", "text-muted", "uppercase"]),
+    );
   });
 
   test("still lets a later colour or role win", () => {

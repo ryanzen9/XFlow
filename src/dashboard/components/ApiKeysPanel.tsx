@@ -4,7 +4,7 @@ import { Button } from "@astryxdesign/core/Button";
 import { Divider } from "@astryxdesign/core/Divider";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { HStack } from "@astryxdesign/core/HStack";
-import { Layout, LayoutContent, LayoutPanel } from "@astryxdesign/core/Layout";
+import { StackItem } from "@astryxdesign/core/Stack";
 import { Link } from "@astryxdesign/core/Link";
 import { RadioList, RadioListItem } from "@astryxdesign/core/RadioList";
 
@@ -121,7 +121,7 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
     }
   };
 
-  const isWide = useMediaQuery("(min-width: 1024px)");
+  const isWide = useMediaQuery("(min-width: 1280px)");
   const providers = (
     <RadioList
       label={t("api.chooseProvider")}
@@ -140,7 +140,9 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
             label={providerLabel(id, locale)}
             description={
               <VStack gap={1}>
-                <Text type="code">{PROVIDERS[id].modelId}</Text>
+                <Text type="code" className="wrap-anywhere">
+                  {PROVIDERS[id].modelId}
+                </Text>
                 <Status
                   variant={configured ? "neutral" : "warning"}
                   label={t(configured ? "api.configured" : "api.needsKey")}
@@ -239,20 +241,12 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
   );
   // A fixed provider region on desktop; a stacked radio group on narrower screens.
   return isWide ? (
-    <Layout
-      height="auto"
-      padding={0}
-      start={
-        <LayoutPanel width={280} hasDivider padding={4} label={t("api.chooseProvider")}>
-          {providers}
-        </LayoutPanel>
-      }
-      content={
-        <LayoutContent padding={6} isScrollable={false}>
-          {detail}
-        </LayoutContent>
-      }
-    />
+    <HStack gap={6} vAlign="start">
+      <VStack width={280} className="shrink-0">
+        {providers}
+      </VStack>
+      <StackItem size="fill">{detail}</StackItem>
+    </HStack>
   ) : (
     <VStack gap={6}>
       {providers}

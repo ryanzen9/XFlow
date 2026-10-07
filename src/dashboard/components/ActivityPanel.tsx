@@ -46,6 +46,7 @@ export function ActivityPanel() {
             id="activity-visualization"
             role="region"
             aria-label={t(view === "daily" ? "activity.heatmap" : "activity.trend")}
+            minHeight="calc(var(--spacing-10) * 8)"
           >
             {view === "daily" ? <ActivityHeatmap days={heatmap} /> : <ActivityTrend days={trend} />}
           </VStack>

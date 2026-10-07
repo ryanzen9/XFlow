@@ -82,6 +82,7 @@ export function useDashboard() {
     if (busyRef.current) return false;
     busyRef.current = true;
     setBusy(true);
+    setStatus({ message: "", error: false });
     try {
       await saveDashboardSettings(patch);
       const next = normalizeSettings({ ...savedRef.current, ...patch });

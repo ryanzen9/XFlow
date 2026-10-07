@@ -235,7 +235,7 @@ export function StrategyPanel({
               isDisabled={busy}
               onClick={() => update({ hoverCss: DEFAULT_HOVER_CSS })}
             />
-            <Collapsible trigger={t("strategy.cssDetails")}>
+            <Collapsible trigger={t("strategy.cssDetails")} defaultIsOpen={false}>
               <VStack gap={3}>
                 <Text as="p" color="secondary">
                   {t("strategy.cssSelectors")}

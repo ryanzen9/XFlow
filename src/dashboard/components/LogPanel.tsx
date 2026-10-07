@@ -1,5 +1,5 @@
 import { Divider } from "@astryxdesign/core/Divider";
-import { HStack } from "@astryxdesign/core/HStack";
+import { Grid } from "@astryxdesign/core/Grid";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { SectionIntro, StatusMessage } from "./DashboardUI";
@@ -30,9 +30,9 @@ export function LogOverview({ days }: { days: ActivityDay[] }) {
         title={t("history.overview")}
         description={t("history.overviewDescription")}
       />
-      <HStack as="dl" gap={8} wrap="wrap" hAlign="between">
+      <Grid columns={{ minWidth: 150, max: 4 }} gap={6}>
         {stats.map((stat) => (
-          <VStack key={stat.label} gap={1}>
+          <VStack as="dl" key={stat.label} gap={1}>
             <dt>
               <Text type="supporting">{stat.label}</Text>
             </dt>
@@ -43,7 +43,7 @@ export function LogOverview({ days }: { days: ActivityDay[] }) {
             </dd>
           </VStack>
         ))}
-      </HStack>
+      </Grid>
       <DailyBlockedChart days={days} />
     </VStack>
   );

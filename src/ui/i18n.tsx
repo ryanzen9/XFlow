@@ -813,7 +813,7 @@ export function LanguageToggle({ disabled, compact = false, dense = false }: Lan
     <button
       type="button"
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-line bg-surface px-2.5 font-mono text-xs font-semibold text-muted transition hover:border-line-strong hover:bg-hover hover:text-ink disabled:cursor-not-allowed disabled:opacity-55",
+        "border-line hover:border-line-strong hover:bg-hover hover:text-ink inline-flex min-h-11 items-center justify-center gap-2 rounded-full border bg-surface px-2.5 font-mono text-xs font-semibold text-muted transition disabled:cursor-not-allowed disabled:opacity-55",
         focusRing,
         iconOnly && "px-0",
         compact && "size-11",

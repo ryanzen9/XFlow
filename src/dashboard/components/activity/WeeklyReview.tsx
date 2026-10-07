@@ -1,5 +1,5 @@
 import { Card } from "@astryxdesign/core/Card";
-import { HStack } from "@astryxdesign/core/HStack";
+import { Grid } from "@astryxdesign/core/Grid";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import type { WeeklyActivity } from "../../../shared";
@@ -14,10 +14,10 @@ export function WeeklyReview({ weekly }: { weekly: WeeklyActivity }) {
   const range = `${dayFormatter.format(weekly.start)} – ${dayFormatter.format(weekly.end)}`;
   return (
     <Card padding={5} aria-labelledby="weekly-title">
-      <HStack gap={6} hAlign="between" vAlign="start" wrap="wrap">
+      <Grid columns={{ minWidth: 240, max: 2 }} gap={6} align="start">
         <VStack gap={3}>
           <SectionIntro id="weekly-title" title={t("activity.weekly")} description={range} />
-          <Text type="display-1" hasTabularNumbers>
+          <Text type="display-1" hasTabularNumbers maxLines={1}>
             {number.format(weekly.total)}
           </Text>
           <Text type="supporting">{t("activity.filteredWeek")}</Text>
@@ -34,7 +34,7 @@ export function WeeklyReview({ weekly }: { weekly: WeeklyActivity }) {
               : `${weekly.comparisonPercent >= 0 ? "+" : ""}${weekly.comparisonPercent}%`}
           </LabeledValue>
         </VStack>
-      </HStack>
+      </Grid>
     </Card>
   );
 }

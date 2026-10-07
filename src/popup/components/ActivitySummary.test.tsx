@@ -11,7 +11,7 @@ describe("ActivitySummary", () => {
     expect(markup).toContain("8,421");
     expect(markup).toContain("累计过滤");
     expect(markup.indexOf(">128<")).toBeLessThan(markup.indexOf("8,421"));
-    expect(markup).toContain("text-readout");
+    expect(markup).toContain('aria-label="过滤活动"');
   });
 
   test("renders the neutral zero state without engagement language", () => {

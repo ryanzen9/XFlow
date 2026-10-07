@@ -26,6 +26,8 @@ const neutralSyntax = defineSyntaxTheme({
 });
 
 const neutralLocalTokens: Record<string, TokenValue> = {
+  "--xflow-popup-width": "320px",
+  "--xflow-popup-height": "480px",
   "--astryx-theme-neutral-color-status-fill-accent": ["#0074e2", "#6d9cfe"],
   "--astryx-theme-neutral-color-status-fill-success": ["#198100", "#64af4c"],
   "--astryx-theme-neutral-color-status-fill-warning": "#ffce2f",
