@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { addLocalDays, localDayKey, startOfLocalDay, type ActivityEvent, type ActivityStatus } from "../../../shared";
+import {
+  addLocalDays,
+  filterHistory,
+  localDayKey,
+  startOfLocalDay,
+  type ActivityEvent,
+  type ActivityStatus,
+  type HistoryStatusFilter,
+} from "../../../shared";
 import { useI18n } from "../../../ui/i18n";
 import { Badge } from "@astryxdesign/core/Badge";
 import { Button } from "@astryxdesign/core/Button";
@@ -15,6 +23,7 @@ import { StackItem } from "@astryxdesign/core/Stack";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { LabeledValue, Panel, SectionIntro, Status } from "../DashboardUI";
+import { CollectionFilters } from "../CollectionFilters";
 
 export const HISTORY_PAGE_SIZE = 10;
 
@@ -102,14 +111,17 @@ export function FilterHistory({
   const { locale, t } = useI18n();
   const number = new Intl.NumberFormat(locale);
   const [requestedPage, setRequestedPage] = useState(1);
-  const totalPages = Math.max(1, Math.ceil(history.length / HISTORY_PAGE_SIZE));
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<HistoryStatusFilter>("all");
+  const filtered = filterHistory(history, query, status);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / HISTORY_PAGE_SIZE));
   const page = Math.min(requestedPage, totalPages);
   const pageStart = (page - 1) * HISTORY_PAGE_SIZE;
-  const visibleHistory = history.slice(pageStart, pageStart + HISTORY_PAGE_SIZE);
+  const visibleHistory = filtered.slice(pageStart, pageStart + HISTORY_PAGE_SIZE);
   const today = localDayKey(now);
   const yesterday = localDayKey(addLocalDays(startOfLocalDay(now), -1));
   const dayCounts = new Map<string, number>();
-  for (const item of history) dayCounts.set(item.day, (dayCounts.get(item.day) ?? 0) + 1);
+  for (const item of filtered) dayCounts.set(item.day, (dayCounts.get(item.day) ?? 0) + 1);
   const groups = new Map<string, ActivityEvent[]>();
   for (const item of visibleHistory) groups.set(item.day, [...(groups.get(item.day) ?? []), item]);
   const groupLabel = (day: string) =>
@@ -121,8 +133,43 @@ export function FilterHistory({
 
   return (
     <Panel id="history-title" title={t("history.title")}>
+      <CollectionFilters
+        id="history"
+        searchLabel={t("collection.searchHistory")}
+        query={query}
+        onQueryChange={(value) => {
+          setQuery(value);
+          setRequestedPage(1);
+        }}
+        status={status}
+        onStatusChange={(value) => {
+          setStatus(value as HistoryStatusFilter);
+          setRequestedPage(1);
+        }}
+        count={filtered.length}
+        options={[
+          { value: "all", label: t("collection.all") },
+          { value: "filtered", label: t("history.filtered") },
+          { value: "revealed", label: t("history.revealed") },
+          { value: "incorrect", label: t("history.incorrect") },
+        ]}
+      />
       {history.length === 0 ? (
         <EmptyState title={t("history.empty")} />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          title={t("collection.noResults")}
+          actions={
+            <Button
+              label={t("collection.clearFilters")}
+              onClick={() => {
+                setQuery("");
+                setStatus("all");
+                setRequestedPage(1);
+              }}
+            />
+          }
+        />
       ) : (
         <>
           <VStack gap={5}>
@@ -155,8 +202,8 @@ export function FilterHistory({
             <Text type="supporting" aria-live="polite">
               {t("history.range", {
                 start: number.format(pageStart + 1),
-                end: number.format(Math.min(pageStart + HISTORY_PAGE_SIZE, history.length)),
-                total: number.format(history.length),
+                end: number.format(Math.min(pageStart + HISTORY_PAGE_SIZE, filtered.length)),
+                total: number.format(filtered.length),
               })}
             </Text>
             {totalPages > 1 && (

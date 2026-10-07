@@ -20,7 +20,7 @@ import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from "@astryxdes
 import { Spinner } from "@astryxdesign/core/Spinner";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
-import { Database, KeyRound, ListFilter, ScrollText, Settings } from "lucide-react";
+import { ChartNoAxesCombined, Database, KeyRound, ListFilter, ScrollText, Settings } from "lucide-react";
 import { localizeError, providerLabel, useI18n } from "../ui/i18n";
 import { privacyPolicyUrl } from "../ui/privacy";
 import { applyTheme } from "../ui/theme";
@@ -30,21 +30,23 @@ import { DataPanel } from "./components/DataPanel";
 import { GeneralPanel } from "./components/GeneralPanel";
 import { LogPanel } from "./components/LogPanel";
 import { StrategyList } from "./components/StrategyList";
-import { StrategyPanel } from "./components/StrategyPanel";
+import { StrategyPanel, StrategySaveButton } from "./components/StrategyPanel";
+import { ActivityPanel } from "./components/ActivityPanel";
 import { StrategyTabs } from "./components/StrategyTabs";
 import { useDashboard } from "./hooks/use-dashboard";
 
-type MenuPage = "general" | "api-keys" | "strategies" | "data" | "log";
+type MenuPage = "overview" | "general" | "api-keys" | "strategies" | "data" | "log";
 
 export function App() {
   const { locale, t } = useI18n();
-  const [menu, setMenu] = useState<MenuPage>("general");
+  const [menu, setMenu] = useState<MenuPage>("overview");
   const [strategySurface, setStrategySurface] = useState<FilterSurface>("timeline");
   const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
   const form = useDashboard();
   const { draft, saved } = form;
   const theme = draft?.theme;
   const menuItems = [
+    { id: "overview", label: t("nav.overview"), icon: ChartNoAxesCombined },
     { id: "general", label: t("nav.general"), icon: Settings },
     { id: "api-keys", label: t("nav.apiKeys"), icon: KeyRound },
     { id: "strategies", label: t("nav.strategies"), icon: ListFilter },
@@ -158,6 +160,7 @@ export function App() {
   };
 
   const page = {
+    overview: { title: t("page.overview.title"), description: "" },
     general: {
       title: t("page.general.title"),
       description: t("page.general.description"),
@@ -189,7 +192,7 @@ export function App() {
   return (
     <DashboardLocale>
       <StatusToast {...form.status} />
-      {/* The sidebar becomes a modal drawer below md; forms cap at 960, data at 1180. */}
+      {/* SideNav becomes a drawer below md. Settings cap at 840; analytics and records at 1180. */}
       <AppShell
         variant="section"
         height="fill"
@@ -248,7 +251,7 @@ export function App() {
       >
         <Layout
           padding={6}
-          contentWidth={menu === "log" || menu === "strategies" || menu === "data" ? 1180 : 960}
+          contentWidth={menu === "general" ? 840 : menu === "api-keys" ? 960 : 1180}
           header={
             <LayoutHeader hasDivider>
               <HStack gap={4} hAlign="between" vAlign="start" wrap="wrap">
@@ -260,10 +263,39 @@ export function App() {
                     </Text>
                   )}
                 </VStack>
-                <Status
-                  variant={form.dirty ? "warning" : "neutral"}
-                  label={form.busy ? t("status.saving") : form.dirty ? t("status.unsaved") : t("status.synced")}
-                />
+                <HStack gap={3} wrap="wrap">
+                  {(form.busy || form.dirty) && (
+                    <Status
+                      variant={form.dirty ? "warning" : "neutral"}
+                      label={form.busy ? t("status.saving") : t("status.unsaved")}
+                    />
+                  )}
+                  {menu === "general" && (
+                    <Button
+                      type="submit"
+                      form="general-settings"
+                      variant="primary"
+                      label={t("general.save")}
+                      isLoading={form.busy}
+                      isDisabled={!draft || draft.modelNickname === saved?.modelNickname}
+                    />
+                  )}
+                  {menu === "strategies" &&
+                    draft &&
+                    (selectedStrategy ? (
+                      <StrategySaveButton strategy={selectedStrategy} busy={form.busy} />
+                    ) : (
+                      <Button
+                        variant="primary"
+                        label={t("strategy.saveSurface", {
+                          surface: t(strategySurface === "timeline" ? "strategy.timeline" : "strategy.comments"),
+                        })}
+                        isLoading={form.busy}
+                        isDisabled={!libraryDirty}
+                        onClick={saveLibrary}
+                      />
+                    ))}
+                </HStack>
               </HStack>
             </LayoutHeader>
           }
@@ -280,6 +312,8 @@ export function App() {
                   ) : (
                     <Spinner label={t("status.loadingSettings")} />
                   )
+                ) : menu === "overview" ? (
+                  <ActivityPanel onOpenLog={() => setMenuPage("log")} />
                 ) : menu === "general" ? (
                   <GeneralPanel
                     settings={draft}
@@ -337,11 +371,9 @@ export function App() {
                           surface={strategySurface}
                           strategies={surfaceStrategies}
                           busy={form.busy}
-                          dirty={libraryDirty}
                           onChange={updateSurfaceStrategies}
                           onOpen={setSelectedStrategyId}
                           onCreate={createNewStrategy}
-                          onSave={saveLibrary}
                         />
                       )}
                     </VStack>

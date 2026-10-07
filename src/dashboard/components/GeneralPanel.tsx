@@ -1,12 +1,10 @@
-import { Button } from "@astryxdesign/core/Button";
 import { Divider } from "@astryxdesign/core/Divider";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { TextInput } from "@astryxdesign/core/TextInput";
 import { VStack } from "@astryxdesign/core/VStack";
 import { type AppSettings } from "../../shared";
 import { useI18n } from "../../ui/i18n";
-import { ActivityPanel } from "./ActivityPanel";
-import { Actions, Panel } from "./DashboardUI";
+import { SettingsGroup } from "./SettingsGroup";
 import { Toggle } from "./Toggle";
 
 interface Props {
@@ -21,9 +19,7 @@ export function GeneralPanel({ settings, busy, onChange, onToggle, onSave }: Pro
   const { t } = useI18n();
   return (
     <VStack gap={8}>
-      <ActivityPanel />
-      <Divider />
-      <Panel title={t("general.scope")}>
+      <SettingsGroup title={t("general.scope")} id="filter-scope-title">
         <Toggle
           label={t("general.homeTimeline")}
           checked={settings.enabled}
@@ -36,17 +32,18 @@ export function GeneralPanel({ settings, busy, onChange, onToggle, onSave }: Pro
           disabled={busy}
           onChange={(checked) => onToggle("commentsEnabled", checked)}
         />
-      </Panel>
+      </SettingsGroup>
       <Divider />
       <VStack
         as="form"
+        id="general-settings"
         gap={4}
         onSubmit={(event) => {
           event.preventDefault();
           onSave();
         }}
       >
-        <Panel title={t("general.modelDisplay")}>
+        <SettingsGroup title={t("general.modelDisplay")} id="model-display-title">
           <FormLayout>
             <TextInput
               data-field="model-nickname"
@@ -58,10 +55,7 @@ export function GeneralPanel({ settings, busy, onChange, onToggle, onSave }: Pro
               onChange={(value) => onChange({ modelNickname: value.slice(0, 40) })}
             />
           </FormLayout>
-          <Actions>
-            <Button type="submit" variant="primary" label={t("general.save")} isLoading={busy} />
-          </Actions>
-        </Panel>
+        </SettingsGroup>
       </VStack>
     </VStack>
   );

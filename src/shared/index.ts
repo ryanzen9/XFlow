@@ -10,3 +10,4 @@ export * from "./persistence";
 export * from "./s3-sync";
 export * from "./providers";
 export * from "./activity";
+export * from "./collection-filters";

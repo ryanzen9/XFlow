@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { previewBrowser } from "./preview-browser";
 
 // Opt-in browser regression. Requires agent-browser and the isolated mock preview.
 // DASHBOARD_FEEDBACK_PREVIEW_URL=http://127.0.0.1:43997/dashboard.html bun test scripts/qa/dashboard-feedback.test.ts
@@ -10,22 +11,7 @@ test.skipIf(!previewUrl)(
     const url = new URL(previewUrl!);
     expect(["127.0.0.1", "localhost"]).toContain(url.hostname);
     expect(url.pathname).toBe("/dashboard.html");
-    const session = `xflow-feedback-${process.pid}`;
-    const browser = async (...args: string[]) => {
-      const proc = Bun.spawn(["agent-browser", "--session", session, "--json", ...args], {
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const [stdout, stderr, exitCode] = await Promise.all([
-        new Response(proc.stdout).text(),
-        new Response(proc.stderr).text(),
-        proc.exited,
-      ]);
-      if (exitCode !== 0) throw new Error(stderr || stdout);
-      const output = JSON.parse(stdout);
-      if (!output.success) throw new Error(JSON.stringify(output.error));
-      return output.data?.result;
-    };
+    const browser = previewBrowser("feedback");
     const click = (name: string) => browser("find", "role", "button", "click", "--name", name, "--exact");
     const seen = async () => {
       await browser("eval", "new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))");
@@ -65,7 +51,7 @@ test.skipIf(!previewUrl)(
       expect(await seen()).toHaveLength(1);
       await dismiss();
 
-      for (const menu of ["API Keys", "策略", "数据", "日志", "通用", "策略"]) {
+      for (const menu of ["概览", "API Keys", "策略", "数据", "日志", "通用", "策略"]) {
         await click(menu);
         expect(await seen()).toHaveLength(1);
       }

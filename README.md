@@ -212,13 +212,15 @@ bun run preview:tokens
 
 Neutral 主题使用扩展内置的 Figtree 可变字体（Latin / Latin Extended），构建时从 `@fontsource-variable/figtree` 复制到 `dist/fonts/`，无需远程字体请求。运行 `bun run preview:dashboard` 后，打开 `/__preview__/foundation.html` 可检查真实 Astryx Button、TextInput 的明暗模式与键盘焦点；该验证页只由本地预览服务提供，不包含在扩展包中。
 
-安装 `agent-browser` 并启动 Dashboard 预览后，可运行通知生命周期回归测试（将 URL 端口替换为预览服务实际端口）：
+Dashboard 默认打开独立的概览页。通用设置、API Keys、策略和数据使用分组面板；策略与日志支持搜索和状态筛选，主要保存操作固定在页头。
+
+安装 `agent-browser` 并启动 Dashboard 预览后，可运行页面与通知回归测试（将 URL 端口替换为预览服务实际端口）：
 
 ```bash
-DASHBOARD_FEEDBACK_PREVIEW_URL=http://127.0.0.1:43997/dashboard.html bun test scripts/qa/dashboard-feedback.test.ts
+DASHBOARD_FEEDBACK_PREVIEW_URL=http://127.0.0.1:43997/dashboard.html bun test scripts/qa/dashboard-pages.test.ts scripts/qa/dashboard-feedback.test.ts
 ```
 
-测试使用独立浏览器会话和模拟存储，检查主题切换、菜单及策略详情导航、语言切换和保存失败后的恢复。未指定 URL 时，普通 `bun test` 跳过这项浏览器测试。
+测试使用独立浏览器会话和模拟存储，检查概览范围联动、筛选后编辑与优先级保存、页头操作、日志分页、320/375/1024/1440px 布局、明暗主题、中英文及通知生命周期。未指定 URL 时，普通 `bun test` 跳过这两项浏览器测试。模板选择与布局约定见 [`docs/dashboard-layouts.md`](docs/dashboard-layouts.md)。
 
 缓存基准的样本与探针集中在 `scripts/cache-benchmark-dataset.ts`，覆盖 Exact、Normalized、Template、Semantic 与 Miss 五类缓存路径，以及社区通知、交通、旅行、烹饪、户外、园艺、科学和中西文内容。合成工作负载保持固定的 80/20 命中与未命中比例；本地查询耗时来自 Bun 高精度计时器，Jev 调用减少率来自实际缓存命中结果。端到端耗时对比属于单条顺序请求模型，默认假设每次 Jev 调用为 600ms，可通过 `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800` 调整；使用 `--json` 可输出机器可读结果。该脚本不会读取真实凭据或发起网络请求。
 

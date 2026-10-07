@@ -10,6 +10,7 @@ export function useActivity() {
   const { t } = useI18n();
   const [data, setData] = useState<ActivityData>(() => normalizeActivityData(null));
   const [loading, setLoading] = useState(true);
+  const [readError, setReadError] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [now, setNow] = useState(() => Date.now());
@@ -27,17 +28,20 @@ export function useActivity() {
         ]);
         if (!live) return;
         setData(normalizeActivityData(stored[ACTIVITY_DATA_KEY]));
+        setReadError("");
         setBytesInUse(usage);
         setLoading(false);
       } catch {
         if (!live) return;
-        setError(t("activity.readError"));
+        setReadError(t("activity.readError"));
         setLoading(false);
       }
     })();
     const onChange = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
       if (areaName === "local" && changes[ACTIVITY_DATA_KEY]) {
         setData(normalizeActivityData(changes[ACTIVITY_DATA_KEY].newValue));
+        setReadError("");
+        setLoading(false);
         void chrome.storage.local
           .getBytesInUse(ACTIVITY_DATA_KEY)
           .then(setBytesInUse)
@@ -94,5 +98,17 @@ export function useActivity() {
     }
   };
 
-  return { data, loading, busy, error, now, bytesInUse, storageLimit, markIncorrect, clear, clearHistory };
+  return {
+    data,
+    loading,
+    loadFailed: Boolean(readError),
+    busy,
+    error: readError || error,
+    now,
+    bytesInUse,
+    storageLimit,
+    markIncorrect,
+    clear,
+    clearHistory,
+  };
 }

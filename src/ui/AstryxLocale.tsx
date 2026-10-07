@@ -18,8 +18,9 @@ const chineseControls = {
   "@astryx.numberInput.incrementLabel": "增加 {label}",
   "@astryx.selector.placeholder": "请选择…",
   "@astryx.selector.empty": "暂无选项",
+  "@astryx.textInput.clearLabel": "清除{label}",
   "@astryx.link.newTab": "（在新标签页打开）",
-  "@astryx.table.label": "可横向滚动的策略表格",
+  "@astryx.table.label": "可横向滚动的表格",
   "@astryx.keyboardHint.toNavigate": "切换标签",
 };
 

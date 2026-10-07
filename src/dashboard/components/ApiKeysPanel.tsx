@@ -155,13 +155,20 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
   );
   const detail = (
     <VStack gap={5}>
-      <SectionIntro id={`provider-detail-title-${activeProviderId}`} title={providerLabel(activeProviderId, locale)} />
-      <Status
-        variant={activeSummary?.configured ? "neutral" : "warning"}
-        label={
-          activeSummary?.configured ? t("api.configuredHint", { hint: activeSummary.keyHint }) : t("api.notConfigured")
-        }
-      />
+      <HStack hAlign="between" gap={3} wrap="wrap">
+        <SectionIntro
+          id={`provider-detail-title-${activeProviderId}`}
+          title={providerLabel(activeProviderId, locale)}
+        />
+        <Status
+          variant={activeSummary?.configured ? "neutral" : "warning"}
+          label={
+            activeSummary?.configured
+              ? t("api.configuredHint", { hint: activeSummary.keyHint })
+              : t("api.notConfigured")
+          }
+        />
+      </HStack>
       <Divider />
       <LabeledValue label={t("api.model")}>{activeProvider.modelId}</LabeledValue>
       <Text as="p" color="secondary">
@@ -179,55 +186,57 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
         }}
       >
         <FormLayout>
-          <TextInput
-            data-field={`provider-key-${activeProviderId}`}
-            label="API Key"
-            type={revealed[activeProviderId] ? "text" : "password"}
-            autoComplete="off"
-            labelTooltip={t("api.localOnly")}
-            placeholder={
-              activeSummary?.configured ? t("api.replacePlaceholder", { hint: activeSummary.keyHint }) : placeholder
-            }
-            value={drafts[activeProviderId]}
-            isDisabled={credentialsBusy}
-            onChange={(value) => setDrafts((current) => ({ ...current, [activeProviderId]: value.slice(0, 512) }))}
-          />
+          <HStack gap={2} vAlign="end">
+            <StackItem size="fill">
+              <TextInput
+                data-field={`provider-key-${activeProviderId}`}
+                label="API Key"
+                type={revealed[activeProviderId] ? "text" : "password"}
+                autoComplete="off"
+                labelTooltip={t("api.localOnly")}
+                placeholder={
+                  activeSummary?.configured ? t("api.replacePlaceholder", { hint: activeSummary.keyHint }) : placeholder
+                }
+                value={drafts[activeProviderId]}
+                isDisabled={credentialsBusy}
+                onChange={(value) => setDrafts((current) => ({ ...current, [activeProviderId]: value.slice(0, 512) }))}
+              />
+            </StackItem>
+            <IconButton
+              label={t("api.toggleKey", {
+                action: t(revealed[activeProviderId] ? "common.hide" : "common.show"),
+                provider: providerLabel(activeProviderId, locale),
+              })}
+              tooltip={t(revealed[activeProviderId] ? "common.hide" : "common.show")}
+              icon={<Icon icon={revealed[activeProviderId] ? EyeOff : Eye} size="sm" />}
+              aria-pressed={revealed[activeProviderId]}
+              variant="ghost"
+              isDisabled={credentialsBusy}
+              onClick={() => setRevealed((current) => ({ ...current, [activeProviderId]: !current[activeProviderId] }))}
+            />
+          </HStack>
         </FormLayout>
-        <HStack gap={3} wrap="wrap" hAlign="between">
+        <HStack hAlign="between" wrap="wrap" gap={3}>
           <Link href={activeProvider.keyUrl} isExternalLink>
             {t("api.getKey")}
           </Link>
-          <IconButton
-            label={t("api.toggleKey", {
-              action: t(revealed[activeProviderId] ? "common.hide" : "common.show"),
-              provider: providerLabel(activeProviderId, locale),
-            })}
-            tooltip={t(revealed[activeProviderId] ? "common.hide" : "common.show")}
-            icon={<Icon icon={revealed[activeProviderId] ? EyeOff : Eye} size="sm" />}
-            aria-pressed={revealed[activeProviderId]}
-            size="sm"
-            variant="ghost"
-            isDisabled={credentialsBusy}
-            onClick={() => setRevealed((current) => ({ ...current, [activeProviderId]: !current[activeProviderId] }))}
-          />
-        </HStack>
-        <Divider />
-        <Actions>
-          {activeSummary?.configured && (
+          <Actions>
+            {activeSummary?.configured && (
+              <Button
+                label={t("api.clearLocal")}
+                isDisabled={credentialsBusy}
+                onClick={() => void clearKey(activeProviderId)}
+              />
+            )}
             <Button
-              label={t("api.clearLocal")}
-              isDisabled={credentialsBusy}
-              onClick={() => void clearKey(activeProviderId)}
+              type="submit"
+              variant="primary"
+              label={t(activeSummary?.configured ? "api.replace" : "api.save")}
+              isLoading={isPending}
+              isDisabled={credentialsBusy || !drafts[activeProviderId].trim()}
             />
-          )}
-          <Button
-            type="submit"
-            variant="primary"
-            label={t(activeSummary?.configured ? "api.replace" : "api.save")}
-            isLoading={isPending}
-            isDisabled={credentialsBusy || !drafts[activeProviderId].trim()}
-          />
-        </Actions>
+          </Actions>
+        </HStack>
       </VStack>
     </VStack>
   );

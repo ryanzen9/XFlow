@@ -1,6 +1,4 @@
 import { Divider } from "@astryxdesign/core/Divider";
-import { Grid } from "@astryxdesign/core/Grid";
-import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { SectionIntro, StatusMessage } from "./DashboardUI";
 import { ACTIVITY_HISTORY_DAYS, activityDays, activityHistory, type ActivityDay } from "../../shared";
@@ -9,6 +7,7 @@ import { useActivity } from "../hooks/use-activity";
 import { DailyBlockedChart } from "./activity/DailyBlockedChart";
 import { FilterHistory } from "./activity/FilterHistory";
 import { LogStorageSummary } from "./activity/LogStorageSummary";
+import { MetricGrid } from "./MetricGrid";
 
 export function LogOverview({ days }: { days: ActivityDay[] }) {
   const { locale, t } = useI18n();
@@ -26,26 +25,13 @@ export function LogOverview({ days }: { days: ActivityDay[] }) {
   return (
     <VStack gap={5}>
       <SectionIntro id="log-overview-title" title={t("history.overview")} />
-      <Grid columns={{ minWidth: 150, max: 4 }} gap={6}>
-        {stats.map((stat) => (
-          <VStack as="dl" key={stat.label} gap={1}>
-            <dt>
-              <Text type="supporting">{stat.label}</Text>
-            </dt>
-            <dd>
-              <Text type="display-1" hasTabularNumbers>
-                {stat.value}
-              </Text>
-            </dd>
-          </VStack>
-        ))}
-      </Grid>
+      <MetricGrid stats={stats} />
       <DailyBlockedChart days={days} />
     </VStack>
   );
 }
 
-/** The Log page owns the 30-day filtering record; insights stay on General. */
+/** The Log page owns the 30-day filtering record; insights stay on Overview. */
 export function LogPanel() {
   const activity = useActivity();
   const history = activityHistory(activity.data, activity.now);

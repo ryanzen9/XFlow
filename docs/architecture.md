@@ -69,6 +69,8 @@ Popup 与 Dashboard 的入口均由 `AstryxThemeRoot` 包裹。它通过 `src/ui
 
 Dashboard 的全局 `StatusToast` 位于按页面重建的 `LayoutContent` 之外，只在反馈内容变化时触发。页面切换仍会重置内容区滚动；`StatusError` 在内容区保留可处理的错误，导航不会重放之前的成功通知。
 
+Dashboard 默认打开独立概览页：Activity 指标、热力图/趋势、周报和近期记录共享内容范围筛选。通用设置不再包含分析图表。通用设置与策略表单通过原生 `form` 关联页头提交按钮；筛选只改变展示结果，策略编辑、排序和保存始终使用完整列表。`src/shared/collection-filters.ts` 保存不依赖浏览器的搜索与状态筛选逻辑，页面内维护临时查询状态，筛选条件不写入配置或 S3。布局与模板约定见 [Dashboard layouts](dashboard-layouts.md)。
+
 ## Review and provider layers
 
 `Review Service` 接收当前页面类型与标准化帖子，为该页面选出已启用策略并按优先级构造判断。`Provider Registry` 只加载用户明确选中的渠道，不进行隐式回退：

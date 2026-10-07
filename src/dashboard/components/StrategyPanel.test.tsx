@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { defaultStrategy } from "../../shared";
-import { StrategyPanel } from "./StrategyPanel";
+import { StrategyPanel, StrategySaveButton } from "./StrategyPanel";
 
 function render(hoverTemplate?: string, hoverCss?: string) {
   const strategy = {
@@ -10,18 +10,21 @@ function render(hoverTemplate?: string, hoverCss?: string) {
     ...(hoverCss === undefined ? {} : { hoverCss }),
   };
   return renderToStaticMarkup(
-    <StrategyPanel
-      strategy={strategy}
-      strategyCount={2}
-      surface="timeline"
-      modelNickname="Jev"
-      modelId="model"
-      busy={false}
-      onBack={() => {}}
-      onChange={() => {}}
-      onPriorityChange={() => {}}
-      onSave={() => {}}
-    />,
+    <>
+      <StrategySaveButton strategy={strategy} busy={false} />
+      <StrategyPanel
+        strategy={strategy}
+        strategyCount={2}
+        surface="timeline"
+        modelNickname="Jev"
+        modelId="model"
+        busy={false}
+        onBack={() => {}}
+        onChange={() => {}}
+        onPriorityChange={() => {}}
+        onSave={() => {}}
+      />
+    </>,
   );
 }
 
@@ -31,6 +34,8 @@ test("keeps strategy editing and preview probability as separate labelled contro
   expect(markup.match(/role="slider"/g)).toHaveLength(2);
   expect(markup).toContain('data-field="hover-template"');
   expect(markup).toContain('data-field="preview-content"');
+  expect(markup).toContain('form="strategy-settings"');
+  expect(markup).toContain('id="strategy-settings"');
   expect(markup).toContain('role="radiogroup"');
   expect(markup).not.toContain('type="submit" disabled=""');
 });

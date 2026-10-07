@@ -1,5 +1,5 @@
 import { Button } from "@astryxdesign/core/Button";
-import { Divider } from "@astryxdesign/core/Divider";
+import { useState } from "react";
 import { EmptyState } from "@astryxdesign/core/EmptyState";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Icon } from "@astryxdesign/core/Icon";
@@ -9,24 +9,31 @@ import { Table, pixel, proportional, type TableColumn } from "@astryxdesign/core
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { Pencil, Trash2 } from "lucide-react";
-import { strategyHitRate, type FilterStrategy, type FilterSurface } from "../../shared";
+import {
+  filterStrategies,
+  strategyHitRate,
+  type FilterStrategy,
+  type FilterSurface,
+  type StrategyStatusFilter,
+} from "../../shared";
 import { useI18n } from "../../ui/i18n";
-import { Actions, SectionIntro } from "./DashboardUI";
+import { SectionIntro } from "./DashboardUI";
 import { HitRatePresets } from "./HitRatePresets";
+import { CollectionFilters } from "./CollectionFilters";
 
 interface Props {
   surface: FilterSurface;
   strategies: FilterStrategy[];
   busy: boolean;
-  dirty: boolean;
   onChange: (strategies: FilterStrategy[]) => void;
   onOpen: (id: string) => void;
   onCreate: () => void;
-  onSave: () => void;
 }
 
-export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpen, onCreate, onSave }: Props) {
+export function StrategyList({ surface, strategies, busy, onChange, onOpen, onCreate }: Props) {
   const { t } = useI18n();
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<StrategyStatusFilter>("all");
   const label = t(surface === "timeline" ? "strategy.timeline" : "strategy.comments");
   const update = (id: string, patch: Partial<FilterStrategy>) =>
     onChange(strategies.map((strategy) => (strategy.id === id ? { ...strategy, ...patch } : strategy)));
@@ -37,7 +44,10 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
     [next[index], next[target]] = [next[target]!, next[index]!];
     onChange(next.map((strategy, priority) => ({ ...strategy, priority: priority + 1 })));
   };
-  const rows = strategies.map((strategy, index) => ({ ...strategy, index }));
+  const rows = filterStrategies(strategies, query, status).map((strategy) => ({
+    ...strategy,
+    index: strategies.findIndex((item) => item.id === strategy.id),
+  }));
   const columns: TableColumn<(typeof rows)[number]>[] = [
     {
       key: "priority",
@@ -162,6 +172,20 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
         <SectionIntro id="strategy-table-title" title={t("strategy.title", { surface: label })} />
         <Button label={t("strategy.createSurface", { surface: label })} onClick={onCreate} isDisabled={busy} />
       </HStack>
+      <CollectionFilters
+        id="strategies"
+        searchLabel={t("collection.searchStrategies")}
+        query={query}
+        onQueryChange={setQuery}
+        status={status}
+        onStatusChange={(value) => setStatus(value as StrategyStatusFilter)}
+        count={rows.length}
+        options={[
+          { value: "all", label: t("collection.all") },
+          { value: "enabled", label: t("common.enabled") },
+          { value: "disabled", label: t("common.disabled") },
+        ]}
+      />
       {rows.length ? (
         <Table
           aria-label={t("strategy.title", { surface: label })}
@@ -171,6 +195,19 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
           density="balanced"
           hasHover
         />
+      ) : strategies.length ? (
+        <EmptyState
+          title={t("collection.noResults")}
+          actions={
+            <Button
+              label={t("collection.clearFilters")}
+              onClick={() => {
+                setQuery("");
+                setStatus("all");
+              }}
+            />
+          }
+        />
       ) : (
         <EmptyState
           title={t("strategy.empty", { surface: label })}
@@ -178,16 +215,6 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
           actions={<Button label={t("strategy.create")} onClick={onCreate} isDisabled={busy} />}
         />
       )}
-      <Divider />
-      <Actions>
-        <Button
-          variant="primary"
-          label={t("strategy.saveSurface", { surface: label })}
-          isLoading={busy}
-          isDisabled={!dirty}
-          onClick={onSave}
-        />
-      </Actions>
     </VStack>
   );
 }

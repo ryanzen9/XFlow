@@ -157,7 +157,23 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
   return (
     <VStack gap={6}>
       <Grid columns={{ minWidth: 320, max: 2 }} gap={8} align="start">
-        <Panel title={t("data.configTitle")} id="config-title">
+        <Panel
+          title={t("data.configTitle")}
+          id="config-title"
+          actions={
+            <>
+              <Button size="sm" label={t("data.format")} onClick={formatJson} isDisabled={busy} />
+              <Button size="sm" label={t("data.discard")} onClick={() => void load()} isDisabled={busy} />
+              <Button
+                size="sm"
+                variant="primary"
+                label={t("data.apply")}
+                isLoading={busy}
+                onClick={() => void applyJson()}
+              />
+            </>
+          }
+        >
           <TextArea
             data-field="config-json"
             label="Config"
@@ -173,11 +189,6 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
             }}
           />
           <Text type="supporting">{t("data.keySeparated")}</Text>
-          <Actions>
-            <Button label={t("data.format")} onClick={formatJson} isDisabled={busy} />
-            <Button label={t("data.discard")} onClick={() => void load()} isDisabled={busy} />
-            <Button variant="primary" label={t("data.apply")} isLoading={busy} onClick={() => void applyJson()} />
-          </Actions>
         </Panel>
         <VStack as="form" gap={4} onSubmit={(event) => void saveAndEnableSync(event)}>
           <Panel title={t("data.s3Title")} id="s3-title">
@@ -192,35 +203,37 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
               label={t(s3.autoSyncEnabled ? "data.syncEnabled" : "data.syncDisabled")}
             />
             <FormLayout>
-              <TextInput
-                data-field="s3-endpoint"
-                label="Endpoint"
-                placeholder="https://s3.us-east-1.amazonaws.com"
-                value={s3.endpoint}
-                isDisabled={busy}
-                onChange={(endpoint) => updateS3({ endpoint })}
-              />
-              <TextInput
-                data-field="s3-region"
-                label="Region"
-                value={s3.region}
-                isDisabled={busy}
-                onChange={(region) => updateS3({ region })}
-              />
-              <TextInput
-                data-field="s3-bucket"
-                label="Bucket"
-                value={s3.bucket}
-                isDisabled={busy}
-                onChange={(bucket) => updateS3({ bucket })}
-              />
-              <TextInput
-                data-field="s3-object-key"
-                label="Object Key"
-                value={s3.objectKey}
-                isDisabled={busy}
-                onChange={(objectKey) => updateS3({ objectKey })}
-              />
+              <Grid columns={{ minWidth: 180, max: 2 }} gap={4}>
+                <TextInput
+                  data-field="s3-endpoint"
+                  label="Endpoint"
+                  placeholder="https://s3.us-east-1.amazonaws.com"
+                  value={s3.endpoint}
+                  isDisabled={busy}
+                  onChange={(endpoint) => updateS3({ endpoint })}
+                />
+                <TextInput
+                  data-field="s3-region"
+                  label="Region"
+                  value={s3.region}
+                  isDisabled={busy}
+                  onChange={(region) => updateS3({ region })}
+                />
+                <TextInput
+                  data-field="s3-bucket"
+                  label="Bucket"
+                  value={s3.bucket}
+                  isDisabled={busy}
+                  onChange={(bucket) => updateS3({ bucket })}
+                />
+                <TextInput
+                  data-field="s3-object-key"
+                  label="Object Key"
+                  value={s3.objectKey}
+                  isDisabled={busy}
+                  onChange={(objectKey) => updateS3({ objectKey })}
+                />
+              </Grid>
               <TextInput
                 data-field="s3-access-key"
                 label="Access Key ID"
@@ -251,15 +264,17 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
                   onClick={() => setShowSecret((value) => !value)}
                 />
               </HStack>
-              <TextArea
-                data-field="s3-session-token"
-                label="Session Token"
-                isOptional
-                rows={2}
-                value={s3.sessionToken}
-                isDisabled={busy}
-                onChange={(sessionToken) => updateS3({ sessionToken })}
-              />
+              <Collapsible trigger={t("data.temporaryCredentials")} defaultIsOpen={Boolean(s3.sessionToken)}>
+                <TextArea
+                  data-field="s3-session-token"
+                  label="Session Token"
+                  isOptional
+                  rows={2}
+                  value={s3.sessionToken}
+                  isDisabled={busy}
+                  onChange={(sessionToken) => updateS3({ sessionToken })}
+                />
+              </Collapsible>
             </FormLayout>
             <Divider />
             <Collapsible trigger={t("data.syncDetails")} defaultIsOpen={false}>

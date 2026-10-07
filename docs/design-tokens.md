@@ -14,6 +14,13 @@ details use Collapsible. At wide widths, activity and weekly metrics sit side by
 Strategy preview edits update without replaying the full veil entrance; the explicit pointer replay action
 demonstrates that motion. The renderer continues to honor reduced motion.
 
+The separate Overview follows Analytics Dashboard: headline metrics, chart/review widgets, then a compact recent-record table.
+Metric labels reserve `min-h-8` for two lines; grids fit two columns at 320px and four when space permits.
+Settings Panels groups re-apply the Layout's `padding={6}` after Section's automatic container bleed, keeping headings and fields aligned.
+Contextual Toolbars use `-mx-3 my-0` to compensate Neutral Section's spacing-3 padding without moving the content line.
+Collection filters wrap their search, status selector and result count as one group; data rows update immediately.
+See [Dashboard layouts](dashboard-layouts.md) for page budgets, template mapping and interaction rules.
+
 `src/styles/token.css` remains the source of truth for legacy UI and the token reference preview.
 `src/styles/theme.css` maps those tokens onto legacy Tailwind utilities. The reference tables below describe
 that legacy system. Components consume utilities or tokens — never literal colours, radii, durations or font sizes.

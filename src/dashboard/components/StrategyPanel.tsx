@@ -46,6 +46,23 @@ interface Props {
   onSave: () => void;
 }
 
+export function StrategySaveButton({ strategy, busy }: { strategy: FilterStrategy; busy: boolean }) {
+  const { t } = useI18n();
+  const invalid = Boolean(
+    compileHoverCss(strategy.hoverCss, "#validation").error || validateTemplate(strategy.hoverTemplate),
+  );
+  return (
+    <Button
+      type="submit"
+      form="strategy-settings"
+      variant="primary"
+      label={t("strategy.save")}
+      isLoading={busy}
+      isDisabled={invalid}
+    />
+  );
+}
+
 export function StrategyPanel({
   strategy,
   strategyCount,
@@ -86,6 +103,7 @@ export function StrategyPanel({
       <Grid columns={{ minWidth: 360, max: 2 }} gap={8} align="start">
         <VStack
           as="form"
+          id="strategy-settings"
           gap={6}
           onSubmit={(event) => {
             event.preventDefault();
@@ -253,13 +271,6 @@ export function StrategyPanel({
           </Collapsible>
           <Actions>
             <Button label={t("strategy.reset")} onClick={reset} isDisabled={busy} />
-            <Button
-              type="submit"
-              variant="primary"
-              label={t("strategy.save")}
-              isLoading={busy}
-              isDisabled={!!cssError || !!templateError}
-            />
           </Actions>
         </VStack>
         <StrategyPreview strategy={strategy} modelNickname={modelNickname} modelId={modelId} />

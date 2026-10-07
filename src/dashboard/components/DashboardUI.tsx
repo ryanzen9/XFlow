@@ -59,15 +59,24 @@ export function Panel({
   description,
   id,
   children,
+  actions,
 }: {
   title: string;
   description?: string;
   id?: string;
   children: ReactNode;
+  actions?: ReactNode;
 }) {
   return (
     <VStack as="section" gap={4} padding={0} aria-labelledby={id}>
-      <SectionIntro title={title} description={description} id={id} />
+      <HStack hAlign="between" gap={3} wrap="wrap" vAlign="center">
+        <SectionIntro title={title} description={description} id={id} />
+        {actions && (
+          <HStack gap={2} className="ml-auto">
+            {actions}
+          </HStack>
+        )}
+      </HStack>
       {children}
     </VStack>
   );
