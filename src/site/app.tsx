@@ -60,7 +60,7 @@ function SiteHeader({ page }: { page: SitePage }) {
   );
 }
 
-// Centered Hero: one centered copy column above one wide filtering illustration.
+// Centered Hero: one centered copy column above one wide product image.
 // The frame caps at 1200px; copy caps at 720px. Actions wrap and the feature
 // grid becomes a single column when its 280px regions no longer fit.
 function HomePage() {
@@ -120,17 +120,21 @@ function HomePage() {
             </VStack>
 
             <VStack as="figure" gap={4}>
-              <AspectRatio ratio={1672 / 941} fit="contain" className="overflow-hidden rounded-lg border border-border">
+              <AspectRatio
+                ratio={1440 / 1000}
+                fit="contain"
+                className="overflow-hidden rounded-lg border border-border"
+              >
                 <img
-                  src="./assets/xflow-hero.webp"
-                  width={1672}
-                  height={941}
+                  src="./assets/strategy-editor.webp"
+                  width={1440}
+                  height={1000}
                   fetchPriority="high"
-                  alt="低对比的模糊帖子背景上，几条细几何线条与开放矩形留出安静的阅读空间。"
+                  alt="XFlow 策略编辑器：配置时间线过滤策略、提示词和命中阈值，右侧实时预览可揭示的模糊遮罩。"
                 />
               </AspectRatio>
               <Text as="p" type="supporting" justify="center">
-                让信息流更安静，把选择留给你。
+                规则与预览，在一个工作台里。截图使用本地演示数据。
               </Text>
             </VStack>
 
