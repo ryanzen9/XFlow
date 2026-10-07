@@ -316,7 +316,7 @@
     --shadow-inset-warning: inset 0px 0px 0px 2px #f8d36a4D;
     --shadow-inset-error: inset 0px 0px 0px 2px #de47454D;
     --xflow-popup-width: 320px;
-    --xflow-popup-height: 480px;
+    --xflow-popup-height: 400px;
     --astryx-theme-neutral-color-status-fill-accent: light-dark(#0074e2, #6d9cfe);
     --astryx-theme-neutral-color-status-fill-success: light-dark(#198100, #64af4c);
     --astryx-theme-neutral-color-status-fill-warning: #ffce2f;

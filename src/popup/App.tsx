@@ -3,9 +3,10 @@ import { Button } from "@astryxdesign/core/Button";
 import { Divider } from "@astryxdesign/core/Divider";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
-import { StackItem } from "@astryxdesign/core/Stack";
+import { Icon } from "@astryxdesign/core/Icon";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
+import { ArrowUpRight } from "lucide-react";
 import { AstryxLocale } from "../ui/AstryxLocale";
 import { AppearanceControls } from "../ui/AppearanceControls";
 import { providerLabel, useI18n } from "../ui/i18n";
@@ -22,7 +23,7 @@ export function App() {
   const { locale, t } = useI18n();
   return (
     <AstryxLocale>
-      <VStack as="main" minHeight="var(--xflow-popup-height)" padding={3} gap={2} className="bg-body">
+      <VStack as="main" minHeight="var(--xflow-popup-height)" padding={4} gap={3} className="bg-surface">
         <HStack as="header" gap={2} hAlign="between">
           <HStack gap={2}>
             <Avatar
@@ -31,68 +32,59 @@ export function App() {
               alt="XFlow logo"
               size="sm"
             />
-            <Heading level={4} accessibilityLevel={1}>
+            <Heading level={3} accessibilityLevel={1}>
               XFlow
             </Heading>
           </HStack>
           <AppearanceControls theme={form.theme} onThemeChange={(theme) => void form.setTheme(theme)} />
         </HStack>
         <ActivitySummary {...activity} live={form.enabled || form.commentsEnabled} />
-        <VStack as="section" gap={1} aria-label={t("popup.monitoringScope")}>
-          <VStack className="divide-y divide-border rounded-lg border border-border">
-            <MonitorSwitch
-              id="enabled"
-              routeLabel="/home"
-              title={t("popup.timeline")}
-              ariaLabel={t("popup.timelineAria")}
-              checked={form.enabled}
-              disabled={!form.settingsReady || form.enabledPending}
-              pending={form.enabledPending}
-              onChange={(event) => void form.setEnabled(event.currentTarget.checked)}
-            />
-            <MonitorSwitch
-              id="comments-enabled"
-              routeLabel="/status"
-              title={t("popup.comments")}
-              ariaLabel={t("popup.commentsAria")}
-              checked={form.commentsEnabled}
-              disabled={!form.settingsReady || form.commentsEnabledPending}
-              pending={form.commentsEnabledPending}
-              onChange={(event) => void form.setCommentsEnabled(event.currentTarget.checked)}
-            />
-          </VStack>
+        <VStack as="section" gap={0} aria-label={t("popup.monitoringScope")}>
+          <MonitorSwitch
+            id="enabled"
+            title={t("popup.timeline")}
+            ariaLabel={t("popup.timelineAria")}
+            checked={form.enabled}
+            disabled={!form.settingsReady || form.enabledPending}
+            pending={form.enabledPending}
+            onChange={(event) => void form.setEnabled(event.currentTarget.checked)}
+          />
+          <Divider />
+          <MonitorSwitch
+            id="comments-enabled"
+            title={t("popup.comments")}
+            ariaLabel={t("popup.commentsAria")}
+            checked={form.commentsEnabled}
+            disabled={!form.settingsReady || form.commentsEnabledPending}
+            pending={form.commentsEnabledPending}
+            onChange={(event) => void form.setCommentsEnabled(event.currentTarget.checked)}
+          />
         </VStack>
-        <VStack as="section" gap={1} aria-label={t("popup.currentProvider")}>
-          <VStack className="rounded-lg border border-border">
-            <ChannelRow name={providerLabel(form.activeProvider, locale)} configured={form.configured} />
-          </VStack>
+        <VStack as="section" gap={0} aria-label={t("popup.currentProvider")}>
+          <Divider />
+          <ChannelRow name={providerLabel(form.activeProvider, locale)} configured={form.configured} />
         </VStack>
-        <VStack minHeight="calc(var(--spacing-4) * 2)">
+        <VStack gap={2} className="mt-auto">
+          <Divider />
+          <ModelFooter modelId={form.modelId} />
           <Text
             as="p"
             id="save-status"
             type="supporting"
-            className={form.status.tone === "error" ? "text-error" : undefined}
+            className={form.status.tone === "error" ? "text-error" : "sr-only"}
             role="status"
             aria-live="polite"
           >
             {form.status.message}
           </Text>
-        </VStack>
-        <StackItem size="fill" />
-        <VStack gap={2}>
-          <Divider />
-          <ModelFooter modelId={form.modelId} />
-          <HStack gap={2}>
-            <StackItem size="fill">
-              <Button
-                label={t("popup.dashboard")}
-                width="100%"
-                size="sm"
-                onClick={() => void chrome.runtime.openOptionsPage()}
-              />
-            </StackItem>
-          </HStack>
+          <Button
+            label={t("popup.dashboard")}
+            width="100%"
+            variant="primary"
+            className="min-h-10"
+            endContent={<Icon icon={ArrowUpRight} size="sm" />}
+            onClick={() => void chrome.runtime.openOptionsPage()}
+          />
         </VStack>
       </VStack>
     </AstryxLocale>

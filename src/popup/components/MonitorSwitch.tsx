@@ -1,14 +1,13 @@
 import { useRef, type ChangeEventHandler } from "react";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Item } from "@astryxdesign/core/Item";
-import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Switch } from "@astryxdesign/core/Switch";
 import { Text } from "@astryxdesign/core/Text";
+import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
 import { useI18n } from "../../ui/i18n";
 
 export interface MonitorSwitchProps {
   id: string;
-  routeLabel: string;
   title: string;
   ariaLabel: string;
   checked: boolean;
@@ -20,7 +19,6 @@ export interface MonitorSwitchProps {
 /** The row delegates clicks to its single, labelled switch. */
 export function MonitorSwitch({
   id,
-  routeLabel,
   title,
   ariaLabel,
   checked,
@@ -35,24 +33,27 @@ export function MonitorSwitch({
   const stateLabel = t(pending ? "popup.syncing" : checked ? "common.enabled" : "popup.paused");
   return (
     <Item
-      label={title}
+      label={
+        <HStack gap={2}>
+          <Text weight="medium" maxLines={1}>
+            {title}
+          </Text>
+          <VisuallyHidden id={stateId} aria-live="polite">
+            {stateLabel}
+          </VisuallyHidden>
+        </HStack>
+      }
       labelLines={1}
-      density="compact"
+      density="balanced"
+      className="min-h-12 p-0"
       interactiveRef={control}
       data-slot={`${id}-filter-control`}
       data-state={state}
       aria-busy={pending}
-      description={
-        <HStack as="span" gap={2}>
-          <Text type="code">{routeLabel}</Text>
-          <StatusDot label={stateLabel} variant={pending ? "warning" : "neutral"} aria-hidden="true" />
-          <Text id={stateId} type="supporting" aria-live="polite">
-            {stateLabel}
-          </Text>
-        </HStack>
-      }
+      description={pending ? <Text type="supporting">{stateLabel}</Text> : undefined}
       endContent={
         <Switch
+          className="flex min-h-11 items-center [&_input]:min-h-11"
           ref={control}
           id={id}
           label={ariaLabel}

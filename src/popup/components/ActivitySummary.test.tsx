@@ -7,7 +7,6 @@ describe("ActivitySummary", () => {
     const markup = renderToStaticMarkup(<ActivitySummary today={128} allTime={8421} />);
     expect(markup).toContain("今日已过滤");
     expect(markup).toContain(">128<");
-    expect(markup).toContain("全部时间");
     expect(markup).toContain("8,421");
     expect(markup).toContain("累计过滤");
     expect(markup.indexOf(">128<")).toBeLessThan(markup.indexOf("8,421"));

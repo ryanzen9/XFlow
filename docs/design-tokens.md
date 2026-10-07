@@ -5,6 +5,10 @@ Its Tailwind utilities come from `@astryxdesign/core/tailwind-theme.css` (`bg-su
 The self-hosted Figtree font, spacing, shape and motion resolve through that theme in both modes.
 Neither imports the legacy Tailwind bridge, so their controls keep Astryx typography and casing.
 Popup width and minimum height are defined by the theme's `--xflow-popup-width` and `--xflow-popup-height` tokens.
+The compact popup uses a 320px width and 400px minimum height. Its two summary columns use tabular numbers;
+model metadata uses supporting text in the UI font rather than code typography. Flat monitor rows have 48px targets,
+with 44px switch inputs, and the dashboard action uses a 40px target. Routine feedback remains in the live region;
+errors appear above the action and the popup may grow to accommodate them.
 Its monitoring rows use Item and Switch, including native labels, loading feedback and reduced-motion support.
 Dashboard confirmations use Astryx Toast; errors remain inline. Chart switching reserves the same 280px plot region,
 tables keep a readable minimum name column, and API provider details stack below 1280px.

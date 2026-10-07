@@ -1,5 +1,5 @@
 import { Item } from "@astryxdesign/core/Item";
-import { StatusDot } from "@astryxdesign/core/StatusDot";
+import { Text } from "@astryxdesign/core/Text";
 import { useI18n } from "../../ui/i18n";
 
 export interface ChannelRowProps {
@@ -13,11 +13,19 @@ export function ChannelRow({ name, configured }: ChannelRowProps) {
   const status = t(configured ? "popup.configured" : "popup.needsKey");
   return (
     <Item
-      label={name}
+      label={
+        <Text weight="medium" maxLines={1}>
+          {name}
+        </Text>
+      }
       labelLines={1}
-      description={status}
-      endContent={<StatusDot label={status} variant={configured ? "neutral" : "warning"} aria-hidden="true" />}
-      density="compact"
+      endContent={
+        <Text type="supporting" className="shrink-0">
+          {status}
+        </Text>
+      }
+      density="balanced"
+      className="min-h-10 px-0"
       data-state={configured ? "configured" : "empty"}
     />
   );

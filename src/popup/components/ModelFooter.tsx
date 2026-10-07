@@ -9,7 +9,7 @@ export function ModelFooter({ modelId }: { modelId: string }) {
     <HStack as="footer" gap={2}>
       <Text type="supporting">{t("popup.decisionModel")}</Text>
       <StackItem size="fill">
-        <Text type="code" maxLines={1} justify="end">
+        <Text type="supporting" maxLines={1} justify="end">
           {modelId}
         </Text>
       </StackItem>

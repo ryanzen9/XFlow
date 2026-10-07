@@ -5,8 +5,7 @@ import { MonitorSwitch } from "./MonitorSwitch";
 describe("MonitorSwitch", () => {
   const baseProps = {
     id: "enabled",
-    routeLabel: "/home",
-    title: "时间线过滤",
+    title: "时间线",
     ariaLabel: "启用时间线分析",
     onChange: () => {},
   };
@@ -41,26 +40,17 @@ describe("MonitorSwitch", () => {
     const markup = renderToStaticMarkup(<MonitorSwitch {...baseProps} checked />);
 
     expect(markup.match(/role="switch"/g)).toHaveLength(1);
-    expect(markup).toContain("/home");
     expect(markup).not.toContain("<p");
   });
 
   test("keeps comment controls uniquely labelled", () => {
     const markup = renderToStaticMarkup(
-      <MonitorSwitch
-        {...baseProps}
-        id="comments-enabled"
-        routeLabel="/status"
-        title="评论区过滤"
-        ariaLabel="启用评论区分析"
-        checked
-      />,
+      <MonitorSwitch {...baseProps} id="comments-enabled" title="评论区" ariaLabel="启用评论区分析" checked />,
     );
 
     expect(markup).toContain('id="comments-enabled"');
     expect(markup).toContain('data-slot="comments-enabled-filter-control"');
-    expect(markup).toContain("评论区过滤");
-    expect(markup).toContain("/status");
+    expect(markup).toContain("评论区");
     const input = markup.match(/<input[^>]*role="switch"[^>]*>/)?.[0] ?? "";
     const inputId = input.match(/id="([^"]+)"/)?.[1];
     expect(inputId).toBeDefined();
