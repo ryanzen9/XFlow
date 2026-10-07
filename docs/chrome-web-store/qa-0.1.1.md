@@ -1,5 +1,7 @@
 # XFlow 0.1.1 release ZIP QA · 2026-09-30
 
+> Historical package report, dated 2026-09-30, for the source and ZIP checksum below. Current UI artwork was refreshed on 2026-10-07; see the [version preview index](../previews/README.md). The artwork refresh does not revalidate this ZIP or publish a release.
+
 ## Exact package
 
 | Item                  | Result                                                             |

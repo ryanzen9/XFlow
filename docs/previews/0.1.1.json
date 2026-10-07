@@ -1,0 +1,146 @@
+{
+  "version": "0.1.1",
+  "capturedAt": "2026-10-07T15:24:05.905Z",
+  "sourceCommit": "df27ee84d27fe51462afe8439a69393615c2d393",
+  "mergedMain": "129ad079aa9fb7ec5b142f16b099c449d3154eab",
+  "source": "Production dist UI served by scripts/preview-dashboard.ts",
+  "data": "Synthetic fixtures; no credentials or provider requests. Health/request results and veil decisions are local simulations.",
+  "assets": [
+    {
+      "file": "output/previews/0.1.1/strategy-editor.png",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "sha256": "3c09ee4f3bbd884595a64ec459b9c54fc1a08ce0c8bc138d6e28769b4db8a1ca"
+    },
+    {
+      "file": "output/previews/0.1.1/dashboard-activity.png",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "sha256": "ef250d4dc3da0b2ae881e89f761de943e9d94cbef1077d414ed7944953c603bf"
+    },
+    {
+      "file": "output/previews/0.1.1/veil-preview.png",
+      "locale": "en",
+      "theme": "dark",
+      "width": 549,
+      "height": 791,
+      "sha256": "9abb4d124e5a9a75c2c9a0e347907e5fbfa2e2041f035fb0c85701e16c181f59"
+    },
+    {
+      "file": "output/previews/0.1.1/popup-light.png",
+      "locale": "zh-CN",
+      "theme": "light",
+      "width": 320,
+      "height": 400,
+      "sha256": "9bef5edfaa1ab4e4ff852725f11df3df2eae662db6f7237e09c097263ad76cc8"
+    },
+    {
+      "file": "output/previews/0.1.1/popup-dark.png",
+      "locale": "zh-CN",
+      "theme": "dark",
+      "width": 320,
+      "height": 400,
+      "sha256": "2bdc2ca5a807a2142e64c81085c3fbd0f38ebdd1760701971d5bd1fca4ca023e"
+    },
+    {
+      "file": "output/previews/0.1.1/provider-settings.png",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1440,
+      "height": 900,
+      "sha256": "b1d4d388636c8aa2ad426f538d2dc642a4a9b90eda6c004860e5b042c738303a"
+    },
+    {
+      "file": "output/previews/0.1.1/jev-request-log.png",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1131,
+      "height": 294,
+      "sha256": "758821c274dcbb01a5701679cca69bd0ab21bce950fb8449057067e537184f46"
+    },
+    {
+      "file": "docs/assets/strategy-editor.webp",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "sha256": "03f1f5cdec6782d504a6c60c76aabcd25958c4ece81641f43e12e1b3bc18ea2d"
+    },
+    {
+      "file": "docs/assets/dashboard-activity.webp",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "sha256": "89cca339aa477d5af048702470ba8797b98085998efcd4c8abda5bb0b253db3b"
+    },
+    {
+      "file": "docs/assets/veil-preview.webp",
+      "locale": "en",
+      "theme": "dark",
+      "width": 549,
+      "height": 791,
+      "sha256": "db5866ea86979bc719baeb1f1577c3dd9b53c889c7e7dcc203d03da64b97ffee"
+    },
+    {
+      "file": "docs/assets/popup-light.webp",
+      "locale": "zh-CN",
+      "theme": "light",
+      "width": 320,
+      "height": 400,
+      "sha256": "4b6ee507b07e516ed1199cbe9a2df617e5eba3fa561c57da677c130cebb8663b"
+    },
+    {
+      "file": "docs/assets/popup-dark.webp",
+      "locale": "zh-CN",
+      "theme": "dark",
+      "width": 320,
+      "height": 400,
+      "sha256": "b900e9f6e424e33b9db39b1ea739ba771ea73b2f5b212703eb1e905c9464869e"
+    },
+    {
+      "file": "docs/assets/provider-settings.webp",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1440,
+      "height": 900,
+      "sha256": "394faaa4468b559126946aca805aa4f361d8f9f220619d82f218789795b1ab40"
+    },
+    {
+      "file": "docs/assets/jev-request-log.webp",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1131,
+      "height": 294,
+      "sha256": "e35d98397a83049b1ca3107dd18091030ae363c0664084e82ab039f14afc2fac"
+    },
+    {
+      "file": "output/previews/0.1.1/01-popup.png",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1280,
+      "height": 800,
+      "sha256": "83648453cbd040bf5b15e1e37bc14b12266a34bad35d3c2a9abf24f0c1240851"
+    },
+    {
+      "file": "output/previews/0.1.1/02-activity-dashboard.png",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1280,
+      "height": 800,
+      "sha256": "b5cf5680e25815b48f0b0ec9dee7fa4107ac88155581a6510d0c2a0909d8881e"
+    },
+    {
+      "file": "output/previews/0.1.1/03-strategy-and-veil.png",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1280,
+      "height": 800,
+      "sha256": "9eef5745e5190290f7fc006624503d1c50c6fecab542c316a9ae13047cfa54e1"
+    }
+  ]
+}

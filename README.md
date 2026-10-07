@@ -34,16 +34,21 @@
 
 <table>
   <tr>
-    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="深色主题下的 Activity 热力图、每周回顾和过滤范围" /></td>
+    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="深色主题下的 独立过滤概览、12 周热力图、每周回顾与近期记录" /></td>
     <td width="28%"><img src="docs/assets/veil-preview.webp" alt="深色主题下的过滤结果本机预览、命中率与阈值控制" /></td>
   </tr>
   <tr>
-    <td align="center"><sub>本地 Activity、30 天历史与 12 周趋势</sub></td>
+    <td align="center"><sub>独立概览：12 周 Activity、周报与近期记录</sub></td>
     <td align="center"><sub>不调用模型的过滤结果预览</sub></td>
   </tr>
 </table>
 
-截图来自隔离的 Dashboard Mock Storage，不包含真实凭据，也不会向 Provider 发起请求。
+<p align="center">
+  <img src="docs/assets/popup-light.webp" alt="XFlow 浅色主题 Popup，过滤计数和紧凑监控开关" width="320" />
+  <img src="docs/assets/popup-dark.webp" alt="XFlow 深色主题 Popup，过滤计数和紧凑监控开关" width="320" />
+</p>
+
+截图更新于 2026-10-07，来自合并最新 main 后的生产界面与隔离模拟数据，不包含凭据，不调用 Provider。Popup 为简体中文，其余为英文界面。版本更新、API Keys / 请求日志预览、图片尺寸与商店上传顺序见 [0.1.1 预览索引](docs/previews/README.md)。
 
 ## 为什么是 XFlow
 
@@ -212,6 +217,7 @@ bun run benchmark:cache # 测试并展示分层缓存命中率与性能影响
 bun run preview:dashboard
 bun run preview:site
 bun run preview:tokens
+bun run preview:assets  # 重新生成文档图片、商店上传图与版本清单
 ```
 
 Neutral 主题使用扩展内置的 Figtree 可变字体（Latin / Latin Extended），构建时从 `@fontsource-variable/figtree` 复制到 `dist/fonts/`，无需远程字体请求。运行 `bun run preview:dashboard` 后，打开 `/__preview__/foundation.html` 可检查真实 Astryx Button、TextInput 的明暗模式与键盘焦点；该验证页只由本地预览服务提供，不包含在扩展包中。
@@ -221,7 +227,7 @@ Dashboard 默认打开独立的概览页。通用设置、API Keys、策略和�
 安装 `agent-browser` 并启动 Dashboard 预览后，可运行页面与通知回归测试（将 URL 端口替换为预览服务实际端口）：
 
 ```bash
-DASHBOARD_FEEDBACK_PREVIEW_URL=http://127.0.0.1:43997/dashboard.html bun test scripts/qa/dashboard-pages.test.ts scripts/qa/dashboard-feedback.test.ts scripts/qa/dashboard-strategies.test.ts scripts/qa/popup-layout.test.ts
+DASHBOARD_FEEDBACK_PREVIEW_URL=http://127.0.0.1:43997/dashboard.html bun test scripts/qa/dashboard-pages.test.ts scripts/qa/dashboard-feedback.test.ts scripts/qa/dashboard-strategies.test.ts scripts/qa/popup-layout.test.ts scripts/qa/dashboard-health.test.ts
 ```
 
 测试使用独立浏览器会话和模拟存储，检查概览范围联动、筛选后编辑与优先级保存、页头操作、日志分页、320/375/1024/1280/1440px 布局、明暗主题、中英文及通知生命周期。策略专项回归同时检查长文本边界、真实点击目标与键盘操作；Popup 回归检查紧凑布局、整行点击、键盘开关、失败回退和控制台入口。未指定 URL 时，普通 `bun test` 跳过这四项浏览器测试。模板选择与布局约定见 [`docs/dashboard-layouts.md`](docs/dashboard-layouts.md)。

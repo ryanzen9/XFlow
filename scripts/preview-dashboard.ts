@@ -1,3 +1,6 @@
+import { storePopupFrame } from "./qa/store-popup-frame";
+import { version } from "../package.json";
+
 // Local UI preview only. The extension build never includes the mock storage script.
 const storageMock = `(() => {
   const listeners = new Set();
@@ -168,6 +171,11 @@ const server = Bun.serve({
     if (path === "/favicon.ico") return new Response(null, { status: 204 });
     if (path === "/__preview__/storage.js")
       return new Response(storageMock, { headers: { "Content-Type": "text/javascript" } });
+    if (path === "/__preview__/store-popup.html")
+      return new Response(
+        `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>XFlow ${version} Popup preview</title><link rel="stylesheet" href="/dashboard.css"></head><body>${storePopupFrame(version)}</body></html>`,
+        { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } },
+      );
     if (path === "/__preview__/foundation.html")
       return new Response(
         '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Astryx foundation preview</title><link rel="stylesheet" href="/dashboard.css"></head><body><div id="root"></div><script type="module" src="/__preview__/foundation.js"></script></body></html>',

@@ -195,3 +195,9 @@ Idle → Classifying ─┬→ Visible
 两个工作流都不需要仓库密钥：版本来自 `package.json` 的 `packageManager`，Release 只用 `GITHUB_TOKEN`（`contents: write`）。所有 Action 固定到提交 SHA。手动触发 `release.yml` 不会创建 Release，可用于演练打包流程；`workflow_dispatch` 要求工作流文件已在默认分支，因此该工作流在合并到 `main` 后生效。
 
 同一提交在 macOS 本地与 GitHub Ubuntu runner 上产出的归档 SHA-256 完全一致，可复现性由 CI 每次运行持续保证。
+
+## Version preview assets
+
+`bun run preview:assets` builds the production extension, starts an isolated localhost mock server, and uses named agent-browser sessions to capture the Dashboard and Popup. `scripts/capture-previews.ts` owns synthetic fixtures and the versioned asset inventory. `scripts/qa/store-popup-frame.tsx` supplies a browser-rendered Astryx presentation frame containing the real Popup iframe; it is served only under `/__preview__/store-popup.html` and never bundled into the extension.
+
+Requested documentation images are encoded as WebP in `docs/assets/`; raw PNG captures, store upload artwork and their ZIP remain ignored in `output/previews/<version>/`. `docs/previews/<version>.json` records source/main commits, capture time, locale, theme, dimensions and SHA-256. The website copies the same strategy-editor asset. No real provider credentials or requests are involved. See [Preview assets](previews/README.md) for regeneration and the release screenshot order.

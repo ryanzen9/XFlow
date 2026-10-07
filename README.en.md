@@ -35,16 +35,21 @@
 
 <table>
   <tr>
-    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="XFlow Activity heatmap, weekly review, and filtering controls in the dark theme" /></td>
+    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="XFlow filtering overview, 12-week heatmap, weekly review and recent records in the dark theme" /></td>
     <td width="28%"><img src="docs/assets/veil-preview.webp" alt="Local filtering result preview with hit-rate and threshold controls in the dark theme" /></td>
   </tr>
   <tr>
-    <td align="center"><sub>Local activity, 30-day history, and a 12-week trend</sub></td>
+    <td align="center"><sub>Overview: 12-week Activity, weekly review and recent records</sub></td>
     <td align="center"><sub>A local filtering result preview that never calls a model</sub></td>
   </tr>
 </table>
 
-The screenshots come from an isolated Dashboard mock store. They contain no real credentials and make no provider requests.
+<p align="center">
+  <img src="docs/assets/popup-light.webp" alt="XFlow light-theme Popup with filtering counts and compact controls" width="320" />
+  <img src="docs/assets/popup-dark.webp" alt="XFlow dark-theme Popup with filtering counts and compact controls" width="320" />
+</p>
+
+Updated October 7, 2026 from the production UI after merging the latest main, using isolated sample data without credentials or provider calls. Popup captures use Simplified Chinese; other captures use English. See the [0.1.1 preview index](docs/previews/README.md) for update notes, API Keys / request-log previews, dimensions and store upload order.
 
 ## Why XFlow
 
@@ -200,6 +205,13 @@ bun run benchmark:cache # test and display cache hit-rate and performance metric
 bun run preview:dashboard
 bun run preview:site
 bun run preview:tokens
+bun run preview:assets  # refresh documentation images, store artwork and version inventory
+```
+
+Screenshot tooling and output paths are documented in [Preview assets](docs/previews/README.md). Optional browser regressions require the isolated preview server:
+
+```sh
+DASHBOARD_FEEDBACK_PREVIEW_URL=http://127.0.0.1:43997/dashboard.html bun test scripts/qa/dashboard-pages.test.ts scripts/qa/dashboard-feedback.test.ts scripts/qa/dashboard-strategies.test.ts scripts/qa/popup-layout.test.ts scripts/qa/dashboard-health.test.ts
 ```
 
 Benchmark samples and probes live in `scripts/cache-benchmark-dataset.ts`. The dataset covers Exact, Normalized, Template, Semantic, and Miss cache paths, plus varied community, transit, travel, cooking, outdoor, gardening, science, and multilingual content. The synthetic workload keeps a deterministic 80/20 hit/miss ratio. Local timings use Bun's high-resolution timer; the end-to-end comparison is an explicit sequential model with a configurable Jev latency. Run `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800`, or add `--json` for machine-readable output. It never reads credentials or makes network requests.
