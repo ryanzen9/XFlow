@@ -15,7 +15,11 @@ test.skipIf(!previewUrl)(
     const click = (name: string) => browser("find", "role", "button", "click", "--name", name, "--exact");
     const settings = normalizeSettings({
       strategies: [
-        { ...defaultStrategy("timeline", 1, "long"), name: longName, prompt: "长文本布局检查".repeat(500) },
+        {
+          ...defaultStrategy("timeline", 1, "long"),
+          name: longName,
+          prompt: "长文本布局检查".repeat(1000).slice(0, 6000),
+        },
         { ...defaultStrategy("timeline", 2, "short"), name: "简洁策略", enabled: false },
         { ...defaultStrategy("comments", 1, "comment"), name: "评论策略" },
       ],
