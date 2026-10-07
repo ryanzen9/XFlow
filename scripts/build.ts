@@ -1,3 +1,18 @@
+import { DEFAULT_LOCALE, LOCALES, createManifest, readLocaleCatalog, validateManifest } from "./manifest";
+
+// Fail fast: the release manifest must stay free of development origins, and
+// `bun run build:dev` may only widen the optional host permissions.
+// `bun run build -- --release` (used by `bun run release:package`) ships no
+// source maps, so the upload contains neither maps nor dangling map comments.
+const dev = Bun.argv.includes("--dev");
+const release = Bun.argv.includes("--release");
+if (dev && release) throw new Error("--dev and --release are mutually exclusive.");
+const productionIssues = validateManifest(createManifest(), await readLocaleCatalog(DEFAULT_LOCALE));
+if (productionIssues.length > 0) {
+  for (const issue of productionIssues) console.error(`manifest: ${issue.code}: ${issue.detail}`);
+  process.exit(1);
+}
+
 const zodCspPlugin: Bun.BunPlugin = {
   name: "zod-csp-safe",
   setup(builder) {
@@ -44,7 +59,7 @@ for (const build of builds) {
     target: "browser",
     format: build.format,
     naming: `${build.outputName}.[ext]`,
-    sourcemap: "external",
+    sourcemap: release ? "none" : "external",
     minify: true,
     plugins: [zodCspPlugin],
     define: {
@@ -71,7 +86,6 @@ for (const [input, output] of [
 }
 
 const staticFiles = [
-  ["manifest.json", "dist/manifest.json"],
   ["popup.html", "dist/popup.html"],
   ["dashboard.html", "dist/dashboard.html"],
   ["logo.png", "dist/logo.png"],
@@ -82,4 +96,20 @@ for (const [source, destination] of staticFiles) {
   await Bun.write(destination, Bun.file(source));
 }
 
-console.log("Built XFlow extension in dist/");
+// `bun run build:dev` keeps local http S3 endpoints testable; the production
+// manifest validated above is the one that ships.
+const manifest = createManifest({ dev });
+await Bun.write("dist/manifest.json", `${JSON.stringify(manifest, null, 2)}\n`);
+
+const iconSources = new Set(Object.values(manifest.icons));
+for (const source of iconSources) {
+  await Bun.write(`dist/${source}`, Bun.file(source));
+}
+
+for (const locale of LOCALES) {
+  await Bun.write(`dist/_locales/${locale}/messages.json`, Bun.file(`_locales/${locale}/messages.json`));
+}
+
+console.log(
+  `Built XFlow extension in dist/${dev ? " (development manifest)" : ""}${release ? " (release, no source maps)" : ""}`,
+);
