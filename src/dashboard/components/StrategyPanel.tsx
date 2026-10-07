@@ -4,6 +4,9 @@ import { Divider } from "@astryxdesign/core/Divider";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { Grid } from "@astryxdesign/core/Grid";
 import { HStack } from "@astryxdesign/core/HStack";
+import { Icon } from "@astryxdesign/core/Icon";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { ArrowLeft } from "lucide-react";
 import { NumberInput } from "@astryxdesign/core/NumberInput";
 import { RadioList, RadioListItem } from "@astryxdesign/core/RadioList";
 import { Selector } from "@astryxdesign/core/Selector";
@@ -68,7 +71,13 @@ export function StrategyPanel({
   return (
     <VStack gap={5}>
       <HStack hAlign="between" wrap="wrap" gap={3}>
-        <Button label={t("strategy.back", { surface: surfaceName })} onClick={onBack} />
+        <IconButton
+          label={t("strategy.back", { surface: surfaceName })}
+          tooltip={t("strategy.back", { surface: surfaceName })}
+          icon={<Icon icon={ArrowLeft} size="sm" />}
+          variant="ghost"
+          onClick={onBack}
+        />
         <Status
           variant="neutral"
           label={`P${strategy.priority} · ${t(strategy.enabled ? "common.enabled" : "common.disabled")}`}
@@ -83,7 +92,7 @@ export function StrategyPanel({
             onSave();
           }}
         >
-          <Panel title={t("strategy.define")} description={t("strategy.defineDescription")}>
+          <Panel title={t("strategy.define")}>
             <FormLayout>
               <TextInput
                 data-field="strategy-name"
@@ -106,20 +115,15 @@ export function StrategyPanel({
               />
               <Switch
                 label={t("strategy.enableStrategy")}
-                description={t("strategy.keepConfig")}
                 value={strategy.enabled}
                 isDisabled={busy}
                 onChange={(enabled) => update({ enabled })}
                 labelPosition="start"
                 labelSpacing="spread"
               />
-              <Text as="p" color="secondary">
-                {surfaceName} · {surface === "timeline" ? "/home" : "/status"} · {t("strategy.tablePriority")}
-              </Text>
               <TextArea
                 data-field="strategy-prompt"
                 label={t("strategy.prompt")}
-                description={t("strategy.promptHelp")}
                 value={strategy.prompt}
                 rows={5}
                 maxLength={6000}
@@ -131,6 +135,7 @@ export function StrategyPanel({
                 key={strategy.id}
                 data-field="strategy-hit-rate-input"
                 label={t("strategy.hitRateInput")}
+                labelTooltip={t("strategy.hitRateHelp", { value: hitRate })}
                 value={hitRate}
                 min={0}
                 max={100}
@@ -152,7 +157,7 @@ export function StrategyPanel({
                 max={100}
                 step={1}
                 formatValue={(value) => `${value}%`}
-                description={t("strategy.hitRateHelp", { value: hitRate })}
+                isLabelHidden
                 isDisabled={busy}
                 onChange={(value: number) => update({ sensitivity: sensitivityForHitRate(value) })}
               />
@@ -165,90 +170,87 @@ export function StrategyPanel({
             </FormLayout>
           </Panel>
           <Divider />
-          <Panel title={t("strategy.hoverTitle")} description={t("strategy.hoverDescription")}>
-            <TextArea
-              data-field="hover-template"
-              label={t("strategy.hoverTemplate")}
-              description={t("strategy.templateHelp")}
-              value={strategy.hoverTemplate}
-              rows={3}
-              maxLength={500}
-              isRequired
-              isDisabled={busy}
-              status={templateError ? { type: "error", message: templateError } : undefined}
-              statusVariant="detached"
-              onChange={(hoverTemplate) => update({ hoverTemplate })}
-            />
-            <HStack gap={1} wrap="wrap">
-              {HOVER_VARIABLES.map((variable) => (
-                <Button
-                  key={variable}
-                  size="sm"
-                  label={t("strategy.insert", { variable })}
-                  isDisabled={busy}
-                  onClick={() => {
-                    update({ hoverTemplate: `${strategy.hoverTemplate} {{${variable}}}`.slice(0, 500) });
-                    document.querySelector<HTMLTextAreaElement>('[data-field="hover-template"]')?.focus();
-                  }}
-                >
-                  <Text type="code">{`{{${variable}}}`}</Text>
-                </Button>
-              ))}
-            </HStack>
-            <RadioList
-              label={t("strategy.hoverStyle")}
-              value={HOVER_STYLE_PRESETS.find((preset) => preset.css === strategy.hoverCss)?.id ?? ""}
-              isDisabled={busy}
-              onChange={(id) => {
-                const preset = HOVER_STYLE_PRESETS.find((item) => item.id === id);
-                if (preset) update({ hoverCss: preset.css });
-              }}
-            >
-              {HOVER_STYLE_PRESETS.map(({ id }) => (
-                <RadioListItem
-                  key={id}
-                  value={id}
-                  label={t(`strategy.hoverStyle.${id}`)}
-                  description={t(`strategy.hoverStyle.${id}Help`)}
-                />
-              ))}
-            </RadioList>
-            <TextArea
-              data-field="hover-css"
-              label={t("strategy.customCss")}
-              description={t("strategy.cssHelp")}
-              value={strategy.hoverCss}
-              placeholder={DEFAULT_HOVER_CSS}
-              rows={6}
-              maxLength={6000}
-              hasSpellCheck={false}
-              className="font-mono"
-              isDisabled={busy}
-              status={cssError ? { type: "error", message: cssError } : undefined}
-              statusVariant="detached"
-              onChange={(hoverCss) => update({ hoverCss })}
-            />
-            <Button
-              label={t("strategy.fillExample")}
-              size="sm"
-              variant="ghost"
-              isDisabled={busy}
-              onClick={() => update({ hoverCss: DEFAULT_HOVER_CSS })}
-            />
-            <Collapsible trigger={t("strategy.cssDetails")} defaultIsOpen={false}>
-              <VStack gap={3}>
-                <Text as="p" color="secondary">
-                  {t("strategy.cssSelectors")}
-                </Text>
-                <Text as="p" color="secondary">
-                  {t("strategy.cssProperties")}
-                </Text>
-                <Text as="p" color="secondary">
-                  {t("strategy.cssVariables")}
-                </Text>
-              </VStack>
-            </Collapsible>
-          </Panel>
+          <Collapsible trigger={t("strategy.hoverTitle")} defaultIsOpen={Boolean(cssError || templateError)}>
+            <VStack gap={4}>
+              <TextArea
+                data-field="hover-template"
+                label={t("strategy.hoverTemplate")}
+                labelTooltip={t("strategy.templateHelp")}
+                value={strategy.hoverTemplate}
+                rows={3}
+                maxLength={500}
+                isRequired
+                isDisabled={busy}
+                status={templateError ? { type: "error", message: templateError } : undefined}
+                statusVariant="detached"
+                onChange={(hoverTemplate) => update({ hoverTemplate })}
+              />
+              <HStack gap={1} wrap="wrap">
+                {HOVER_VARIABLES.map((variable) => (
+                  <Button
+                    key={variable}
+                    size="sm"
+                    label={t("strategy.insert", { variable })}
+                    isDisabled={busy}
+                    onClick={() => {
+                      update({ hoverTemplate: `${strategy.hoverTemplate} {{${variable}}}`.slice(0, 500) });
+                      document.querySelector<HTMLTextAreaElement>('[data-field="hover-template"]')?.focus();
+                    }}
+                  >
+                    <Text type="code">{`{{${variable}}}`}</Text>
+                  </Button>
+                ))}
+              </HStack>
+              <RadioList
+                label={t("strategy.hoverStyle")}
+                value={HOVER_STYLE_PRESETS.find((preset) => preset.css === strategy.hoverCss)?.id ?? ""}
+                isDisabled={busy}
+                onChange={(id) => {
+                  const preset = HOVER_STYLE_PRESETS.find((item) => item.id === id);
+                  if (preset) update({ hoverCss: preset.css });
+                }}
+              >
+                {HOVER_STYLE_PRESETS.map(({ id }) => (
+                  <RadioListItem key={id} value={id} label={t(`strategy.hoverStyle.${id}`)} />
+                ))}
+              </RadioList>
+              <TextArea
+                data-field="hover-css"
+                label={t("strategy.customCss")}
+                labelTooltip={t("strategy.cssHelp")}
+                value={strategy.hoverCss}
+                placeholder={DEFAULT_HOVER_CSS}
+                rows={6}
+                maxLength={6000}
+                hasSpellCheck={false}
+                className="font-mono"
+                isDisabled={busy}
+                status={cssError ? { type: "error", message: cssError } : undefined}
+                statusVariant="detached"
+                onChange={(hoverCss) => update({ hoverCss })}
+              />
+              <Button
+                label={t("strategy.fillExample")}
+                size="sm"
+                variant="ghost"
+                isDisabled={busy}
+                onClick={() => update({ hoverCss: DEFAULT_HOVER_CSS })}
+              />
+              <Collapsible trigger={t("strategy.cssDetails")} defaultIsOpen={false}>
+                <VStack gap={3}>
+                  <Text as="p" color="secondary">
+                    {t("strategy.cssSelectors")}
+                  </Text>
+                  <Text as="p" color="secondary">
+                    {t("strategy.cssProperties")}
+                  </Text>
+                  <Text as="p" color="secondary">
+                    {t("strategy.cssVariables")}
+                  </Text>
+                </VStack>
+              </Collapsible>
+            </VStack>
+          </Collapsible>
           <Actions>
             <Button label={t("strategy.reset")} onClick={reset} isDisabled={busy} />
             <Button
@@ -259,7 +261,6 @@ export function StrategyPanel({
               isDisabled={!!cssError || !!templateError}
             />
           </Actions>
-          <Text type="supporting">{t("strategy.previewUpdates")}</Text>
         </VStack>
         <StrategyPreview strategy={strategy} modelNickname={modelNickname} modelId={modelId} />
       </Grid>

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { AlertDialog } from "@astryxdesign/core/AlertDialog";
-import { Button } from "@astryxdesign/core/Button";
+import { Icon } from "@astryxdesign/core/Icon";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Trash2 } from "lucide-react";
 import { useI18n } from "../../../ui/i18n";
 
 export function ClearActivityDialog({ busy, onClear }: { busy: boolean; onClear: () => Promise<void> }) {
@@ -8,7 +10,15 @@ export function ClearActivityDialog({ busy, onClear }: { busy: boolean; onClear:
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button label={t("activity.clearData")} variant="secondary" isDisabled={busy} onClick={() => setOpen(true)} />
+      <IconButton
+        label={t("activity.clearData")}
+        tooltip={t("activity.clearData")}
+        icon={<Icon icon={Trash2} size="sm" />}
+        size="sm"
+        variant="ghost"
+        isDisabled={busy}
+        onClick={() => setOpen(true)}
+      />
       <AlertDialog
         isOpen={open}
         onOpenChange={(value) => {

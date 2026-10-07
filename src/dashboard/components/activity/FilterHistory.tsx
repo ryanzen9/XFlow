@@ -8,6 +8,8 @@ import { Divider } from "@astryxdesign/core/Divider";
 import { EmptyState } from "@astryxdesign/core/EmptyState";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Link } from "@astryxdesign/core/Link";
+import { Icon } from "@astryxdesign/core/Icon";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { StackItem } from "@astryxdesign/core/Stack";
 
 import { Text } from "@astryxdesign/core/Text";
@@ -118,8 +120,7 @@ export function FilterHistory({
         : new Date(`${day}T12:00:00`).toLocaleDateString(locale, { month: "long", day: "numeric" });
 
   return (
-    <Panel id="history-title" title={t("history.title")} description={t("history.subtitle")}>
-      <Text type="supporting">{t("history.records", { count: number.format(history.length) })}</Text>
+    <Panel id="history-title" title={t("history.title")}>
       {history.length === 0 ? (
         <EmptyState title={t("history.empty")} />
       ) : (
@@ -160,8 +161,10 @@ export function FilterHistory({
             </Text>
             {totalPages > 1 && (
               <HStack as="nav" gap={2} aria-label={t("history.pagination")}>
-                <Button
+                <IconButton
                   label={t("history.previous")}
+                  tooltip={t("history.previous")}
+                  icon={<Icon icon="chevronLeft" size="sm" />}
                   variant="secondary"
                   size="sm"
                   isDisabled={page === 1}
@@ -170,8 +173,10 @@ export function FilterHistory({
                 <Text type="code">
                   {t("history.page", { current: number.format(page), total: number.format(totalPages) })}
                 </Text>
-                <Button
+                <IconButton
                   label={t("history.next")}
+                  tooltip={t("history.next")}
+                  icon={<Icon icon="chevronRight" size="sm" />}
                   variant="secondary"
                   size="sm"
                   isDisabled={page === totalPages}

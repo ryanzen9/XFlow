@@ -6,8 +6,11 @@ The self-hosted Figtree font, spacing, shape and motion resolve through that the
 Neither imports the legacy Tailwind bridge, so their controls keep Astryx typography and casing.
 Popup width and minimum height are defined by the theme's `--xflow-popup-width` and `--xflow-popup-height` tokens.
 Its monitoring rows use Item and Switch, including native labels, loading feedback and reduced-motion support.
-Dashboard confirmations use Astryx Toast; errors remain inline. Chart switching reserves the same plot region,
+Dashboard confirmations use Astryx Toast; errors remain inline. Chart switching reserves the same 280px plot region,
 tables keep a readable minimum name column, and API provider details stack below 1280px.
+Theme and language controls use labelled IconButtons with tooltips in both entry points.
+The Dashboard removes repeated section introductions and the pinned branding footer; advanced appearance and sync
+details use Collapsible. At wide widths, activity and weekly metrics sit side by side; narrow screens stack them.
 Strategy preview edits update without replaying the full veil entrance; the explicit pointer replay action
 demonstrates that motion. The renderer continues to honor reduced motion.
 

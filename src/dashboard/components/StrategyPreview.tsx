@@ -2,14 +2,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { mountPostVeil, type PostVeilPresentation } from "../../content/render/post-veil";
 import { formatProbability, strategyThreshold, type FilterStrategy } from "../../shared";
 import { useI18n } from "../../ui/i18n";
-import { Button } from "@astryxdesign/core/Button";
+import { Icon } from "@astryxdesign/core/Icon";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { RotateCcw } from "lucide-react";
 import { Card } from "@astryxdesign/core/Card";
 import { Divider } from "@astryxdesign/core/Divider";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Selector } from "@astryxdesign/core/Selector";
 import { Slider } from "@astryxdesign/core/Slider";
-import { Text } from "@astryxdesign/core/Text";
 import { TextArea } from "@astryxdesign/core/TextArea";
 import { VStack } from "@astryxdesign/core/VStack";
 import { SectionIntro, Status } from "./DashboardUI";
@@ -88,10 +89,20 @@ export function StrategyPreview({
       <Card padding={5}>
         <VStack gap={4}>
           <HStack gap={3} hAlign="between" wrap="wrap">
-            <SectionIntro title={t("preview.title")} description={t("preview.live")} />
-            <Status variant="neutral" label={t("preview.local")} />
+            <SectionIntro title={t("preview.title")} />
+            <IconButton
+              label={t("preview.replay")}
+              tooltip={t("preview.replay")}
+              icon={<Icon icon={RotateCcw} size="sm" />}
+              size="sm"
+              variant="ghost"
+              onClick={(event) => {
+                animateReplay.current = event.detail > 0;
+                setCycle((value) => value + 1);
+              }}
+              isDisabled={!hit}
+            />
           </HStack>
-          <Text type="supporting">{t(surface === "timeline" ? "strategy.timeline" : "strategy.comments")}</Text>
           <Selector
             label={t("preview.theme")}
             value={theme}
@@ -107,16 +118,6 @@ export function StrategyPreview({
             <Status
               variant="neutral"
               label={t(!hit ? "preview.visible" : revealed ? "preview.revealed" : "preview.hit")}
-            />
-            <Button
-              label={t("preview.replay")}
-              size="sm"
-              variant="ghost"
-              onClick={(event) => {
-                animateReplay.current = event.detail > 0;
-                setCycle((value) => value + 1);
-              }}
-              isDisabled={!hit}
             />
           </HStack>
           <Divider />
@@ -141,9 +142,6 @@ export function StrategyPreview({
               onChange={setText}
             />
           </FormLayout>
-          <Text as="p" type="supporting">
-            {t("preview.help")}
-          </Text>
         </VStack>
       </Card>
     </VStack>

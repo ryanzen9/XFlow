@@ -8,6 +8,7 @@ import { Switch } from "@astryxdesign/core/Switch";
 import { Table, pixel, proportional, type TableColumn } from "@astryxdesign/core/Table";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
+import { Pencil, Trash2 } from "lucide-react";
 import { strategyHitRate, type FilterStrategy, type FilterSurface } from "../../shared";
 import { useI18n } from "../../ui/i18n";
 import { Actions, SectionIntro } from "./DashboardUI";
@@ -48,7 +49,6 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
           <IconButton
             size="sm"
             variant="ghost"
-            className="px-0"
             label={t("strategy.raise", { name: strategy.name })}
             tooltip={t("strategy.raiseTitle")}
             icon={<Icon icon="arrowUp" size="sm" />}
@@ -76,6 +76,7 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
           <Button
             size="sm"
             variant="ghost"
+            className="px-0"
             label={t("strategy.edit", { name: strategy.name })}
             onClick={() => onOpen(strategy.id)}
           >
@@ -108,7 +109,7 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
     {
       key: "enabled",
       header: t("strategy.state"),
-      width: pixel(160),
+      width: pixel(100),
       renderCell: (strategy) => (
         <HStack gap={2}>
           <Switch
@@ -119,20 +120,27 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
             isDisabled={busy}
             onChange={(enabled) => update(strategy.id, { enabled })}
           />
-          <Text type="supporting">{t(strategy.enabled ? "common.enabled" : "common.disabled")}</Text>
         </HStack>
       ),
     },
     {
       key: "actions",
       header: t("strategy.actions"),
-      width: pixel(170),
+      width: pixel(110),
       renderCell: (strategy) => (
         <HStack gap={1}>
-          <Button label={t("strategy.details")} size="sm" onClick={() => onOpen(strategy.id)} />
-          <Button
-            label={t("strategy.delete")}
-            aria-label={`${t("strategy.delete")}: ${strategy.name}`}
+          <IconButton
+            label={`${t("strategy.details")}: ${strategy.name}`}
+            tooltip={t("strategy.edit", { name: strategy.name })}
+            icon={<Icon icon={Pencil} size="sm" />}
+            size="sm"
+            variant="ghost"
+            onClick={() => onOpen(strategy.id)}
+          />
+          <IconButton
+            label={`${t("strategy.delete")}: ${strategy.name}`}
+            tooltip={`${t("strategy.delete")}: ${strategy.name}`}
+            icon={<Icon icon={Trash2} size="sm" />}
             size="sm"
             variant="destructive"
             isDisabled={busy}
@@ -151,11 +159,7 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
   return (
     <VStack as="section" gap={5} aria-labelledby="strategy-table-title">
       <HStack hAlign="between" vAlign="start" gap={4} wrap="wrap">
-        <SectionIntro
-          id="strategy-table-title"
-          title={t("strategy.title", { surface: label })}
-          description={t("strategy.libraryHelp", { surface: label })}
-        />
+        <SectionIntro id="strategy-table-title" title={t("strategy.title", { surface: label })} />
         <Button label={t("strategy.createSurface", { surface: label })} onClick={onCreate} isDisabled={busy} />
       </HStack>
       {rows.length ? (
@@ -175,9 +179,6 @@ export function StrategyList({ surface, strategies, busy, dirty, onChange, onOpe
         />
       )}
       <Divider />
-      <Text as="p" color="secondary">
-        {t("strategy.orderHelp", { surface: label })}
-      </Text>
       <Actions>
         <Button
           variant="primary"

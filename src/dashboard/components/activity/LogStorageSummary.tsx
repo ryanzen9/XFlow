@@ -1,6 +1,8 @@
 import { AlertDialog } from "@astryxdesign/core/AlertDialog";
 import { useState } from "react";
-import { Button } from "@astryxdesign/core/Button";
+import { Icon } from "@astryxdesign/core/Icon";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Trash2 } from "lucide-react";
 import { HStack } from "@astryxdesign/core/HStack";
 import { ProgressBar } from "@astryxdesign/core/ProgressBar";
 import { Text } from "@astryxdesign/core/Text";
@@ -36,7 +38,7 @@ export function LogStorageSummary({
     usagePercent,
   );
   return (
-    <Panel id="log-storage-title" title={t("history.storage")} description={t("history.storageDescription")}>
+    <Panel id="log-storage-title" title={t("history.storage")}>
       <VStack gap={3}>
         <HStack hAlign="between" gap={3} wrap="wrap">
           <Text type="code">
@@ -45,9 +47,12 @@ export function LogStorageSummary({
               limit: formatBytes(storageLimit, locale),
             })}
           </Text>
-          <Button
+          <IconButton
             label={t("history.clear")}
-            variant="secondary"
+            tooltip={t("history.clear")}
+            icon={<Icon icon={Trash2} size="sm" />}
+            size="sm"
+            variant="ghost"
             isDisabled={busy || recordCount === 0}
             onClick={() => setOpen(true)}
           />

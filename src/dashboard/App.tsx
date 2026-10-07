@@ -14,7 +14,7 @@ import { Button } from "@astryxdesign/core/Button";
 import { EmptyState } from "@astryxdesign/core/EmptyState";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
-import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from "@astryxdesign/core/Layout";
+import { Layout, LayoutContent, LayoutHeader } from "@astryxdesign/core/Layout";
 import { Link } from "@astryxdesign/core/Link";
 import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from "@astryxdesign/core/SideNav";
 import { Spinner } from "@astryxdesign/core/Spinner";
@@ -199,7 +199,6 @@ export function App() {
             header={
               <SideNavHeading
                 heading="XFlow"
-                subheading="Read with intention"
                 icon={
                   <Avatar
                     src={theme === "dark" ? "logo.png" : "logo-dark.png"}
@@ -223,7 +222,9 @@ export function App() {
                     )
                   }
                 />
-                <Text type="supporting">XFlow / 0.1</Text>
+                <Link href={privacyPolicyUrl(locale)} target="_blank" color="secondary" isStandalone>
+                  {t("privacy.policyLink")}
+                </Link>
               </VStack>
             }
           >
@@ -252,9 +253,11 @@ export function App() {
               <HStack gap={4} hAlign="between" vAlign="start" wrap="wrap">
                 <VStack gap={1} className="min-w-0 flex-1">
                   <Heading level={1}>{page.title}</Heading>
-                  <Text as="p" color="secondary" maxLines={1}>
-                    {page.description}
-                  </Text>
+                  {selectedStrategy && menu === "strategies" && (
+                    <Text as="p" color="secondary" maxLines={1}>
+                      {page.description}
+                    </Text>
+                  )}
                 </VStack>
                 <Status
                   variant={form.dirty ? "warning" : "neutral"}
@@ -345,17 +348,6 @@ export function App() {
                 )}
               </VStack>
             </LayoutContent>
-          }
-          footer={
-            <LayoutFooter hasDivider>
-              <HStack hAlign="between" gap={3} wrap="wrap">
-                <Text type="supporting">XFlow — build your X</Text>
-                <Link href={privacyPolicyUrl(locale)} target="_blank" hasUnderline isStandalone>
-                  {t("privacy.policyLink")}
-                </Link>
-                <Text type="supporting">Created by Ryan Zeng</Text>
-              </HStack>
-            </LayoutFooter>
           }
         />
       </AppShell>

@@ -4,6 +4,9 @@ import { Button } from "@astryxdesign/core/Button";
 import { Divider } from "@astryxdesign/core/Divider";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { HStack } from "@astryxdesign/core/HStack";
+import { Icon } from "@astryxdesign/core/Icon";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Eye, EyeOff } from "lucide-react";
 import { StackItem } from "@astryxdesign/core/Stack";
 import { Link } from "@astryxdesign/core/Link";
 import { RadioList, RadioListItem } from "@astryxdesign/core/RadioList";
@@ -125,7 +128,6 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
   const providers = (
     <RadioList
       label={t("api.chooseProvider")}
-      description={t("api.oneProvider")}
       value={activeProviderId}
       onChange={(value) => void onProviderChange(value as ProviderId)}
       htmlName="active-provider"
@@ -140,9 +142,6 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
             label={providerLabel(id, locale)}
             description={
               <VStack gap={1}>
-                <Text type="code" className="wrap-anywhere">
-                  {PROVIDERS[id].modelId}
-                </Text>
                 <Status
                   variant={configured ? "neutral" : "warning"}
                   label={t(configured ? "api.configured" : "api.needsKey")}
@@ -156,11 +155,7 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
   );
   const detail = (
     <VStack gap={5}>
-      <SectionIntro
-        id={`provider-detail-title-${activeProviderId}`}
-        title={providerLabel(activeProviderId, locale)}
-        description={t("api.description")}
-      />
+      <SectionIntro id={`provider-detail-title-${activeProviderId}`} title={providerLabel(activeProviderId, locale)} />
       <Status
         variant={activeSummary?.configured ? "neutral" : "warning"}
         label={
@@ -169,9 +164,6 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
       />
       <Divider />
       <LabeledValue label={t("api.model")}>{activeProvider.modelId}</LabeledValue>
-      <LabeledValue label={t("api.credentialStatus")}>
-        {activeSummary?.configured ? t("api.savedLocally", { hint: activeSummary.keyHint }) : t("api.awaitingKey")}
-      </LabeledValue>
       <Text as="p" color="secondary">
         {t("api.privacyNotice")}{" "}
         <Link href={privacyPolicyUrl(locale)} target="_blank" hasUnderline>
@@ -192,7 +184,7 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
             label="API Key"
             type={revealed[activeProviderId] ? "text" : "password"}
             autoComplete="off"
-            description={t("api.localOnly")}
+            labelTooltip={t("api.localOnly")}
             placeholder={
               activeSummary?.configured ? t("api.replacePlaceholder", { hint: activeSummary.keyHint }) : placeholder
             }
@@ -205,19 +197,19 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
           <Link href={activeProvider.keyUrl} isExternalLink>
             {t("api.getKey")}
           </Link>
-          <Button
+          <IconButton
             label={t("api.toggleKey", {
               action: t(revealed[activeProviderId] ? "common.hide" : "common.show"),
               provider: providerLabel(activeProviderId, locale),
             })}
+            tooltip={t(revealed[activeProviderId] ? "common.hide" : "common.show")}
+            icon={<Icon icon={revealed[activeProviderId] ? EyeOff : Eye} size="sm" />}
             aria-pressed={revealed[activeProviderId]}
             size="sm"
             variant="ghost"
             isDisabled={credentialsBusy}
             onClick={() => setRevealed((current) => ({ ...current, [activeProviderId]: !current[activeProviderId] }))}
-          >
-            {t(revealed[activeProviderId] ? "common.hide" : "common.show")}
-          </Button>
+          />
         </HStack>
         <Divider />
         <Actions>

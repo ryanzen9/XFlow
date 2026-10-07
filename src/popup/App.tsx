@@ -7,6 +7,7 @@ import { StackItem } from "@astryxdesign/core/Stack";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { AstryxLocale } from "../ui/AstryxLocale";
+import { AppearanceControls } from "../ui/AppearanceControls";
 import { providerLabel, useI18n } from "../ui/i18n";
 import { ActivitySummary } from "./components/ActivitySummary";
 import { ChannelRow } from "./components/ChannelRow";
@@ -18,20 +19,26 @@ import { useSettingsForm } from "./hooks/use-settings-form";
 export function App() {
   const form = useSettingsForm();
   const activity = useActivity();
-  const { locale, t, setLocale } = useI18n();
-  const nextTheme = form.theme === "dark" ? "light" : "dark";
+  const { locale, t } = useI18n();
   return (
     <AstryxLocale>
       <VStack as="main" minHeight="var(--xflow-popup-height)" padding={3} gap={2} className="bg-body">
-        <HStack as="header" gap={2}>
-          <Avatar src={form.theme === "dark" ? "logo.png" : "logo-dark.png"} name="XFlow" alt="XFlow logo" size="sm" />
-          <Heading level={4} accessibilityLevel={1}>
-            XFlow
-          </Heading>
+        <HStack as="header" gap={2} hAlign="between">
+          <HStack gap={2}>
+            <Avatar
+              src={form.theme === "dark" ? "logo.png" : "logo-dark.png"}
+              name="XFlow"
+              alt="XFlow logo"
+              size="sm"
+            />
+            <Heading level={4} accessibilityLevel={1}>
+              XFlow
+            </Heading>
+          </HStack>
+          <AppearanceControls theme={form.theme} onThemeChange={(theme) => void form.setTheme(theme)} />
         </HStack>
         <ActivitySummary {...activity} live={form.enabled || form.commentsEnabled} />
         <VStack as="section" gap={1} aria-label={t("popup.monitoringScope")}>
-          <Text type="supporting">{t("popup.monitoring")}</Text>
           <VStack className="divide-y divide-border rounded-lg border border-border">
             <MonitorSwitch
               id="enabled"
@@ -56,7 +63,6 @@ export function App() {
           </VStack>
         </VStack>
         <VStack as="section" gap={1} aria-label={t("popup.currentProvider")}>
-          <Text type="supporting">{t("popup.provider")}</Text>
           <VStack className="rounded-lg border border-border">
             <ChannelRow name={providerLabel(form.activeProvider, locale)} configured={form.configured} />
           </VStack>
@@ -86,22 +92,6 @@ export function App() {
                 onClick={() => void chrome.runtime.openOptionsPage()}
               />
             </StackItem>
-            <Button
-              label={t("language.switch")}
-              size="sm"
-              variant="ghost"
-              onClick={() => void setLocale(locale === "zh-CN" ? "en" : "zh-CN").catch(() => undefined)}
-            >
-              {locale === "zh-CN" ? "EN" : "中文"}
-            </Button>
-            <Button
-              label={t(nextTheme === "dark" ? "theme.switch.dark" : "theme.switch.light")}
-              size="sm"
-              variant="ghost"
-              onClick={() => void form.setTheme(nextTheme)}
-            >
-              {t(form.theme === "dark" ? "theme.dark" : "theme.light")}
-            </Button>
           </HStack>
         </VStack>
       </VStack>

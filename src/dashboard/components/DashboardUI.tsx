@@ -1,7 +1,6 @@
 import { StatusDot, type StatusDotProps } from "@astryxdesign/core/StatusDot";
 import { useEffect, type ReactNode } from "react";
 import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
 import { LayerProvider } from "@astryxdesign/core/Layer";
@@ -9,8 +8,8 @@ import { Text } from "@astryxdesign/core/Text";
 import { useToast } from "@astryxdesign/core/Toast";
 import { VStack } from "@astryxdesign/core/VStack";
 import type { Theme } from "../../shared";
-import { useI18n } from "../../ui/i18n";
 import { AstryxLocale } from "../../ui/AstryxLocale";
+import { AppearanceControls } from "../../ui/AppearanceControls";
 
 export function DashboardLocale({ children }: { children: ReactNode }) {
   return (
@@ -23,7 +22,7 @@ export function DashboardLocale({ children }: { children: ReactNode }) {
 /** Always pair the non-colour status label with the dot. */
 export function Status({ label, variant = "neutral" }: Pick<StatusDotProps, "label" | "variant">) {
   return (
-    <HStack gap={2} className="shrink-0">
+    <HStack as="span" gap={2} className="shrink-0">
       <StatusDot label={label} variant={variant} aria-hidden="true" />
       <Text type="supporting">{label}</Text>
     </HStack>
@@ -110,32 +109,5 @@ export function DashboardPreferences({
   busy: boolean;
   onThemeChange: (theme: Theme) => void;
 }) {
-  const { locale, t, setLocale } = useI18n();
-  const nextLocale = locale === "zh-CN" ? "en" : "zh-CN";
-  const nextTheme = theme === "dark" ? "light" : "dark";
-  return (
-    <HStack gap={2} wrap="wrap">
-      <Button
-        label={t("language.switch")}
-        aria-pressed={locale === "en"}
-        size="sm"
-        variant="ghost"
-        isDisabled={busy}
-        onClick={() => void setLocale(nextLocale).catch(() => undefined)}
-      >
-        {locale === "zh-CN" ? "EN" : "中文"}
-      </Button>
-      {theme && (
-        <Button
-          label={t(nextTheme === "dark" ? "theme.switch.dark" : "theme.switch.light")}
-          size="sm"
-          variant="ghost"
-          isDisabled={busy}
-          onClick={() => onThemeChange(nextTheme)}
-        >
-          {t(theme === "dark" ? "theme.dark" : "theme.light")}
-        </Button>
-      )}
-    </HStack>
-  );
+  return <AppearanceControls theme={theme} busy={busy} onThemeChange={onThemeChange} />;
 }

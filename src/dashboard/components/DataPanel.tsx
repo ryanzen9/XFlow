@@ -10,11 +10,16 @@ import {
   type AppSettings,
   type S3SyncSettings,
 } from "../../shared";
-import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
+import { Collapsible } from "@astryxdesign/core/Collapsible";
 import { Divider } from "@astryxdesign/core/Divider";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { Grid } from "@astryxdesign/core/Grid";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Icon } from "@astryxdesign/core/Icon";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { StackItem } from "@astryxdesign/core/Stack";
+import { Eye, EyeOff } from "lucide-react";
 import { Link } from "@astryxdesign/core/Link";
 import { Spinner } from "@astryxdesign/core/Spinner";
 import { Text } from "@astryxdesign/core/Text";
@@ -152,11 +157,11 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
   return (
     <VStack gap={6}>
       <Grid columns={{ minWidth: 320, max: 2 }} gap={8} align="start">
-        <Panel title={t("data.configTitle")} description={t("data.configDescription")} id="config-title">
+        <Panel title={t("data.configTitle")} id="config-title">
           <TextArea
             data-field="config-json"
             label="Config"
-            description={t("data.characters", { count: source.length })}
+            isLabelHidden
             rows={22}
             className="font-mono"
             hasSpellCheck={false}
@@ -167,7 +172,7 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
               setStatus({ message: "", error: false });
             }}
           />
-          <Banner status="warning" title={t("data.note")} description={t("data.keySeparated")} container="section" />
+          <Text type="supporting">{t("data.keySeparated")}</Text>
           <Actions>
             <Button label={t("data.format")} onClick={formatJson} isDisabled={busy} />
             <Button label={t("data.discard")} onClick={() => void load()} isDisabled={busy} />
@@ -175,9 +180,9 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
           </Actions>
         </Panel>
         <VStack as="form" gap={4} onSubmit={(event) => void saveAndEnableSync(event)}>
-          <Panel title={t("data.s3Title")} description={t("data.s3Description")} id="s3-title">
+          <Panel title={t("data.s3Title")} id="s3-title">
             <Text as="p" color="secondary">
-              {t("data.privacyNotice")}{" "}
+              {t("data.privacySummary")}{" "}
               <Link href={privacyPolicyUrl(locale)} target="_blank" hasUnderline>
                 {t("privacy.policyLink")}
               </Link>
@@ -186,9 +191,6 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
               variant={s3.autoSyncEnabled ? "success" : "neutral"}
               label={t(s3.autoSyncEnabled ? "data.syncEnabled" : "data.syncDisabled")}
             />
-            <Text as="p" color="secondary">
-              {t(s3.autoSyncEnabled ? "data.syncEnabledHelp" : "data.syncDisabledHelp")}
-            </Text>
             <FormLayout>
               <TextInput
                 data-field="s3-endpoint"
@@ -227,23 +229,28 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
                 isDisabled={busy}
                 onChange={(accessKeyId) => updateS3({ accessKeyId })}
               />
-              <TextInput
-                data-field="s3-secret-key"
-                label="Secret Access Key"
-                type={showSecret ? "text" : "password"}
-                autoComplete="off"
-                value={s3.secretAccessKey}
-                isDisabled={busy}
-                onChange={(secretAccessKey) => updateS3({ secretAccessKey })}
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                label={`${t(showSecret ? "common.hide" : "common.show")} Secret Access Key`}
-                aria-pressed={showSecret}
-                isDisabled={busy}
-                onClick={() => setShowSecret((value) => !value)}
-              />
+              <HStack gap={2} vAlign="end">
+                <StackItem size="fill">
+                  <TextInput
+                    data-field="s3-secret-key"
+                    label="Secret Access Key"
+                    type={showSecret ? "text" : "password"}
+                    autoComplete="off"
+                    value={s3.secretAccessKey}
+                    isDisabled={busy}
+                    onChange={(secretAccessKey) => updateS3({ secretAccessKey })}
+                  />
+                </StackItem>
+                <IconButton
+                  variant="ghost"
+                  label={`${t(showSecret ? "common.hide" : "common.show")} Secret Access Key`}
+                  tooltip={`${t(showSecret ? "common.hide" : "common.show")} Secret Access Key`}
+                  icon={<Icon icon={showSecret ? EyeOff : Eye} size="sm" />}
+                  aria-pressed={showSecret}
+                  isDisabled={busy}
+                  onClick={() => setShowSecret((value) => !value)}
+                />
+              </HStack>
               <TextArea
                 data-field="s3-session-token"
                 label="Session Token"
@@ -255,9 +262,16 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
               />
             </FormLayout>
             <Divider />
-            <Text as="p" color="secondary">
-              {t("data.bucketHelp")}
-            </Text>
+            <Collapsible trigger={t("data.syncDetails")} defaultIsOpen={false}>
+              <VStack gap={3}>
+                <Text as="p" color="secondary">
+                  {t("data.privacyNotice")}
+                </Text>
+                <Text as="p" color="secondary">
+                  {t("data.bucketHelp")}
+                </Text>
+              </VStack>
+            </Collapsible>
             <Actions>
               {s3.autoSyncEnabled && (
                 <Button label={t("data.disableSync")} isDisabled={busy} onClick={() => void disableSync()} />

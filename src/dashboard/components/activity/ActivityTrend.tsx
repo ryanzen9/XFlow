@@ -1,6 +1,6 @@
 import { VStack } from "@astryxdesign/core/VStack";
 import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
-import { SectionIntro } from "../DashboardUI";
+import { Text } from "@astryxdesign/core/Text";
 import type { ActivityDay } from "../../../shared";
 import { useI18n } from "../../../ui/i18n";
 
@@ -19,7 +19,7 @@ export function ActivityTrend({ days }: { days: ActivityDay[] }) {
 
   return (
     <VStack gap={3}>
-      <SectionIntro title={t("activity.trend")} description={t("activity.last7Days")} level={3} />
+      <Text type="supporting">{t("activity.last7Days")}</Text>
       <svg
         className="h-60 w-full overflow-visible"
         viewBox="0 0 516 150"

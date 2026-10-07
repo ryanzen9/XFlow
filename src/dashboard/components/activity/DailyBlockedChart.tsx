@@ -32,7 +32,7 @@ export function DailyBlockedChart({ days }: { days: ActivityDay[] }) {
 
   return (
     <VStack gap={3}>
-      <SectionIntro title={t("history.dailyChart")} description={t("history.dailyChartDescription")} level={3} />
+      <SectionIntro title={t("history.dailyChart")} level={3} />
       <ScrollableArea ref={scroller} axis="inline" role="region" label={t("history.chartScrollArea")}>
         <svg
           width="780"

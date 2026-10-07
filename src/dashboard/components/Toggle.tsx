@@ -8,7 +8,7 @@ export function Toggle({
   onChange,
 }: {
   label: string;
-  description: string;
+  description?: string;
   checked: boolean;
   disabled: boolean;
   onChange: (checked: boolean) => void;

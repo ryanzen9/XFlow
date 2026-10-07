@@ -34,5 +34,5 @@ test("keeps provider credentials masked and ties the label to Astryx's input ID"
   expect(markup).toContain(`for="${inputId}"`);
   expect(input).toContain('type="password"');
   expect(input).toContain('disabled=""');
-  expect(markup).toContain("不进入配置 JSON 或 S3 同步");
+  expect(markup).toContain("密钥仅存本机");
 });

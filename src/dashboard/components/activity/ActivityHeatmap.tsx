@@ -5,7 +5,6 @@ import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import type { ActivityDay } from "../../../shared";
 import { useI18n } from "../../../ui/i18n";
-import { SectionIntro } from "../DashboardUI";
 
 export function ActivityHeatmap({ days }: { days: ActivityDay[] }) {
   const { locale, t } = useI18n();
@@ -18,7 +17,7 @@ export function ActivityHeatmap({ days }: { days: ActivityDay[] }) {
   return (
     <VStack gap={3}>
       <HStack gap={3} hAlign="between" vAlign="start" wrap="wrap">
-        <SectionIntro title={t("activity.heatmap")} description={t("activity.last12Weeks")} level={3} />
+        <Text type="supporting">{t("activity.last12Weeks")}</Text>
         <Text type="supporting">{t("activity.lessMore")}</Text>
       </HStack>
       <ScrollableArea axis="inline" label={t("activity.heatmapAria")} padding={1}>

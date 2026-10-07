@@ -25,11 +25,7 @@ export function LogOverview({ days }: { days: ActivityDay[] }) {
 
   return (
     <VStack gap={5}>
-      <SectionIntro
-        id="log-overview-title"
-        title={t("history.overview")}
-        description={t("history.overviewDescription")}
-      />
+      <SectionIntro id="log-overview-title" title={t("history.overview")} />
       <Grid columns={{ minWidth: 150, max: 4 }} gap={6}>
         {stats.map((stat) => (
           <VStack as="dl" key={stat.label} gap={1}>

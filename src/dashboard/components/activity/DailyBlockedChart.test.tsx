@@ -10,7 +10,7 @@ test("daily blocked chart labels dates and localized volumes", () => {
   const markup = renderToStaticMarkup(<DailyBlockedChart days={days} />);
 
   expect(markup).toContain("每日屏蔽量");
-  expect(markup).toContain("横轴：日期 · 纵轴：屏蔽条数");
+  expect(markup).toContain('aria-label="最近 30 天每日屏蔽量趋势"');
   expect(markup).toContain("9月27日");
   expect(markup).toContain("1,234");
   expect(markup).not.toContain("NaN");
