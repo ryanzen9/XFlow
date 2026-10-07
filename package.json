@@ -1,11 +1,12 @@
 {
   "name": "xflow",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "A privacy-conscious Manifest V3 extension that filters X timelines and replies with Jev.",
   "type": "module",
   "scripts": {
     "build": "bun run theme:check && bun run scripts/build.ts",
+    "build:dev": "bun run theme:check && bun run scripts/build.ts --dev",
     "benchmark:cache": "sh scripts/cache-benchmark.sh",
     "format": "bunx oxfmt --write .",
     "format:check": "bunx oxfmt --check .",
@@ -17,9 +18,12 @@
     "preview:tokens": "bun run scripts/preview-tokens.ts",
     "typecheck": "bunx tsc --noEmit",
     "test": "bun test",
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun test && bun run build && bun run build:site",
+    "release:check": "bun run scripts/release-check.ts",
+    "release:package": "bun run scripts/release-package.ts",
+    "release:verify": "bun run scripts/release-verify.ts",
     "theme:build": "bunx astryx theme build src/themes/neutral/neutralTheme.ts",
-    "theme:check": "bunx astryx theme build --check src/themes/neutral/neutralTheme.ts",
-    "check": "bun run format:check && bun run lint && bun run typecheck && bun test && bun run build && bun run build:site"
+    "theme:check": "bunx astryx theme build --check src/themes/neutral/neutralTheme.ts"
   },
   "dependencies": {
     "@astryxdesign/core": "^0.6.3",

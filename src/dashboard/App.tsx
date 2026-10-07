@@ -15,12 +15,14 @@ import { EmptyState } from "@astryxdesign/core/EmptyState";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from "@astryxdesign/core/Layout";
+import { Link } from "@astryxdesign/core/Link";
 import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from "@astryxdesign/core/SideNav";
 import { Spinner } from "@astryxdesign/core/Spinner";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { Database, KeyRound, ListFilter, ScrollText, Settings } from "lucide-react";
 import { localizeError, providerLabel, useI18n } from "../ui/i18n";
+import { privacyPolicyUrl } from "../ui/privacy";
 import { applyTheme } from "../ui/theme";
 import { DashboardLocale, DashboardPreferences, StatusMessage, Status } from "./components/DashboardUI";
 import { ApiKeysPanel } from "./components/ApiKeysPanel";
@@ -348,6 +350,9 @@ export function App() {
             <LayoutFooter hasDivider>
               <HStack hAlign="between" gap={3} wrap="wrap">
                 <Text type="supporting">XFlow — build your X</Text>
+                <Link href={privacyPolicyUrl(locale)} target="_blank" hasUnderline isStandalone>
+                  {t("privacy.policyLink")}
+                </Link>
                 <Text type="supporting">Created by Ryan Zeng</Text>
               </HStack>
             </LayoutFooter>

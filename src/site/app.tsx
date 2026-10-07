@@ -90,9 +90,8 @@ function HomePage() {
                   用你的规则，找回值得读的时间线。
                 </Text>
                 <Text as="p" color="secondary" justify="center" textWrap="balance">
-                  XFlow 基于 Jev 与自定义策略过滤 X 帖子与评论。
-                  <br />
-                  想看什么，由你决定；何时揭示，也由你决定。
+                  XFlow 用默认广告过滤策略和你自定义的规则筛选 X 首页与评论区。策略由你掌控，过滤判断由你选择的 Jev
+                  Provider 提供。
                 </Text>
               </VStack>
               <VStack gap={4} hAlign="center">

@@ -7,6 +7,12 @@ output/
 *.lcov
 *.tgz
 
+# Release artifacts and temporary packaging output
+*.zip
+*.crx
+*.pem
+docs/chrome-web-store/assets/[0-9][0-9]-*.png
+
 # Local tools and caches
 .playwright-cli/
 .cache/

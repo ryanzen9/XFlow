@@ -15,6 +15,7 @@ import { Button } from "@astryxdesign/core/Button";
 import { Divider } from "@astryxdesign/core/Divider";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { Grid } from "@astryxdesign/core/Grid";
+import { Link } from "@astryxdesign/core/Link";
 import { Spinner } from "@astryxdesign/core/Spinner";
 import { Text } from "@astryxdesign/core/Text";
 import { TextArea } from "@astryxdesign/core/TextArea";
@@ -22,6 +23,7 @@ import { TextInput } from "@astryxdesign/core/TextInput";
 import { VStack } from "@astryxdesign/core/VStack";
 import { Actions, Panel, StatusMessage, Status } from "./DashboardUI";
 import { localizeError, useI18n } from "../../ui/i18n";
+import { privacyPolicyUrl } from "../../ui/privacy";
 
 type PanelStatus = { message: string; error: boolean };
 
@@ -174,6 +176,12 @@ export function DataPanel({ onConfigurationApplied }: { onConfigurationApplied?:
         </Panel>
         <VStack as="form" gap={4} onSubmit={(event) => void saveAndEnableSync(event)}>
           <Panel title={t("data.s3Title")} description={t("data.s3Description")} id="s3-title">
+            <Text as="p" color="secondary">
+              {t("data.privacyNotice")}{" "}
+              <Link href={privacyPolicyUrl(locale)} target="_blank" hasUnderline>
+                {t("privacy.policyLink")}
+              </Link>
+            </Text>
             <Status
               variant={s3.autoSyncEnabled ? "success" : "neutral"}
               label={t(s3.autoSyncEnabled ? "data.syncEnabled" : "data.syncDisabled")}

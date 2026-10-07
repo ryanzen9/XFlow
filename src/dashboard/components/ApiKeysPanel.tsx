@@ -14,6 +14,7 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { useMediaQuery } from "@astryxdesign/core/hooks";
 import { Actions, LabeledValue, SectionIntro, Status } from "./DashboardUI";
 import { providerLabel, translate, useI18n, type Locale, type MessageKey } from "../../ui/i18n";
+import { privacyPolicyUrl } from "../../ui/privacy";
 import {
   clearProviderCredential,
   loadProviderSummaries,
@@ -169,6 +170,12 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
       <LabeledValue label={t("api.credentialStatus")}>
         {activeSummary?.configured ? t("api.savedLocally", { hint: activeSummary.keyHint }) : t("api.awaitingKey")}
       </LabeledValue>
+      <Text as="p" color="secondary">
+        {t("api.privacyNotice")}{" "}
+        <Link href={privacyPolicyUrl(locale)} target="_blank" hasUnderline>
+          {t("privacy.policyLink")}
+        </Link>
+      </Text>
       <VStack
         as="form"
         gap={4}
