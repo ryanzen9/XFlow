@@ -67,6 +67,8 @@ Policy 指纹包含 surface、Provider、策略 ID、启用状态、优先级、
 
 Popup 与 Dashboard 的入口均由 `AstryxThemeRoot` 包裹。它通过 `src/ui/theme-mode.ts` 订阅现有的 Light / Dark 设置；`applyTheme()` 更新浏览器根节点和订阅者，因此两套界面使用同一个模式。Astryx 组件读取 `src/themes/neutral/neutralTheme.ts` 定义的 token；尚未迁移的界面继续读取 `src/styles/token.css` 和 Tailwind bridge。Dashboard 已迁移到 Astryx：AppShell / SideNav 管理导航和窄屏抽屉，Layout 管理页面区域，Table 与 CollapsibleGroup 呈现策略和日志，AlertDialog 管理清理确认与焦点恢复。Dashboard 与 Popup 的样式均只使用 Neutral 主题和 Astryx Tailwind bridge。Popup 使用 Item / Switch 呈现紧凑监控行，计数和反馈区域保留稳定的高度预算；`src/ui/AstryxLocale.tsx` 为两个入口提供 Astryx 控件的语言覆盖。Dashboard 在语言上下文内提供 LayerProvider，让 Toast 确认反馈继承主题和语言；需要处理的错误保留在页面内。两个入口的 CSS 显式声明 reset、Tailwind 与 Astryx 的层顺序。`src/styles/figtree.css` 把 Neutral 主题声明的 Figtree 指向扩展内的字体文件；构建脚本从安装包复制字体与 OFL 许可证到 `dist/fonts/`。本地预览服务另提供 `/__preview__/foundation.html` 验证 Astryx 控件，不将该页面打入扩展。
 
+Dashboard 的全局 `StatusToast` 位于按页面重建的 `LayoutContent` 之外，只在反馈内容变化时触发。页面切换仍会重置内容区滚动；`StatusError` 在内容区保留可处理的错误，导航不会重放之前的成功通知。
+
 ## Review and provider layers
 
 `Review Service` 接收当前页面类型与标准化帖子，为该页面选出已启用策略并按优先级构造判断。`Provider Registry` 只加载用户明确选中的渠道，不进行隐式回退：

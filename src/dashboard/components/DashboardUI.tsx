@@ -1,5 +1,5 @@
 import { StatusDot, type StatusDotProps } from "@astryxdesign/core/StatusDot";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useEffectEvent, type ReactNode } from "react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
@@ -81,14 +81,31 @@ export function Actions({ children }: { children: ReactNode }) {
   );
 }
 
-export function StatusMessage({ message, error = false }: { message: string; error?: boolean }) {
+type Feedback = { message: string; error?: boolean };
+
+/** Mount outside keyed page content so navigation cannot replay retained feedback. */
+export function StatusToast({ message, error = false }: Feedback) {
   const toast = useToast();
+  const notify = useEffectEvent(toast);
   useEffect(() => {
     if (!message || error) return;
-    return toast({ body: message, uniqueID: "xflow-feedback" });
-  }, [message, error, toast]);
+    return notify({ body: message, uniqueID: "xflow-feedback" });
+  }, [message, error]);
+  return null;
+}
+
+export function StatusError({ message, error = false }: Feedback) {
   if (!message || !error) return null;
   return <Banner status="error" title={message} role="alert" container="section" />;
+}
+
+export function StatusMessage(props: Feedback) {
+  return (
+    <>
+      <StatusToast {...props} />
+      <StatusError {...props} />
+    </>
+  );
 }
 
 export function LabeledValue({ label, children }: { label: string; children: ReactNode }) {

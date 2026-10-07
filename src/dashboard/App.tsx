@@ -24,7 +24,7 @@ import { Database, KeyRound, ListFilter, ScrollText, Settings } from "lucide-rea
 import { localizeError, providerLabel, useI18n } from "../ui/i18n";
 import { privacyPolicyUrl } from "../ui/privacy";
 import { applyTheme } from "../ui/theme";
-import { DashboardLocale, DashboardPreferences, StatusMessage, Status } from "./components/DashboardUI";
+import { DashboardLocale, DashboardPreferences, StatusError, StatusToast, Status } from "./components/DashboardUI";
 import { ApiKeysPanel } from "./components/ApiKeysPanel";
 import { DataPanel } from "./components/DataPanel";
 import { GeneralPanel } from "./components/GeneralPanel";
@@ -188,6 +188,7 @@ export function App() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   return (
     <DashboardLocale>
+      <StatusToast {...form.status} />
       {/* The sidebar becomes a modal drawer below md; forms cap at 960, data at 1180. */}
       <AppShell
         variant="section"
@@ -269,7 +270,7 @@ export function App() {
           content={
             <LayoutContent key={`${menu}:${selectedStrategyId ?? "list"}`}>
               <VStack gap={6}>
-                <StatusMessage message={form.status.message} error={form.status.error} />
+                <StatusError {...form.status} />
                 {!draft ? (
                   form.loadFailed ? (
                     <EmptyState
