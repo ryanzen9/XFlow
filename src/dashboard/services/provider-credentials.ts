@@ -3,6 +3,7 @@ import type {
   ExtensionRequest,
   ExtensionResponse,
   ProviderId,
+  ProviderHealthResult,
   ProviderSummary,
 } from "../../shared";
 
@@ -30,4 +31,14 @@ export function saveProviderCredential(providerId: ProviderId, apiKey: string): 
 
 export function clearProviderCredential(providerId: ProviderId): Promise<ProviderSummary[]> {
   return send({ type: "CLEAR_PROVIDER_KEY", providerId });
+}
+
+export async function checkProviderCredential(providerId: ProviderId): Promise<ProviderHealthResult> {
+  const response = (await chrome.runtime.sendMessage({
+    type: "CHECK_PROVIDER_HEALTH",
+    providerId,
+  })) as ExtensionResponse;
+  if (!response.ok) throw new ProviderCredentialError(response.code);
+  if (!("providerHealth" in response)) throw new ProviderCredentialError("API_ERROR");
+  return response.providerHealth;
 }

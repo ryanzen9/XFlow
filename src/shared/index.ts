@@ -9,4 +9,5 @@ export * from "./hover-css";
 export * from "./persistence";
 export * from "./s3-sync";
 export * from "./providers";
+export * from "./jev-request-log";
 export * from "./activity";

@@ -118,6 +118,8 @@ bun run check
 
 渠道始终由用户明确选择。请求失败时，XFlow 不会自动将内容转发到另一个 Provider，以避免意外的数据流向或费用变化。
 
+API Keys 页面可对每个渠道发起一次最小 Jev 健康检查，用于验证已保存密钥与接口是否可用。健康检查会产生一次真实 Provider 请求，可能计入第三方用量。
+
 ## 策略与交互
 
 - 时间线和评论区拥有独立策略表，分别从 P1 开始排序。
@@ -134,6 +136,7 @@ bun run check
 
 - Popup 展示今日和累计过滤数；Toolbar Badge 只统计当前 Tab 当前页面生命周期内的唯一内容，0 时隐藏。
 - Dashboard 提供过去 12 周 Heatmap、最近 7 天趋势、当前自然周回顾和最近 30 天筛选历史。
+- 日志页同时保留最近 30 天、最多 200 条 Jev 请求元数据，包括渠道、模型、耗时、项目/问题数量与结果；不保存 API Key 或帖子正文，并可单独清除。后台启动及每日维护会移除过期记录。
 - 只有明确选择 **Not supposed to be filtered** 才会标记错误；临时 Reveal 不会自动视为误判。
 - 详细历史在 30 天后压缩；事件身份在 12 周后折叠为按设备合并的紧凑计数，以维持累计值并限制存储增长。
 - 日志页可单独清理作者、内容预览、原文链接和命中策略，保留每日统计与累计数量。
@@ -171,12 +174,13 @@ Background Worker 按“单条标注 → 作者规则 → 用户模板/语义规
 
 完整说明见 [XFlow 隐私政策](https://ryanzen9.github.io/XFlow/privacy.html)（[English](https://ryanzen9.github.io/XFlow/privacy-en.html)；[仓库源文件](docs/privacy-policy.md)）。
 
-- 只有已启用范围内、从 X 页面提取的文本会发送到当前选中的 Provider。
+- 内容判断只会把已启用范围内、从 X 页面提取的文本发送到当前选中的 Provider；用户主动运行健康检查时，还会发送不含 X 内容的固定合成测试数据。
 - Provider API Key 与 S3 凭据保存在 `chrome.storage.local`，目前没有额外加密。
 - Content Script 只能读取不含密钥的 `chrome.storage.session` 设置镜像。
 - 远程 S3 文档可包含配置、Activity 和用户反馈形成的长期判断规则；后者可能包含规范化帖子正文、语义词、帖子及作者 ID、判断结果和设备 ID。清除 Activity 不会清除这些规则，它们不会自动过期。
 - 配置 JSON 和远程 S3 文档不包含 Provider API Key 或 S3 凭据。
 - Activity 保存内容 ID、短文本预览、作者、对应 X 帖子 URL、过滤时间、命中策略和必要状态；不保存 HTML、DOM、Cookie、Session、媒体文件或完整浏览路径。
+- Jev 请求日志只保存在本机，不进入配置 JSON 或 S3 同步文档，也不包含 API Key、请求正文或 Provider 原始错误。
 - 固定主机权限仅包含 X / Twitter 与三个 Provider；S3 Endpoint 通过用户操作授予可选权限。
 - 生产 `manifest.json` 不声明任何 localhost / 127.0.0.1 来源；本地 http 调试来源只由 `bun run build:dev` 注入。
 

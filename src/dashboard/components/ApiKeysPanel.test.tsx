@@ -15,6 +15,7 @@ test("renders API providers as a master-detail layout", () => {
   expect(markup).toContain('id="provider-key-typesafe"');
   expect(markup).not.toContain('id="provider-key-openrouter"');
   expect(markup).not.toContain('id="provider-key-vercel-ai-gateway"');
+  expect(markup).toContain("运行健康检查");
   expect(markup.indexOf("可见帖子的 ID 和正文")).toBeLessThan(markup.indexOf('id="provider-key-typesafe"'));
   expect(markup).toContain(`href="${privacyPolicyUrl("zh-CN")}"`);
 });
