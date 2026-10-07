@@ -89,6 +89,31 @@ const storageMock = `(() => {
           await globalThis.chrome.storage.local.set({ activityData: activity });
           return { ok: true, updated: true };
         }
+        if (message.type === 'GET_JEV_REQUEST_LOG') {
+          return { ok: true, requestLog: data.jevRequestLog || { schemaVersion: 1, entries: [] } };
+        }
+        if (message.type === 'CLEAR_JEV_REQUEST_LOG') {
+          const requestLog = { schemaVersion: 1, entries: [] };
+          await globalThis.chrome.storage.local.set({ jevRequestLog: requestLog });
+          return { ok: true, requestLog };
+        }
+        if (message.type === 'CHECK_PROVIDER_HEALTH') {
+          const checkedAt = Date.now();
+          const entry = {
+            id: 'preview-' + checkedAt,
+            kind: 'health-check',
+            requestedAt: checkedAt,
+            durationMs: 42,
+            providerId: message.providerId,
+            modelId: providers[message.providerId].modelId,
+            status: 'success',
+            itemCount: 1,
+            questionCount: 1
+          };
+          const requestLog = { schemaVersion: 1, entries: [entry, ...(data.jevRequestLog?.entries || [])].slice(0, 200) };
+          await globalThis.chrome.storage.local.set({ jevRequestLog: requestLog });
+          return { ok: true, providerHealth: { providerId: message.providerId, healthy: true, checkedAt, latencyMs: 42 } };
+        }
         if (message.type === 'SAVE_PROVIDER_KEY') secrets[message.providerId] = message.apiKey;
         if (message.type === 'CLEAR_PROVIDER_KEY') secrets[message.providerId] = '';
         if (message.type === 'SAVE_PROVIDER_KEY' || message.type === 'CLEAR_PROVIDER_KEY') {

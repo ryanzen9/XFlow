@@ -4,9 +4,11 @@ import { SectionIntro, StatusMessage } from "./DashboardUI";
 import { ACTIVITY_HISTORY_DAYS, activityDays, activityHistory, type ActivityDay } from "../../shared";
 import { useI18n } from "../../ui/i18n";
 import { useActivity } from "../hooks/use-activity";
+import { useJevRequestLog } from "../hooks/use-jev-request-log";
 import { DailyBlockedChart } from "./activity/DailyBlockedChart";
 import { FilterHistory } from "./activity/FilterHistory";
 import { LogStorageSummary } from "./activity/LogStorageSummary";
+import { JevRequestHistory } from "./activity/JevRequestHistory";
 import { MetricGrid } from "./MetricGrid";
 
 export function LogOverview({ days }: { days: ActivityDay[] }) {
@@ -34,11 +36,12 @@ export function LogOverview({ days }: { days: ActivityDay[] }) {
 /** The Log page owns the 30-day filtering record; insights stay on Overview. */
 export function LogPanel() {
   const activity = useActivity();
+  const requests = useJevRequestLog();
   const history = activityHistory(activity.data, activity.now);
   const days = activityDays(activity.data, ACTIVITY_HISTORY_DAYS, activity.now);
 
   return (
-    <VStack gap={6} aria-busy={activity.loading || activity.busy}>
+    <VStack gap={6} aria-busy={activity.loading || activity.busy || requests.loading || requests.busy}>
       <LogOverview days={days} />
       <Divider />
       <FilterHistory
@@ -55,7 +58,10 @@ export function LogPanel() {
         busy={activity.busy}
         onClear={activity.clearHistory}
       />
+      <Divider />
+      <JevRequestHistory entries={requests.data.entries} busy={requests.busy} onClear={requests.clear} />
       <StatusMessage message={activity.error} error />
+      <StatusMessage message={requests.error} error />
     </VStack>
   );
 }

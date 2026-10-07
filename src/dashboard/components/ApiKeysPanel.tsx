@@ -20,6 +20,7 @@ import { providerLabel, translate, useI18n, type Locale, type MessageKey } from 
 import { privacyPolicyUrl } from "../../ui/privacy";
 import {
   clearProviderCredential,
+  checkProviderCredential,
   loadProviderSummaries,
   ProviderCredentialError,
   saveProviderCredential,
@@ -58,11 +59,12 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
     typesafe: false,
   });
   const [pending, setPending] = useState<ProviderId | null>(null);
+  const [healthPending, setHealthPending] = useState<ProviderId | null>(null);
   const activeProviderId = settings.activeProvider;
   const activeProvider = PROVIDERS[activeProviderId];
   const activeSummary = summaries.find((summary) => summary.id === activeProviderId);
   const isPending = pending === activeProviderId;
-  const credentialsBusy = busy || pending !== null;
+  const credentialsBusy = busy || pending !== null || healthPending !== null;
   const placeholder =
     activeProviderId === "openrouter"
       ? t("api.placeholder.openrouter")
@@ -121,6 +123,24 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
       onStatus({ message: credentialErrorMessage(locale, error, "api.clearFailed"), error: true });
     } finally {
       setPending(null);
+    }
+  };
+
+  const checkHealth = async (providerId: ProviderId) => {
+    setHealthPending(providerId);
+    try {
+      const result = await checkProviderCredential(providerId);
+      const provider = providerLabel(providerId, locale);
+      if (result.healthy) {
+        onStatus({ message: t("api.healthPassed", { provider, latency: result.latencyMs }), error: false });
+      } else {
+        const reason = t(`api.healthError.${result.errorCode ?? "provider"}` as MessageKey);
+        onStatus({ message: t("api.healthFailed", { provider, reason }), error: true });
+      }
+    } catch (error) {
+      onStatus({ message: credentialErrorMessage(locale, error, "api.healthRequestFailed"), error: true });
+    } finally {
+      setHealthPending(null);
     }
   };
 
@@ -221,6 +241,12 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
             {t("api.getKey")}
           </Link>
           <Actions>
+            <Button
+              label={t("api.healthCheck")}
+              isLoading={healthPending === activeProviderId}
+              isDisabled={credentialsBusy || !activeSummary?.configured}
+              onClick={() => void checkHealth(activeProviderId)}
+            />
             {activeSummary?.configured && (
               <Button
                 label={t("api.clearLocal")}

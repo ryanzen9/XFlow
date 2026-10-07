@@ -67,6 +67,10 @@ function ChinesePolicy() {
               <code className="font-mono break-words text-primary">chrome.storage.local</code>
               ，供所选服务鉴权或签名请求使用。
             </li>
+            <li>
+              Jev 请求诊断：在本机保存渠道、模型、请求类型、耗时、数量与结果；不保存 API Key、帖子正文或 Provider
+              原始错误。
+            </li>
             <li>界面语言、主题及其他设置：用于提供扩展功能；界面语言保存在本机，不进入 S3 同步文档。</li>
           </ul>
           <Text as="p" color="secondary">
@@ -82,7 +86,8 @@ function ChinesePolicy() {
           <Text as="p" color="secondary">
             <strong>你选中的 Jev Provider。</strong>扩展只向当前选中的 OpenRouter、Vercel AI Gateway 或 TypeSafe
             发送待判断帖子的 ID、正文、适用策略的名称与规则，以及该 Provider 的 API
-            Key。请求用于返回过滤判断；失败时不会自动转发到另一家 Provider。Provider
+            Key。请求用于返回过滤判断；失败时不会自动转发到另一家 Provider。Provider 健康检查由用户主动触发，会向所选
+            Provider 发送不含 X 帖子或策略内容的固定合成 state 与 question，并可能产生第三方用量或费用。所选 Provider
             及其可能使用的上游模型服务按各自条款和隐私政策处理请求。请在选择前阅读{" "}
             <Link hasUnderline href={openRouterPrivacy}>
               OpenRouter 隐私政策
@@ -139,6 +144,7 @@ function ChinesePolicy() {
               后，扩展会尝试同步清除状态，以防旧记录在之后的同步中恢复。
             </li>
             <li>在 API Keys 页可逐个清除本机 Provider Key；这不会撤销 Provider 账户中的密钥。</li>
+            <li>Jev 请求诊断最多保留 30 天或 200 条，可在 Dashboard 日志页单独清除；它不会同步到 S3。</li>
             <li>
               停用 S3 同步不会删除本机连接配置或已写入 S3 的对象。远程副本需在你选用的 S3
               服务中删除，并检查该服务的版本与备份。
@@ -161,7 +167,8 @@ function ChinesePolicy() {
             的连接使用 HTTPS；本机 HTTP S3 调试仅在开发构建中可用。扩展访问 X / Twitter
             页面用于读取待判断内容、应用广告与自定义内容过滤策略，并在原页面呈现可重新显示的结果；S3 主机访问由你在保存
             Endpoint 时单独授权。<code className="font-mono break-words text-primary">storage</code> 用于保存本机数据；
-            <code className="font-mono break-words text-primary">alarms</code> 用于启用 S3 后的定时同步。
+            <code className="font-mono break-words text-primary">alarms</code> 用于启用 S3 后的定时同步及每日清理过期的
+            Jev 请求日志。
           </Text>
         </VStack>
       </Section>
@@ -261,6 +268,10 @@ function EnglishPolicy() {
               request signing.
             </li>
             <li>
+              Jev request diagnostics: provider, model, request type, duration, counts, and outcome are stored locally;
+              API Keys, post text, and raw Provider errors are not stored.
+            </li>
+            <li>
               Interface language, theme, and other settings: used to provide the extension; interface language stays
               local and is not part of the S3 sync document.
             </li>
@@ -279,8 +290,10 @@ function EnglishPolicy() {
             <strong>Your selected Jev Provider.</strong>The extension sends post IDs and text, applicable strategy names
             and criteria, and that Provider's API Key only to the currently selected OpenRouter, Vercel AI Gateway, or
             TypeSafe service. The request is used to return a filtering decision. A failed request is not automatically
-            forwarded to another Provider. The Provider and any upstream model services it uses process requests under
-            their own terms and privacy policies. Before choosing one, review the{" "}
+            forwarded to another Provider. A health check is explicitly user-triggered and sends the selected Provider a
+            fixed synthetic state and question containing no X post or policy content; it may count toward third-party
+            usage or charges. The Provider and any upstream model services it uses process requests under their own
+            terms and privacy policies. Before choosing one, review the{" "}
             <Link hasUnderline href={openRouterPrivacy}>
               OpenRouter Privacy Policy
             </Link>
@@ -346,6 +359,10 @@ function EnglishPolicy() {
             </li>
             <li>Clear each local Provider Key on the API Keys page. This does not revoke the key at the Provider.</li>
             <li>
+              Jev request diagnostics are kept for up to 30 days or 200 entries and can be cleared separately on the
+              Dashboard Log page. They are not synced to S3.
+            </li>
+            <li>
               Disabling S3 sync does not remove local connection settings or objects already written to S3. Delete
               remote copies in your S3 service and check its versions and backups.
             </li>
@@ -370,7 +387,7 @@ function EnglishPolicy() {
             on the original page. You grant access to an S3 host separately when saving its Endpoint. The{" "}
             <code className="font-mono break-words text-primary">storage</code> permission stores local data;{" "}
             <code className="font-mono break-words text-primary">alarms</code> supports scheduled sync after you enable
-            S3.
+            S3 and daily pruning of expired Jev request diagnostics.
           </Text>
         </VStack>
       </Section>

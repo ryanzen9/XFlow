@@ -14,15 +14,24 @@ import {
   type ProviderSecrets,
   type ReviewResult,
 } from "../../shared";
-import { readableProviderError } from "../jev/errors";
+import { providerErrorCode, readableProviderError } from "../jev/errors";
 import { getJevProvider } from "../jev/provider-registry";
 import type { JevDecisionRequest, JevProvider } from "../jev/types";
 import type { ExtensionSettings } from "./settings";
 import { findLocalDecision, loadDecisionLookupContext, rememberJevDecision } from "./decision-cache";
+import { recordJevRequest } from "./jev-request-log";
 
 const zodRuntime = globalThis as typeof globalThis & {
   __zod_globalConfig?: { jitless?: boolean };
 };
+
+async function safelyRecordJevRequest(entry: Parameters<typeof recordJevRequest>[0]): Promise<void> {
+  try {
+    await recordJevRequest(entry);
+  } catch (error) {
+    console.warn("[XFlow] Jev request log persistence failed.", error);
+  }
+}
 zodRuntime.__zod_globalConfig = {
   ...zodRuntime.__zod_globalConfig,
   jitless: true,
@@ -150,8 +159,23 @@ export async function requestPostReviews(
     ),
   };
 
+  const requestedAt = Date.now();
+  const requestDetails = {
+    kind: "review" as const,
+    requestedAt,
+    providerId: provider.id,
+    modelId: provider.modelId,
+    itemCount: uniqueMisses.length,
+    questionCount: Object.keys(request.questions).length,
+    surface,
+  };
   try {
     const answers = await provider.evaluate(request, apiKey);
+    await safelyRecordJevRequest({
+      ...requestDetails,
+      durationMs: Math.max(0, Date.now() - requestedAt),
+      status: "success",
+    });
     const representativeResults: ReviewResult[] = uniqueMisses.map((post, postIndex) => {
       let maximumProbability = 0;
       for (const [strategyIndex, strategy] of strategies.entries()) {
@@ -194,6 +218,12 @@ export async function requestPostReviews(
     }
     return { ok: true, results: [...cachedResults, ...remoteResults] };
   } catch (error) {
+    await safelyRecordJevRequest({
+      ...requestDetails,
+      durationMs: Math.max(0, Date.now() - requestedAt),
+      status: "error",
+      errorCode: providerErrorCode(error),
+    });
     console.error(`[XFlow] ${PROVIDERS[settings.activeProvider].label} Jev request failed`, error);
     if (cachedResults.length > 0) return { ok: true, results: cachedResults };
     return { ok: false, code: "API_ERROR", error: readableProviderError(settings.activeProvider, error) };

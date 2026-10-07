@@ -27,6 +27,8 @@ test("log page owns the filter history record", () => {
   expect(markup).toContain("30 天屏蔽");
   expect(markup).toContain("过滤历史");
   expect(markup).toContain("暂无过滤历史。");
+  expect(markup).toContain("Jev 请求日志");
+  expect(markup).toContain("暂无 Jev 请求记录。");
 });
 
 test("log overview uses populated daily counts, including cleared record details", () => {
