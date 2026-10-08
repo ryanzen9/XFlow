@@ -8,37 +8,51 @@ import {
   type FilterStrategy,
   type FilterSurface,
 } from "../shared";
-import { cn } from "../ui/cn";
-import { LanguageToggle, localizeError, providerLabel, useI18n } from "../ui/i18n";
+import { AppShell } from "@astryxdesign/core/AppShell";
+import { Avatar } from "@astryxdesign/core/Avatar";
+import { Button } from "@astryxdesign/core/Button";
+import { EmptyState } from "@astryxdesign/core/EmptyState";
+import { Heading } from "@astryxdesign/core/Heading";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Layout, LayoutContent, LayoutHeader } from "@astryxdesign/core/Layout";
+import { Link } from "@astryxdesign/core/Link";
+import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from "@astryxdesign/core/SideNav";
+import { Spinner } from "@astryxdesign/core/Spinner";
+import { Text } from "@astryxdesign/core/Text";
+import { VStack } from "@astryxdesign/core/VStack";
+import { ChartNoAxesCombined, Database, KeyRound, ListFilter, ScrollText, Settings } from "lucide-react";
+import { localizeError, providerLabel, useI18n } from "../ui/i18n";
 import { privacyPolicyUrl } from "../ui/privacy";
-import { card, eyebrow, textButton } from "../ui/styles";
-import { ThemeToggle, applyTheme } from "../ui/theme";
+import { applyTheme } from "../ui/theme";
+import { DashboardLocale, DashboardPreferences, StatusError, StatusToast, Status } from "./components/DashboardUI";
 import { ApiKeysPanel } from "./components/ApiKeysPanel";
 import { DataPanel } from "./components/DataPanel";
 import { GeneralPanel } from "./components/GeneralPanel";
 import { LogPanel } from "./components/LogPanel";
 import { StrategyList } from "./components/StrategyList";
-import { StrategyPanel } from "./components/StrategyPanel";
+import { StrategyPanel, StrategySaveButton } from "./components/StrategyPanel";
+import { ActivityPanel } from "./components/ActivityPanel";
 import { StrategyTabs } from "./components/StrategyTabs";
 import { useDashboard } from "./hooks/use-dashboard";
 
-type MenuPage = "general" | "api-keys" | "strategies" | "data" | "log";
+type MenuPage = "overview" | "general" | "api-keys" | "strategies" | "data" | "log";
 
 export function App() {
   const { locale, t } = useI18n();
-  const [menu, setMenu] = useState<MenuPage>("general");
+  const [menu, setMenu] = useState<MenuPage>("overview");
   const [strategySurface, setStrategySurface] = useState<FilterSurface>("timeline");
   const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
   const form = useDashboard();
   const { draft, saved } = form;
   const theme = draft?.theme;
-  const menuItems: { id: MenuPage; label: string; icon: string }[] = [
-    { id: "general", label: t("nav.general"), icon: "⊞" },
-    { id: "api-keys", label: t("nav.apiKeys"), icon: "⌘" },
-    { id: "strategies", label: t("nav.strategies"), icon: "≋" },
-    { id: "data", label: t("nav.data"), icon: "⌁" },
-    { id: "log", label: t("nav.log"), icon: "≡" },
-  ];
+  const menuItems = [
+    { id: "overview", label: t("nav.overview"), icon: ChartNoAxesCombined },
+    { id: "general", label: t("nav.general"), icon: Settings },
+    { id: "api-keys", label: t("nav.apiKeys"), icon: KeyRound },
+    { id: "strategies", label: t("nav.strategies"), icon: ListFilter },
+    { id: "data", label: t("nav.data"), icon: Database },
+    { id: "log", label: t("nav.log"), icon: ScrollText },
+  ] as const;
   const strategyError = (strategy: FilterStrategy): string | null => {
     if (!strategy.name.trim() || !strategy.prompt.trim() || !strategy.hoverTemplate.trim()) {
       return t("strategy.required");
@@ -69,7 +83,7 @@ export function App() {
     const modelNickname = draft.modelNickname.trim();
     if (!modelNickname) {
       form.setStatus({ message: t("general.nicknameRequired"), error: true });
-      document.getElementById("model-nickname")?.focus();
+      document.querySelector<HTMLInputElement>('[data-field="model-nickname"]')?.focus();
       return;
     }
     void form.save({ modelNickname });
@@ -146,206 +160,230 @@ export function App() {
   };
 
   const page = {
+    overview: { title: t("page.overview.title"), description: "" },
     general: {
       title: t("page.general.title"),
       description: t("page.general.description"),
-      eyebrow: "GENERAL",
     },
     "api-keys": {
       title: "API Keys",
       description: t("page.apiKeys.description"),
-      eyebrow: "API KEYS",
     },
     strategies: selectedStrategy
       ? {
           title: t("page.strategies.edit"),
           description: `P${selectedStrategy.priority} · ${selectedStrategy.name}`,
-          eyebrow: "STRATEGIES / EDIT",
         }
       : {
           title: t("page.strategies.title"),
           description: t("page.strategies.description"),
-          eyebrow: "STRATEGIES",
         },
     data: {
       title: t("page.data.title"),
       description: t("page.data.description"),
-      eyebrow: "DATA",
     },
     log: {
       title: t("nav.log"),
       description: t("page.log.description"),
-      eyebrow: "LOG",
     },
   }[menu];
 
-  const navItem =
-    "flex min-h-11 w-full items-center gap-3 rounded-md border border-transparent px-3 text-left font-semibold text-muted transition hover:bg-hover hover:text-ink aria-[current=page]:border-line-strong aria-[current=page]:bg-selected aria-[current=page]:text-ink";
-
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   return (
-    <div className="min-h-screen bg-canvas font-sans text-sm leading-[1.6] text-ink transition-colors sm:grid sm:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[224px_minmax(0,1fr)]">
-      <aside className="border-b border-line bg-surface p-[18px] transition-colors sm:sticky sm:top-0 sm:flex sm:h-screen sm:flex-col sm:border-r sm:border-b-0 sm:px-3.5 sm:py-7 xl:px-5 xl:pt-8 xl:pb-[22px]">
-        <div className="mb-6 flex items-center gap-2.5 border-b border-line pb-5">
-          <img
-            className="size-9 rounded-full border border-line-strong object-cover"
-            src={theme === "dark" ? "logo.png" : "logo-dark.png"}
-            alt="XFlow logo"
-          />
-          <div>
-            <div className="font-display text-sm leading-none font-bold text-ink">XFlow</div>
-            <div className="mt-1 font-mono text-caption text-muted">READ WITH INTENTION</div>
-          </div>
-        </div>
-        <nav className="flex flex-wrap gap-2.5 sm:grid sm:gap-1.5" aria-label={t("nav.menu")}>
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              className={navItem}
-              aria-current={menu === item.id ? "page" : undefined}
-              onClick={() => setMenuPage(item.id)}
-            >
-              <span className="w-[18px] text-xl leading-none xl:w-6 xl:text-2xl" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span className="text-ui">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="mt-6 flex items-center justify-between gap-2 border-t border-line pt-5 sm:mt-auto sm:pt-6">
-          <div className="flex gap-2">
-            <LanguageToggle disabled={form.busy} compact />
-            {draft && (
-              <ThemeToggle
-                value={draft.theme}
-                disabled={form.busy}
-                compact
-                onChange={(nextTheme) =>
-                  void form.save(
-                    { theme: nextTheme },
-                    t("status.themeChanged", {
-                      theme: t(nextTheme === "dark" ? "theme.dark" : "theme.light"),
-                    }),
-                  )
+    <DashboardLocale>
+      <StatusToast {...form.status} />
+      {/* SideNav becomes a drawer below md. Settings cap at 840; analytics and records at 1180. */}
+      <AppShell
+        variant="section"
+        height="fill"
+        mobileNav={{ breakpoint: "md", isOpen: mobileNavOpen, onOpenChange: setMobileNavOpen }}
+        sideNav={
+          <SideNav
+            aria-label={t("nav.menu")}
+            header={
+              <SideNavHeading
+                heading="XFlow"
+                icon={
+                  <Avatar
+                    src={theme === "dark" ? "logo.png" : "logo-dark.png"}
+                    name="XFlow"
+                    alt="XFlow logo"
+                    size="sm"
+                    shape="rounded"
+                  />
                 }
               />
-            )}
-          </div>
-          <span className="font-mono text-caption text-muted">XFlow / 0.1</span>
-        </div>
-      </aside>
-      <main className="mx-auto w-full max-w-[1540px] min-w-0 px-4 pt-6 pb-5 min-[1600px]:pt-[50px] sm:px-6 sm:pt-7 sm:pb-[22px] xl:px-[clamp(24px,3.8vw,64px)] xl:pt-[38px] xl:pb-6">
-        <header className="flex items-start justify-between gap-2.5 border-b border-line pb-5 sm:items-center sm:gap-5">
-          <div>
-            <p className={eyebrow}>WORKSPACE / {page.eyebrow}</p>
-            <h1 className="mt-2.5 mb-[7px] text-title font-semibold sm:text-3xl">{page.title}</h1>
-            <p className="text-xs text-muted sm:text-ui">{page.description}</p>
-          </div>
-          <span
-            className="mt-1.5 text-caption whitespace-nowrap text-muted before:mr-2 before:inline-block before:size-1.5 before:rounded-full before:bg-fg-4 before:content-[''] data-[dirty=true]:before:bg-warn sm:mt-0 sm:text-xs"
-            data-dirty={form.dirty}
-          >
-            {form.busy ? t("status.saving") : form.dirty ? t("status.unsaved") : t("status.synced")}
-          </span>
-        </header>
-        <div
-          className={cn("min-h-9 py-2 text-xs text-ink", form.status.error && "text-danger")}
-          role={form.status.error ? "alert" : "status"}
-        >
-          {form.status.message}
-        </div>
-        {!draft ? (
-          <div className={card} role="status">
-            {form.loadFailed ? (
-              <>
-                {t("status.loadFailed")}
-                <button className={textButton} onClick={() => location.reload()}>
-                  {t("common.reload")}
-                </button>
-              </>
-            ) : (
-              t("status.loadingSettings")
-            )}
-          </div>
-        ) : menu === "general" ? (
-          <GeneralPanel
-            settings={draft}
-            busy={form.busy}
-            onChange={form.update}
-            onToggle={(key, checked) => void form.toggle(key, checked)}
-            onSave={saveGeneral}
-          />
-        ) : menu === "api-keys" ? (
-          <ApiKeysPanel
-            settings={draft}
-            busy={form.busy}
-            onProviderChange={(providerId) =>
-              form.save(
-                { activeProvider: providerId },
-                t("api.providerChanged", { provider: providerLabel(providerId, locale) }),
-              )
             }
-            onStatus={form.setStatus}
-          />
-        ) : menu === "data" ? (
-          <DataPanel onConfigurationApplied={form.reload} />
-        ) : menu === "log" ? (
-          <LogPanel />
-        ) : (
-          <>
-            <StrategyTabs
-              value={strategySurface}
-              counts={strategyCounts}
-              onChange={(surface) => {
-                setStrategySurface(surface);
-                setSelectedStrategyId(null);
-              }}
-            />
-            <div
-              id={`strategy-panel-${strategySurface}`}
-              role="tabpanel"
-              aria-labelledby={`strategy-tab-${strategySurface}`}
-            >
-              {selectedStrategy ? (
-                <StrategyPanel
-                  strategy={selectedStrategy}
-                  strategyCount={surfaceStrategies.length}
-                  surface={strategySurface}
-                  modelNickname={draft.modelNickname}
-                  modelId={PROVIDERS[draft.activeProvider].modelId}
+            footer={
+              <VStack gap={2} padding={3}>
+                <DashboardPreferences
+                  theme={theme}
                   busy={form.busy}
-                  onBack={() => setSelectedStrategyId(null)}
-                  onChange={updateSelectedStrategy}
-                  onPriorityChange={changeSelectedPriority}
-                  onSave={saveSelectedStrategy}
+                  onThemeChange={(nextTheme) =>
+                    void form.save(
+                      { theme: nextTheme },
+                      t("status.themeChanged", { theme: t(nextTheme === "dark" ? "theme.dark" : "theme.light") }),
+                    )
+                  }
                 />
-              ) : (
-                <StrategyList
-                  surface={strategySurface}
-                  strategies={surfaceStrategies}
-                  busy={form.busy}
-                  dirty={libraryDirty}
-                  onChange={updateSurfaceStrategies}
-                  onOpen={setSelectedStrategyId}
-                  onCreate={createNewStrategy}
-                  onSave={saveLibrary}
-                />
-              )}
-            </div>
-          </>
-        )}
-        <footer className="mt-[42px] flex justify-between gap-3 border-t border-line pt-[18px] text-caption text-muted sm:text-meta">
-          <span>XFlow - build your X</span>
-          <a
-            className="underline decoration-fg-4 underline-offset-[3px] hover:decoration-fg-2"
-            href={privacyPolicyUrl(locale)}
-            target="_blank"
-            rel="noopener noreferrer"
+                <Link href={privacyPolicyUrl(locale)} target="_blank" color="secondary" isStandalone>
+                  {t("privacy.policyLink")}
+                </Link>
+              </VStack>
+            }
           >
-            {t("privacy.policyLink")}
-          </a>
-          <span>Created By Ryan Zeng</span>
-        </footer>
-      </main>
-    </div>
+            <SideNavSection title={t("nav.menu")} isHeaderHidden>
+              {menuItems.map((item) => (
+                <SideNavItem
+                  key={item.id}
+                  label={item.label}
+                  icon={item.icon}
+                  isSelected={menu === item.id}
+                  onClick={() => {
+                    setMenuPage(item.id);
+                    setMobileNavOpen(false);
+                  }}
+                />
+              ))}
+            </SideNavSection>
+          </SideNav>
+        }
+      >
+        <Layout
+          padding={6}
+          contentWidth={menu === "general" ? 840 : menu === "api-keys" ? 960 : 1180}
+          header={
+            <LayoutHeader hasDivider>
+              <HStack gap={4} hAlign="between" vAlign="start" wrap="wrap">
+                <VStack gap={1} className="min-w-0 flex-1">
+                  <Heading level={1}>{page.title}</Heading>
+                  {selectedStrategy && menu === "strategies" && (
+                    <Text as="p" color="secondary" maxLines={1}>
+                      {page.description}
+                    </Text>
+                  )}
+                </VStack>
+                <HStack gap={3} wrap="wrap">
+                  {(form.busy || form.dirty) && (
+                    <Status
+                      variant={form.dirty ? "warning" : "neutral"}
+                      label={form.busy ? t("status.saving") : t("status.unsaved")}
+                    />
+                  )}
+                  {menu === "general" && (
+                    <Button
+                      type="submit"
+                      form="general-settings"
+                      variant="primary"
+                      label={t("general.save")}
+                      isLoading={form.busy}
+                      isDisabled={!draft || draft.modelNickname === saved?.modelNickname}
+                    />
+                  )}
+                  {menu === "strategies" &&
+                    draft &&
+                    (selectedStrategy ? (
+                      <StrategySaveButton strategy={selectedStrategy} busy={form.busy} />
+                    ) : (
+                      <Button
+                        variant="primary"
+                        label={t("strategy.saveSurface", {
+                          surface: t(strategySurface === "timeline" ? "strategy.timeline" : "strategy.comments"),
+                        })}
+                        isLoading={form.busy}
+                        isDisabled={!libraryDirty}
+                        onClick={saveLibrary}
+                      />
+                    ))}
+                </HStack>
+              </HStack>
+            </LayoutHeader>
+          }
+          content={
+            <LayoutContent key={`${menu}:${selectedStrategyId ?? "list"}`}>
+              <VStack gap={6}>
+                <StatusError {...form.status} />
+                {!draft ? (
+                  form.loadFailed ? (
+                    <EmptyState
+                      title={t("status.loadFailed")}
+                      actions={<Button label={t("common.reload")} onClick={() => location.reload()} />}
+                    />
+                  ) : (
+                    <Spinner label={t("status.loadingSettings")} />
+                  )
+                ) : menu === "overview" ? (
+                  <ActivityPanel onOpenLog={() => setMenuPage("log")} />
+                ) : menu === "general" ? (
+                  <GeneralPanel
+                    settings={draft}
+                    busy={form.busy}
+                    onChange={form.update}
+                    onToggle={(key, checked) => void form.toggle(key, checked)}
+                    onSave={saveGeneral}
+                  />
+                ) : menu === "api-keys" ? (
+                  <ApiKeysPanel
+                    settings={draft}
+                    busy={form.busy}
+                    onProviderChange={(providerId) =>
+                      form.save(
+                        { activeProvider: providerId },
+                        t("api.providerChanged", { provider: providerLabel(providerId, locale) }),
+                      )
+                    }
+                    onStatus={form.setStatus}
+                  />
+                ) : menu === "data" ? (
+                  <DataPanel onConfigurationApplied={form.reload} />
+                ) : menu === "log" ? (
+                  <LogPanel />
+                ) : (
+                  <VStack gap={5}>
+                    <StrategyTabs
+                      value={strategySurface}
+                      counts={strategyCounts}
+                      onChange={(surface) => {
+                        setStrategySurface(surface);
+                        setSelectedStrategyId(null);
+                      }}
+                    />
+                    <VStack
+                      id={`strategy-panel-${strategySurface}`}
+                      role="tabpanel"
+                      aria-labelledby={`strategy-tab-${strategySurface}`}
+                    >
+                      {selectedStrategy ? (
+                        <StrategyPanel
+                          strategy={selectedStrategy}
+                          strategyCount={surfaceStrategies.length}
+                          surface={strategySurface}
+                          modelNickname={draft.modelNickname}
+                          modelId={PROVIDERS[draft.activeProvider].modelId}
+                          busy={form.busy}
+                          onBack={() => setSelectedStrategyId(null)}
+                          onChange={updateSelectedStrategy}
+                          onPriorityChange={changeSelectedPriority}
+                          onSave={saveSelectedStrategy}
+                        />
+                      ) : (
+                        <StrategyList
+                          surface={strategySurface}
+                          strategies={surfaceStrategies}
+                          busy={form.busy}
+                          onChange={updateSurfaceStrategies}
+                          onOpen={setSelectedStrategyId}
+                          onCreate={createNewStrategy}
+                        />
+                      )}
+                    </VStack>
+                  </VStack>
+                )}
+              </VStack>
+            </LayoutContent>
+          }
+        />
+      </AppShell>
+    </DashboardLocale>
   );
 }

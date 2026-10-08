@@ -1,7 +1,15 @@
-import { cn } from "../ui/cn";
-import { focusRing } from "../ui/styles";
-import { ThemeToggle } from "../ui/theme";
-import { LanguageToggle, providerLabel, useI18n } from "../ui/i18n";
+import { Avatar } from "@astryxdesign/core/Avatar";
+import { Button } from "@astryxdesign/core/Button";
+import { Divider } from "@astryxdesign/core/Divider";
+import { Heading } from "@astryxdesign/core/Heading";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Icon } from "@astryxdesign/core/Icon";
+import { Text } from "@astryxdesign/core/Text";
+import { VStack } from "@astryxdesign/core/VStack";
+import { ArrowUpRight } from "lucide-react";
+import { AstryxLocale } from "../ui/AstryxLocale";
+import { AppearanceControls } from "../ui/AppearanceControls";
+import { providerLabel, useI18n } from "../ui/i18n";
 import { ActivitySummary } from "./components/ActivitySummary";
 import { ChannelRow } from "./components/ChannelRow";
 import { ModelFooter } from "./components/ModelFooter";
@@ -9,34 +17,31 @@ import { MonitorSwitch } from "./components/MonitorSwitch";
 import { useActivity } from "./hooks/use-activity";
 import { useSettingsForm } from "./hooks/use-settings-form";
 
-/* Secondary groups share one list surface: hairline rows, no per-row cards. */
-const groupLabel = "mb-1.5 font-mono text-caption text-muted uppercase";
-const list = "divide-y divide-line overflow-hidden rounded-md border border-line bg-surface";
-
 export function App() {
   const form = useSettingsForm();
   const activity = useActivity();
   const { locale, t } = useI18n();
-
   return (
-    <main className="flex min-h-(--layout-popup-height) w-full flex-col bg-canvas bg-(image:--pattern-margin-rule) px-4 pt-3.5 pb-3 font-sans text-ink transition-colors">
-      <header className="mb-3 flex items-center gap-2.5">
-        <img
-          className="size-7 rounded-full border border-line-strong object-cover"
-          src={form.theme === "dark" ? "logo.png" : "logo-dark.png"}
-          alt="XFlow logo"
-        />
-        <h1 className="font-display text-sm leading-none font-bold">XFlow</h1>
-      </header>
-
-      <ActivitySummary {...activity} live={form.enabled || form.commentsEnabled} />
-
-      <section className="mt-3.5" aria-label={t("popup.monitoringScope")}>
-        <p className={groupLabel}>{t("popup.monitoring")}</p>
-        <div className={list}>
+    <AstryxLocale>
+      <VStack as="main" minHeight="var(--xflow-popup-height)" padding={4} gap={3} className="bg-surface">
+        <HStack as="header" gap={2} hAlign="between">
+          <HStack gap={2}>
+            <Avatar
+              src={form.theme === "dark" ? "logo.png" : "logo-dark.png"}
+              name="XFlow"
+              alt="XFlow logo"
+              size="sm"
+            />
+            <Heading level={3} accessibilityLevel={1}>
+              XFlow
+            </Heading>
+          </HStack>
+          <AppearanceControls theme={form.theme} onThemeChange={(theme) => void form.setTheme(theme)} />
+        </HStack>
+        <ActivitySummary {...activity} live={form.enabled || form.commentsEnabled} />
+        <VStack as="section" gap={0} aria-label={t("popup.monitoringScope")}>
           <MonitorSwitch
             id="enabled"
-            routeLabel="/home"
             title={t("popup.timeline")}
             ariaLabel={t("popup.timelineAria")}
             checked={form.enabled}
@@ -44,9 +49,9 @@ export function App() {
             pending={form.enabledPending}
             onChange={(event) => void form.setEnabled(event.currentTarget.checked)}
           />
+          <Divider />
           <MonitorSwitch
             id="comments-enabled"
-            routeLabel="/status"
             title={t("popup.comments")}
             ariaLabel={t("popup.commentsAria")}
             checked={form.commentsEnabled}
@@ -54,46 +59,34 @@ export function App() {
             pending={form.commentsEnabledPending}
             onChange={(event) => void form.setCommentsEnabled(event.currentTarget.checked)}
           />
-        </div>
-      </section>
-
-      <section className="mt-3.5" aria-label={t("popup.currentProvider")}>
-        <p className={groupLabel}>{t("popup.provider")}</p>
-        <div className={list}>
+        </VStack>
+        <VStack as="section" gap={0} aria-label={t("popup.currentProvider")}>
+          <Divider />
           <ChannelRow name={providerLabel(form.activeProvider, locale)} configured={form.configured} />
-        </div>
-      </section>
-
-      <p
-        id="save-status"
-        className={cn(
-          "mt-2.5 min-h-4 text-meta leading-[1.45] text-faint",
-          form.status.tone === "success" && "text-ink",
-          form.status.tone === "error" && "text-danger",
-        )}
-        role="status"
-        aria-live="polite"
-      >
-        {form.status.message}
-      </p>
-
-      <div className="mt-auto">
-        <ModelFooter modelId={form.modelId} />
-        <div className="mt-2 flex items-stretch gap-2">
-          <button
-            className={cn(
-              "min-h-8 min-w-0 flex-1 rounded-md border-0 bg-selected px-3 text-xs text-ink transition hover:bg-hover",
-              focusRing,
-            )}
-            type="button"
-            onClick={() => void chrome.runtime.openOptionsPage()}
+        </VStack>
+        <VStack gap={2} className="mt-auto">
+          <Divider />
+          <ModelFooter modelId={form.modelId} />
+          <Text
+            as="p"
+            id="save-status"
+            type="supporting"
+            className={form.status.tone === "error" ? "text-error" : "sr-only"}
+            role="status"
+            aria-live="polite"
           >
-            {t("popup.dashboard")}
-          </button>
-          <LanguageToggle dense />
-          <ThemeToggle value={form.theme} dense onChange={(theme) => void form.setTheme(theme)} />
-        </div>
-      </div>
-    </main>
+            {form.status.message}
+          </Text>
+          <Button
+            label={t("popup.dashboard")}
+            width="100%"
+            variant="primary"
+            className="min-h-10"
+            endContent={<Icon icon={ArrowUpRight} size="sm" />}
+            onClick={() => void chrome.runtime.openOptionsPage()}
+          />
+        </VStack>
+      </VStack>
+    </AstryxLocale>
   );
 }

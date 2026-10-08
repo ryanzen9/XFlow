@@ -151,6 +151,27 @@ describe("reference resolution", () => {
 });
 
 describe("required release paths", () => {
+  test("packages the required Figtree license and rejects a missing license", async () => {
+    const files = (await releaseFixture()).map((entry) =>
+      entry.path === "popup.css"
+        ? file("popup.css", "@font-face{font-family:Figtree;src:url(./fonts/figtree-latin-wght-normal.woff2)}")
+        : entry,
+    );
+    files.push(file("fonts/figtree-latin-wght-normal.woff2", "font"), file("fonts/OFL.txt", "font license"));
+    expect(codes(files)).toEqual([]);
+    expect(planRelease(files).required).toContain("fonts/OFL.txt");
+    expect(planRelease(files.filter((entry) => entry.path !== "fonts/OFL.txt")).issues).toContainEqual({
+      code: "missing-asset",
+      detail: "fonts/OFL.txt is referenced but not packaged",
+    });
+  });
+
+  test("does not allow a font license without its referenced font", async () => {
+    const files = await releaseFixture();
+    files.push(file("fonts/OFL.txt", "font license"));
+    expect(codes(files)).toContain("unreferenced-asset");
+  });
+
   test("cover the manifest, its pages and both locale catalogs", async () => {
     const files = await releaseFixture();
     const required = requiredReleasePaths({

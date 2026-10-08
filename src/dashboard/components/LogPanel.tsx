@@ -1,3 +1,6 @@
+import { Divider } from "@astryxdesign/core/Divider";
+import { VStack } from "@astryxdesign/core/VStack";
+import { SectionIntro, StatusMessage } from "./DashboardUI";
 import { ACTIVITY_HISTORY_DAYS, activityDays, activityHistory, type ActivityDay } from "../../shared";
 import { useI18n } from "../../ui/i18n";
 import { useActivity } from "../hooks/use-activity";
@@ -6,6 +9,7 @@ import { DailyBlockedChart } from "./activity/DailyBlockedChart";
 import { FilterHistory } from "./activity/FilterHistory";
 import { LogStorageSummary } from "./activity/LogStorageSummary";
 import { JevRequestHistory } from "./activity/JevRequestHistory";
+import { MetricGrid } from "./MetricGrid";
 
 export function LogOverview({ days }: { days: ActivityDay[] }) {
   const { locale, t } = useI18n();
@@ -21,27 +25,15 @@ export function LogOverview({ days }: { days: ActivityDay[] }) {
   ];
 
   return (
-    <div className="p-[18px] sm:p-6">
-      <div className="mb-6">
-        <h2 id="log-overview-title" className="text-heading text-ink">
-          {t("history.overview")}
-        </h2>
-        <p className="mt-1 text-meta text-muted">{t("history.overviewDescription")}</p>
-      </div>
-      <dl className="mb-7 grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label}>
-            <dt className="text-label text-muted">{stat.label}</dt>
-            <dd className="mt-1 font-mono text-title text-ink tabular-nums">{stat.value}</dd>
-          </div>
-        ))}
-      </dl>
+    <VStack gap={5}>
+      <SectionIntro id="log-overview-title" title={t("history.overview")} />
+      <MetricGrid stats={stats} />
       <DailyBlockedChart days={days} />
-    </div>
+    </VStack>
   );
 }
 
-/** The Log page owns the 30-day filtering record; insights stay on General. */
+/** The Log page owns the 30-day filtering record; insights stay on Overview. */
 export function LogPanel() {
   const activity = useActivity();
   const requests = useJevRequestLog();
@@ -49,44 +41,27 @@ export function LogPanel() {
   const days = activityDays(activity.data, ACTIVITY_HISTORY_DAYS, activity.now);
 
   return (
-    <div
-      className="grid max-w-[1180px] content-start gap-4"
-      aria-busy={activity.loading || activity.busy || requests.loading || requests.busy}
-    >
-      <section
-        className="overflow-hidden rounded-xl border border-line bg-surface"
-        aria-labelledby="log-overview-title"
-      >
-        <LogOverview days={days} />
-        <div className="border-t border-line p-[18px] sm:p-6">
-          <FilterHistory
-            history={history}
-            now={activity.now}
-            busy={activity.busy}
-            onIncorrect={(id) => void activity.markIncorrect(id)}
-          />
-        </div>
-        <div className="border-t border-line p-[18px] sm:p-6">
-          <LogStorageSummary
-            bytesInUse={activity.bytesInUse}
-            storageLimit={activity.storageLimit}
-            recordCount={history.length}
-            busy={activity.busy}
-            onClear={activity.clearHistory}
-          />
-        </div>
-      </section>
+    <VStack gap={6} aria-busy={activity.loading || activity.busy || requests.loading || requests.busy}>
+      <LogOverview days={days} />
+      <Divider />
+      <FilterHistory
+        history={history}
+        now={activity.now}
+        busy={activity.busy}
+        onIncorrect={(id) => void activity.markIncorrect(id)}
+      />
+      <Divider />
+      <LogStorageSummary
+        bytesInUse={activity.bytesInUse}
+        storageLimit={activity.storageLimit}
+        recordCount={history.length}
+        busy={activity.busy}
+        onClear={activity.clearHistory}
+      />
+      <Divider />
       <JevRequestHistory entries={requests.data.entries} busy={requests.busy} onClear={requests.clear} />
-      {activity.error && (
-        <p className="text-xs text-danger" role="alert">
-          {activity.error}
-        </p>
-      )}
-      {requests.error && (
-        <p className="text-xs text-danger" role="alert">
-          {requests.error}
-        </p>
-      )}
-    </div>
+      <StatusMessage message={activity.error} error />
+      <StatusMessage message={requests.error} error />
+    </VStack>
   );
 }

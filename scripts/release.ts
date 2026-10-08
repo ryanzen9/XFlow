@@ -16,7 +16,7 @@ import {
  * Release packaging and verification.
  *
  * `bun run release:package` rebuilds `dist/` without source maps, proves that
- * the packaged files are exactly the ones the manifest and its pages reference,
+ * the packaged files are exactly the referenced assets and their declared font license,
  * scans them for patterns that break the Manifest V3 policy, and writes a
  * byte-reproducible ZIP whose root contains `manifest.json`.
  *
@@ -229,6 +229,15 @@ export function requiredReleasePaths(input: {
       if (resolved) required.add(resolved);
     }
   }
+  // The bundled Figtree font must carry its license even though it is not a
+  // browser resource. Require only this declared companion, not arbitrary files.
+  if (
+    ["fonts/figtree-latin-wght-normal.woff2", "fonts/figtree-latin-ext-wght-normal.woff2"].some((path) =>
+      required.has(path),
+    )
+  ) {
+    required.add("fonts/OFL.txt");
+  }
   for (const locale of input.locales) required.add(`_locales/${locale}/messages.json`);
   return [...required].toSorted();
 }
@@ -379,7 +388,7 @@ export function verifyArchive(files: ArchiveEntry[], archive: Uint8Array): Valid
 }
 
 async function buildReleaseBundle(): Promise<void> {
-  const build = Bun.spawn([process.execPath, "run", "scripts/build.ts", "--release"], {
+  const build = Bun.spawn([process.execPath, "run", "build", "--", "--release"], {
     cwd: REPOSITORY_ROOT,
     stdout: "inherit",
     stderr: "inherit",

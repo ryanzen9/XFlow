@@ -90,6 +90,15 @@ const staticFiles = [
   ["dashboard.html", "dist/dashboard.html"],
   ["logo.png", "dist/logo.png"],
   ["logo-dark.png", "dist/logo-dark.png"],
+  [
+    "node_modules/@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2",
+    "dist/fonts/figtree-latin-wght-normal.woff2",
+  ],
+  [
+    "node_modules/@fontsource-variable/figtree/files/figtree-latin-ext-wght-normal.woff2",
+    "dist/fonts/figtree-latin-ext-wght-normal.woff2",
+  ],
+  ["node_modules/@fontsource-variable/figtree/LICENSE", "dist/fonts/OFL.txt"],
 ] as const;
 
 for (const [source, destination] of staticFiles) {

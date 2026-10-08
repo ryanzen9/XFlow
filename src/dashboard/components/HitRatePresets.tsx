@@ -1,7 +1,8 @@
+import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
+import { useMediaQuery } from "@astryxdesign/core/hooks";
+import { Tooltip } from "@astryxdesign/core/Tooltip";
 import { sensitivityForHitRate } from "../../shared";
-import { cn } from "../../ui/cn";
 import { useI18n } from "../../ui/i18n";
-import { focusRing } from "../../ui/styles";
 
 const presets = [
   { id: "low", hitRate: 80 },
@@ -9,38 +10,40 @@ const presets = [
   { id: "strict", hitRate: 50 },
 ] as const;
 
-interface Props {
+export function HitRatePresets({
+  hitRate,
+  name,
+  disabled,
+  onChange,
+}: {
   hitRate: number;
   name: string;
   disabled?: boolean;
   onChange: (sensitivity: number) => void;
-}
-
-export function HitRatePresets({ hitRate, name, disabled, onChange }: Props) {
+}) {
   const { t } = useI18n();
+  const isWide = useMediaQuery("(min-width: 768px)");
   return (
-    <div className="flex flex-wrap gap-1" role="group" aria-label={t("strategy.hitRateFor", { name })}>
-      {presets.map(({ id, hitRate: presetHitRate }) => (
-        <button
+    <SegmentedControl
+      label={t("strategy.hitRateFor", { name })}
+      size="md"
+      layout="fill"
+      value={presets.some((preset) => preset.hitRate === hitRate) ? String(hitRate) : ""}
+      isDisabled={disabled}
+      onChange={(value) => onChange(sensitivityForHitRate(Number(value)))}
+    >
+      {presets.map(({ id, hitRate: value }) => (
+        <Tooltip
           key={id}
-          type="button"
-          className={cn(
-            focusRing,
-            "min-h-8 rounded-sm border border-line-strong bg-surface px-1.5 font-mono text-caption text-ink transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-55",
-            hitRate === presetHitRate && "border-action bg-action text-action-fg hover:bg-action-hover",
-          )}
-          aria-label={t("strategy.hitRatePreset", {
-            name,
-            level: t(`strategy.hitRate.${id}`),
-            value: presetHitRate,
-          })}
-          aria-pressed={hitRate === presetHitRate}
-          disabled={disabled}
-          onClick={() => onChange(sensitivityForHitRate(presetHitRate))}
+          content={t("strategy.hitRatePreset", { name, level: t(`strategy.hitRate.${id}`), value })}
+          isEnabled={!disabled}
         >
-          {t(`strategy.hitRate.${id}`)} {presetHitRate}%
-        </button>
+          <SegmentedControlItem
+            value={String(value)}
+            label={isWide ? `${t(`strategy.hitRate.${id}`)} ${value}%` : `${value}%`}
+          />
+        </Tooltip>
       ))}
-    </div>
+    </SegmentedControl>
   );
 }

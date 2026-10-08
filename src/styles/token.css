@@ -31,15 +31,15 @@
    · The only chromatic accent is --live (phosphor), reserved for the
      monitoring state and the veil's reveal affordance.
    · Structure comes from hairline rules and 1px borders, never from shadow.
-   · Every uppercase role is tracked into the 0.96–1.6 px band from design.md.
+   · Every uppercase role is tracked into the legacy 0.96–1.6 px tracking band.
    · Motion moves only cheap properties, stays in the 100–300 ms band, and
      uses the snappy / smooth / swift curves by name.
 
    ---------------------------------------------------------------------------
    Naming
    ---------------------------------------------------------------------------
-   Motion tokens keep the normative names from design.md (--duration-snappy,
-   --ease-snappy) because the document treats the names as the spec.
+   Motion tokens keep the legacy semantic names (--duration-snappy,
+   --ease-snappy) used by the token bridge.
    Everything else avoids Tailwind's theme namespaces (--color-*, --font-*,
    --text-*, --leading-*, --tracking-*, --radius-*, --shadow-*, --ease-*,
    --breakpoint-*) so the bridge in theme.css can map one to the other
@@ -106,7 +106,7 @@
 
   /* ── Weight ───────────────────────────────────────────────────────────────
      Display/hero: 700. Body and UI: 400, with 500 as the hover weight — the
-     "text thickens slightly" interaction from design.md §4.2. */
+     "text thickens slightly" legacy hover interaction. */
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
@@ -138,7 +138,7 @@
   --line-mono: 1.75;
 
   /* ── Tracking ─────────────────────────────────────────────────────────────
-     design.md asks for positive tracking of 0.96–1.6 px on uppercase text.
+     Legacy uppercase text uses positive tracking of 0.96–1.6 px.
      Expressed in em, every uppercase role below lands inside that band:
        hero     0.02em @ 48–80px = 0.96–1.60px
        readout  0.025em @ 46px   = 1.15px
@@ -375,7 +375,7 @@
   --motion-ease-smooth: cubic-bezier(0.19, 1, 0.22, 1);
   --motion-ease-swift: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-  /* Normative names from design.md §4.1. */
+  /* Legacy semantic motion aliases. */
   --duration-instant: var(--motion-duration-instant);
   --duration-quick: var(--motion-duration-quick);
   --duration-snappy: var(--motion-duration-snappy);
@@ -392,7 +392,7 @@
   --motion-smooth: var(--duration-smooth) var(--ease-smooth);
   --motion-swift: var(--duration-swift) var(--ease-swift);
 
-  /* Property-level transitions, straight from the design.md §4.1 table. */
+  /* Legacy property-level transitions. */
   --transition-color: color var(--duration-quick) var(--motion-ease-linear);
   --transition-surface:
     background-color var(--duration-quick) var(--motion-ease-linear),

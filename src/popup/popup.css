@@ -1,27 +1,18 @@
-@import "tailwindcss";
-@import "../styles/theme.css";
+@layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "../themes/neutral/neutral.css";
+@import "../styles/figtree.css";
+@import "@astryxdesign/core/tailwind-theme.css";
+@import "tailwindcss/utilities.css" layer(utilities);
 @source "./";
 @source "../ui";
 
 html,
 body,
 #root {
-  width: var(--layout-popup-width);
-}
-
-@keyframes activity-number-enter {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-}
-
-.activity-number {
-  animation: activity-number-enter 180ms ease-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .activity-number {
-    animation: none;
-  }
+  width: var(--xflow-popup-width);
 }

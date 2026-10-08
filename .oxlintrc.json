@@ -20,7 +20,16 @@
   "globals": {
     "Bun": "readonly"
   },
-  "ignorePatterns": ["dist/**", "node_modules/**", "output/**", ".playwright-cli/**", "coverage/**"],
+  "ignorePatterns": [
+    "dist/**",
+    "node_modules/**",
+    "output/**",
+    ".playwright-cli/**",
+    "coverage/**",
+    "src/themes/neutral/neutral.js",
+    "src/themes/neutral/neutral.d.ts",
+    "src/themes/neutral/neutral.variants.d.ts"
+  ],
   "settings": {
     "react": {
       "version": "19.3"

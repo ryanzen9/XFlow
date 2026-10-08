@@ -1,14 +1,18 @@
+import { Text } from "@astryxdesign/core/Text";
+import { HStack } from "@astryxdesign/core/HStack";
+import { StackItem } from "@astryxdesign/core/Stack";
 import { useI18n } from "../../ui/i18n";
 
 export function ModelFooter({ modelId }: { modelId: string }) {
   const { t } = useI18n();
   return (
-    <footer className="mt-2.5 grid grid-cols-[auto_auto_1fr] items-center gap-[7px] border-t border-line px-0.5 pt-2.5 text-caption text-muted">
-      <span className="grid size-[13px] place-items-center rounded-full border border-live/40" aria-hidden="true">
-        <i className="size-[5px] rounded-full bg-live" />
-      </span>
-      <span>{t("popup.decisionModel")}</span>
-      <code className="justify-self-end font-mono text-caption leading-none font-semibold text-muted">{modelId}</code>
-    </footer>
+    <HStack as="footer" gap={2}>
+      <Text type="supporting">{t("popup.decisionModel")}</Text>
+      <StackItem size="fill">
+        <Text type="supporting" maxLines={1} justify="end">
+          {modelId}
+        </Text>
+      </StackItem>
+    </HStack>
   );
 }

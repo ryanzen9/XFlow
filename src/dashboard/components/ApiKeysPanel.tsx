@@ -1,9 +1,23 @@
 import { useEffect, useState } from "react";
 import { PROVIDERS, PROVIDER_IDS, type AppSettings, type ProviderId, type ProviderSummary } from "../../shared";
-import { cn } from "../../ui/cn";
+import { Button } from "@astryxdesign/core/Button";
+import { Divider } from "@astryxdesign/core/Divider";
+import { FormLayout } from "@astryxdesign/core/FormLayout";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Icon } from "@astryxdesign/core/Icon";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Eye, EyeOff } from "lucide-react";
+import { StackItem } from "@astryxdesign/core/Stack";
+import { Link } from "@astryxdesign/core/Link";
+import { RadioList, RadioListItem } from "@astryxdesign/core/RadioList";
+
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
+import { VStack } from "@astryxdesign/core/VStack";
+import { useMediaQuery } from "@astryxdesign/core/hooks";
+import { Actions, LabeledValue, SectionIntro, Status } from "./DashboardUI";
 import { providerLabel, translate, useI18n, type Locale, type MessageKey } from "../../ui/i18n";
 import { privacyPolicyUrl } from "../../ui/privacy";
-import { control, field, fieldHelp, fieldLabel, primaryButton, secondaryButton, tag } from "../../ui/styles";
 import {
   clearProviderCredential,
   checkProviderCredential,
@@ -51,7 +65,6 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
   const activeSummary = summaries.find((summary) => summary.id === activeProviderId);
   const isPending = pending === activeProviderId;
   const credentialsBusy = busy || pending !== null || healthPending !== null;
-  const helpId = `provider-key-help-${activeProviderId}`;
   const placeholder =
     activeProviderId === "openrouter"
       ? t("api.placeholder.openrouter")
@@ -80,12 +93,12 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
     const key = drafts[providerId].trim();
     if (!key) {
       onStatus({ message: t("api.enterKey", { provider: providerLabel(providerId, locale) }), error: true });
-      document.getElementById(`provider-key-${providerId}`)?.focus();
+      document.querySelector<HTMLInputElement>(`[data-field="provider-key-${providerId}"]`)?.focus();
       return;
     }
     if (providerId === "openrouter" && !key.startsWith("sk-or-")) {
       onStatus({ message: t("api.prefixError"), error: true });
-      document.getElementById(`provider-key-${providerId}`)?.focus();
+      document.querySelector<HTMLInputElement>(`[data-field="provider-key-${providerId}"]`)?.focus();
       return;
     }
     setPending(providerId);
@@ -131,192 +144,141 @@ export function ApiKeysPanel({ settings, busy, onProviderChange, onStatus }: Pro
     }
   };
 
-  return (
-    <div className="grid max-w-(--layout-content-max) overflow-hidden rounded-lg border border-line bg-surface lg:grid-cols-[minmax(220px,.72fr)_minmax(0,2fr)]">
-      <fieldset
-        className="min-w-0 border-0 border-b border-line p-0 lg:border-r lg:border-b-0"
-        disabled={credentialsBusy}
-      >
-        <legend className="sr-only">{t("api.chooseProvider")}</legend>
-        <div className="border-b border-line px-5 py-[18px]">
-          <p className="text-label text-ink">{t("api.provider")}</p>
-          <p className="mt-1 text-xs text-muted">{t("api.oneProvider")}</p>
-        </div>
-        <div className="grid divide-y divide-line">
-          {PROVIDER_IDS.map((providerId) => {
-            const provider = PROVIDERS[providerId];
-            const configured = summaries.find((summary) => summary.id === providerId)?.configured ?? false;
-            const selected = activeProviderId === providerId;
-            return (
-              <label
-                htmlFor={`active-provider-${providerId}`}
-                aria-label={`${providerLabel(providerId, locale)}, ${t(configured ? "api.configured" : "api.needsKey")}`}
-                className={cn(
-                  "relative flex min-h-24 cursor-pointer items-center gap-3.5 px-5 py-4 text-muted transition-colors before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-transparent before:content-[''] hover:bg-hover hover:text-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-55 has-[:focus-visible]:outline-(length:--focus-ring-width) has-[:focus-visible]:outline-offset-(--focus-ring-offset) has-[:focus-visible]:outline-focus",
-                  selected && "bg-selected text-ink before:bg-ink",
-                )}
-                key={providerId}
-                data-state={selected ? "selected" : "idle"}
-              >
-                <input
-                  className="peer sr-only"
-                  id={`active-provider-${providerId}`}
-                  type="radio"
-                  name="active-provider"
-                  value={providerId}
-                  checked={selected}
-                  onChange={() => void onProviderChange(providerId)}
+  const isWide = useMediaQuery("(min-width: 1280px)");
+  const providers = (
+    <RadioList
+      label={t("api.chooseProvider")}
+      value={activeProviderId}
+      onChange={(value) => void onProviderChange(value as ProviderId)}
+      htmlName="active-provider"
+      isDisabled={credentialsBusy}
+    >
+      {PROVIDER_IDS.map((id) => {
+        const configured = summaries.find((summary) => summary.id === id)?.configured ?? false;
+        return (
+          <RadioListItem
+            key={id}
+            value={id}
+            label={providerLabel(id, locale)}
+            description={
+              <VStack gap={1}>
+                <Status
+                  variant={configured ? "neutral" : "warning"}
+                  label={t(configured ? "api.configured" : "api.needsKey")}
                 />
-                <span
-                  className="grid size-4 shrink-0 place-items-center rounded-full border border-line-strong bg-surface peer-checked:border-action peer-checked:bg-action after:size-1.5 after:rounded-full after:bg-transparent after:content-[''] peer-checked:after:bg-action-fg"
-                  aria-hidden="true"
-                />
-                <span className="grid min-w-0 flex-1 gap-1">
-                  <strong className="truncate text-xs text-ink">{providerLabel(providerId, locale)}</strong>
-                  <small className="truncate font-mono text-caption text-muted">{provider.modelId}</small>
-                  <small className={cn("mt-1 text-caption", configured ? "text-muted" : "text-warn")}>
-                    {t(configured ? "api.configured" : "api.needsKey")}
-                  </small>
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      </fieldset>
-
-      <section className="min-w-0 p-[18px] sm:p-6 lg:p-8" aria-labelledby={`provider-detail-title-${activeProviderId}`}>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="font-mono text-meta text-muted">PROVIDER / ACTIVE</p>
-            <h2 className="mt-2 text-heading text-ink" id={`provider-detail-title-${activeProviderId}`}>
-              {providerLabel(activeProviderId, locale)}
-            </h2>
-            <p className="mt-1.5 max-w-(--layout-measure-narrow) text-xs text-muted">{t("api.description")}</p>
-          </div>
-          <span className={cn(tag, activeSummary?.configured && "border border-line-strong bg-selected")}>
-            {activeSummary?.configured
+              </VStack>
+            }
+          />
+        );
+      })}
+    </RadioList>
+  );
+  const detail = (
+    <VStack gap={5}>
+      <HStack hAlign="between" gap={3} wrap="wrap">
+        <SectionIntro
+          id={`provider-detail-title-${activeProviderId}`}
+          title={providerLabel(activeProviderId, locale)}
+        />
+        <Status
+          variant={activeSummary?.configured ? "neutral" : "warning"}
+          label={
+            activeSummary?.configured
               ? t("api.configuredHint", { hint: activeSummary.keyHint })
-              : t("api.notConfigured")}
-          </span>
-        </div>
-
-        <dl className="mt-7 grid border-y border-line sm:grid-cols-2 sm:divide-x sm:divide-line">
-          <div className="py-4 sm:pr-5">
-            <dt className="text-meta text-muted">{t("api.model")}</dt>
-            <dd className="mt-1.5 truncate font-mono text-xs text-ink" title={activeProvider.modelId}>
-              {activeProvider.modelId}
-            </dd>
-          </div>
-          <div className="border-t border-line py-4 sm:border-t-0 sm:pl-5">
-            <dt className="text-meta text-muted">{t("api.credentialStatus")}</dt>
-            <dd className="mt-1.5 flex items-center gap-2 text-xs text-ink">
-              <span
-                className={cn("size-1.5 rounded-full bg-warn", activeSummary?.configured && "bg-live")}
-                aria-hidden="true"
-              />
-              {activeSummary?.configured
-                ? t("api.savedLocally", { hint: activeSummary.keyHint })
-                : t("api.awaitingKey")}
-            </dd>
-          </div>
-        </dl>
-
-        <p className="mt-6 border-l-[3px] border-line-strong bg-inset px-[13px] py-[11px] text-meta leading-[1.7] text-ink">
-          {t("api.privacyNotice")}{" "}
-          <a
-            className="underline decoration-fg-4 underline-offset-[3px] hover:decoration-fg-2"
-            href={privacyPolicyUrl(locale)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("privacy.policyLink")}
-          </a>
-        </p>
-
-        <form
-          className="mt-7"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void saveKey(activeProviderId);
-          }}
-        >
-          <label className={`${field} mt-0`} htmlFor={`provider-key-${activeProviderId}`}>
-            <span className={fieldLabel}>
-              API Key
-              <a
-                className="text-xs text-ink underline decoration-fg-4 underline-offset-[3px] transition-[text-decoration-color] hover:decoration-fg-2"
-                href={activeProvider.keyUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {t("api.getKey")}
-              </a>
-            </span>
-            <span className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-              <input
-                className={`${control} font-mono`}
-                id={`provider-key-${activeProviderId}`}
+              : t("api.notConfigured")
+          }
+        />
+      </HStack>
+      <Divider />
+      <LabeledValue label={t("api.model")}>{activeProvider.modelId}</LabeledValue>
+      <Text as="p" color="secondary">
+        {t("api.privacyNotice")}{" "}
+        <Link href={privacyPolicyUrl(locale)} target="_blank" hasUnderline>
+          {t("privacy.policyLink")}
+        </Link>
+      </Text>
+      <VStack
+        as="form"
+        gap={4}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void saveKey(activeProviderId);
+        }}
+      >
+        <FormLayout>
+          <HStack gap={2} vAlign="end">
+            <StackItem size="fill">
+              <TextInput
+                data-field={`provider-key-${activeProviderId}`}
+                label="API Key"
                 type={revealed[activeProviderId] ? "text" : "password"}
                 autoComplete="off"
-                spellCheck={false}
-                maxLength={512}
+                labelTooltip={t("api.localOnly")}
                 placeholder={
                   activeSummary?.configured ? t("api.replacePlaceholder", { hint: activeSummary.keyHint }) : placeholder
                 }
                 value={drafts[activeProviderId]}
-                disabled={credentialsBusy}
-                aria-describedby={helpId}
-                onChange={(event) => setDrafts((current) => ({ ...current, [activeProviderId]: event.target.value }))}
+                isDisabled={credentialsBusy}
+                onChange={(value) => setDrafts((current) => ({ ...current, [activeProviderId]: value.slice(0, 512) }))}
               />
-              <button
-                className={secondaryButton}
-                type="button"
-                disabled={credentialsBusy}
-                aria-label={t("api.toggleKey", {
-                  action: t(revealed[activeProviderId] ? "common.hide" : "common.show"),
-                  provider: providerLabel(activeProviderId, locale),
-                })}
-                aria-pressed={revealed[activeProviderId]}
-                onClick={() =>
-                  setRevealed((current) => ({ ...current, [activeProviderId]: !current[activeProviderId] }))
-                }
-              >
-                {t(revealed[activeProviderId] ? "common.hide" : "common.show")}
-              </button>
-            </span>
-            <small className={fieldHelp} id={helpId}>
-              {t("api.localOnly")}
-            </small>
-          </label>
-          <div className="mt-6 flex flex-col-reverse gap-2 border-t border-line pt-5 sm:flex-row sm:flex-wrap sm:justify-end">
-            <button
-              className={secondaryButton}
-              type="button"
-              disabled={credentialsBusy || !activeSummary?.configured}
+            </StackItem>
+            <IconButton
+              label={t("api.toggleKey", {
+                action: t(revealed[activeProviderId] ? "common.hide" : "common.show"),
+                provider: providerLabel(activeProviderId, locale),
+              })}
+              tooltip={t(revealed[activeProviderId] ? "common.hide" : "common.show")}
+              icon={<Icon icon={revealed[activeProviderId] ? EyeOff : Eye} size="sm" />}
+              aria-pressed={revealed[activeProviderId]}
+              variant="ghost"
+              isDisabled={credentialsBusy}
+              onClick={() => setRevealed((current) => ({ ...current, [activeProviderId]: !current[activeProviderId] }))}
+            />
+          </HStack>
+        </FormLayout>
+        <HStack hAlign="between" wrap="wrap" gap={3}>
+          <Link href={activeProvider.keyUrl} isExternalLink>
+            {t("api.getKey")}
+          </Link>
+          <Actions>
+            <Button
+              label={t("api.healthCheck")}
+              isLoading={healthPending === activeProviderId}
+              isDisabled={credentialsBusy || !activeSummary?.configured}
               onClick={() => void checkHealth(activeProviderId)}
-            >
-              {healthPending === activeProviderId ? t("api.healthChecking") : t("api.healthCheck")}
-            </button>
+            />
             {activeSummary?.configured && (
-              <button
-                className={secondaryButton}
-                type="button"
-                disabled={credentialsBusy}
+              <Button
+                label={t("api.clearLocal")}
+                isDisabled={credentialsBusy}
                 onClick={() => void clearKey(activeProviderId)}
-              >
-                {t("api.clearLocal")}
-              </button>
+              />
             )}
-            <button
-              className={primaryButton}
+            <Button
               type="submit"
-              disabled={credentialsBusy || !drafts[activeProviderId].trim()}
-            >
-              {isPending ? t("common.saving") : t(activeSummary?.configured ? "api.replace" : "api.save")}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+              variant="primary"
+              label={t(activeSummary?.configured ? "api.replace" : "api.save")}
+              isLoading={isPending}
+              isDisabled={credentialsBusy || !drafts[activeProviderId].trim()}
+            />
+          </Actions>
+        </HStack>
+      </VStack>
+    </VStack>
+  );
+  // A fixed provider region on desktop; a stacked radio group on narrower screens.
+  return isWide ? (
+    <HStack gap={6} vAlign="start">
+      <VStack width={280} className="shrink-0">
+        {providers}
+      </VStack>
+      <StackItem size="fill">{detail}</StackItem>
+    </HStack>
+  ) : (
+    <VStack gap={6}>
+      {providers}
+      <Divider />
+      {detail}
+    </VStack>
   );
 }

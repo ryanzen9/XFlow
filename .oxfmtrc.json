@@ -5,7 +5,7 @@
   "singleQuote": false,
   "sortPackageJson": true,
   "sortTailwindcss": {
-    "stylesheet": "./src/dashboard/styles/dashboard.css",
+    "stylesheet": "./src/popup/popup.css",
     "functions": ["cn"]
   },
   "ignorePatterns": [
@@ -16,6 +16,10 @@
     ".agents/**",
     ".claude/**",
     "coverage/**",
+    "src/themes/neutral/neutral.css",
+    "src/themes/neutral/neutral.js",
+    "src/themes/neutral/neutral.d.ts",
+    "src/themes/neutral/neutral.variants.d.ts",
     "bun.lock"
   ]
 }

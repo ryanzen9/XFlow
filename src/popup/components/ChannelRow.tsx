@@ -1,4 +1,5 @@
-import { cn } from "../../ui/cn";
+import { Item } from "@astryxdesign/core/Item";
+import { Text } from "@astryxdesign/core/Text";
 import { useI18n } from "../../ui/i18n";
 
 export interface ChannelRowProps {
@@ -6,25 +7,26 @@ export interface ChannelRowProps {
   configured: boolean;
 }
 
-/**
- * Secondary row: which channel the popup is reporting on, and whether it holds
- * a local credential. Credentials themselves never render here.
- */
+/** Credentials themselves never render here. */
 export function ChannelRow({ name, configured }: ChannelRowProps) {
   const { t } = useI18n();
+  const status = t(configured ? "popup.configured" : "popup.needsKey");
   return (
-    <div className="flex min-h-12 items-center gap-2.5 px-3 py-2" data-state={configured ? "configured" : "empty"}>
-      <span className="min-w-0 flex-1 truncate text-ui leading-tight" title={name}>
-        {name}
-      </span>
-      <span
-        className={cn(
-          "shrink-0 font-mono text-caption leading-none whitespace-nowrap uppercase",
-          configured ? "text-muted" : "text-warn",
-        )}
-      >
-        {t(configured ? "popup.configured" : "popup.needsKey")}
-      </span>
-    </div>
+    <Item
+      label={
+        <Text weight="medium" maxLines={1}>
+          {name}
+        </Text>
+      }
+      labelLines={1}
+      endContent={
+        <Text type="supporting" className="shrink-0">
+          {status}
+        </Text>
+      }
+      density="balanced"
+      className="min-h-10 px-0"
+      data-state={configured ? "configured" : "empty"}
+    />
   );
 }

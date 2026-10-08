@@ -1,7 +1,11 @@
+import { Button } from "@astryxdesign/core/Button";
+import { List, ListItem } from "@astryxdesign/core/List";
+import { StatusDot } from "@astryxdesign/core/StatusDot";
+import { Text } from "@astryxdesign/core/Text";
+import { VStack } from "@astryxdesign/core/VStack";
 import type { JevRequestLogEntry } from "../../../shared";
-import { cn } from "../../../ui/cn";
 import { providerLabel, useI18n, type MessageKey } from "../../../ui/i18n";
-import { secondaryButton, tag } from "../../../ui/styles";
+import { Panel } from "../DashboardUI";
 
 interface Props {
   entries: JevRequestLogEntry[];
@@ -19,64 +23,58 @@ export function JevRequestHistory({ entries, busy, onClear }: Props) {
   const number = new Intl.NumberFormat(locale);
 
   return (
-    <section className="overflow-hidden rounded-xl border border-line bg-surface" aria-labelledby="jev-log-title">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line p-[18px] sm:p-6">
-        <div>
-          <h2 id="jev-log-title" className="text-heading text-ink">
-            {t("jevLog.title")}
-          </h2>
-          <p className="mt-1 text-meta text-muted">{t("jevLog.description")}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className={tag}>{t("jevLog.records", { count: entries.length })}</span>
-          <button
-            className={secondaryButton}
-            type="button"
-            disabled={busy || entries.length === 0}
-            onClick={() => void onClear().catch(() => undefined)}
-          >
-            {busy ? t("jevLog.clearing") : t("jevLog.clear")}
-          </button>
-        </div>
-      </div>
+    <Panel
+      id="jev-log-title"
+      title={t("jevLog.title")}
+      description={t("jevLog.description")}
+      actions={
+        <Button
+          label={t("jevLog.clear")}
+          size="sm"
+          isLoading={busy}
+          isDisabled={busy || entries.length === 0}
+          onClick={() => void onClear().catch(() => undefined)}
+        />
+      }
+    >
       {entries.length === 0 ? (
-        <p className="p-[18px] text-xs text-muted sm:p-6">{t("jevLog.empty")}</p>
+        <Text as="p" color="secondary">
+          {t("jevLog.empty")}
+        </Text>
       ) : (
-        <ol className="divide-y divide-line">
-          {entries.map((entry) => (
-            <li className="grid gap-3 p-[18px] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6" key={entry.id}>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className={cn("size-1.5 rounded-full", entry.status === "success" ? "bg-live" : "bg-danger")}
-                    aria-hidden="true"
-                  />
-                  <strong className="text-xs text-ink">{providerLabel(entry.providerId, locale)}</strong>
-                  <span className="font-mono text-caption text-muted">{entry.modelId}</span>
-                  <span className={tag}>{t(entry.kind === "health-check" ? "jevLog.health" : "jevLog.review")}</span>
-                </div>
-                <p className="mt-2 text-xs text-muted">
-                  {entry.status === "success" ? t("jevLog.success") : t(errorLabel(entry.errorCode))}
-                </p>
-                <p className="mt-1 font-mono text-caption text-muted">
-                  {t("jevLog.details", {
-                    items: number.format(entry.itemCount),
-                    questions: number.format(entry.questionCount),
-                    duration: number.format(entry.durationMs),
-                  })}
-                  {entry.surface ? ` · ${t(entry.surface === "timeline" ? "popup.timeline" : "popup.comments")}` : ""}
-                </p>
-              </div>
-              <time
-                className="font-mono text-caption text-muted sm:text-right"
-                dateTime={new Date(entry.requestedAt).toISOString()}
-              >
-                {date.format(entry.requestedAt)}
-              </time>
-            </li>
-          ))}
-        </ol>
+        <List header={t("jevLog.records", { count: entries.length })} density="compact" hasDividers>
+          {entries.map((entry) => {
+            const outcome = entry.status === "success" ? t("jevLog.success") : t(errorLabel(entry.errorCode));
+            return (
+              <ListItem
+                key={entry.id}
+                label={`${providerLabel(entry.providerId, locale)} · ${t(entry.kind === "health-check" ? "jevLog.health" : "jevLog.review")}`}
+                startContent={<StatusDot label={outcome} variant={entry.status === "success" ? "success" : "error"} />}
+                description={
+                  <VStack gap={1} className="min-w-0">
+                    <Text type="supporting" className="break-words">
+                      {entry.modelId} · {outcome}
+                    </Text>
+                    <Text type="supporting" className="tabular-nums">
+                      {t("jevLog.details", {
+                        items: number.format(entry.itemCount),
+                        questions: number.format(entry.questionCount),
+                        duration: number.format(entry.durationMs),
+                      })}
+                      {entry.surface
+                        ? ` · ${t(entry.surface === "timeline" ? "popup.timeline" : "popup.comments")}`
+                        : ""}
+                    </Text>
+                    <Text type="supporting" color="secondary">
+                      <time dateTime={new Date(entry.requestedAt).toISOString()}>{date.format(entry.requestedAt)}</time>
+                    </Text>
+                  </VStack>
+                }
+              />
+            );
+          })}
+        </List>
       )}
-    </section>
+    </Panel>
   );
 }

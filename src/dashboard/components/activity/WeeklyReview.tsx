@@ -1,42 +1,44 @@
+import { Card } from "@astryxdesign/core/Card";
+import { Grid } from "@astryxdesign/core/Grid";
+import { Text } from "@astryxdesign/core/Text";
+import { VStack } from "@astryxdesign/core/VStack";
 import type { WeeklyActivity } from "../../../shared";
 import { useI18n } from "../../../ui/i18n";
+import { LabeledValue, SectionIntro } from "../DashboardUI";
 
-export function WeeklyReview({ weekly }: { weekly: WeeklyActivity }) {
+export function WeeklyReview({ weekly, pending = false }: { weekly: WeeklyActivity; pending?: boolean }) {
   const { locale, t } = useI18n();
   const number = new Intl.NumberFormat(locale);
   const dayFormatter = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" });
   const weekdayFormatter = new Intl.DateTimeFormat(locale, { weekday: "long" });
   const range = `${dayFormatter.format(weekly.start)} – ${dayFormatter.format(weekly.end)}`;
   return (
-    <section className="rounded-xl border border-line bg-surface p-[18px]" aria-labelledby="weekly-title">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 id="weekly-title" className="text-sm font-semibold">
-            {t("activity.weekly")}
-          </h2>
-          <p className="mt-1 text-meta text-muted">{range}</p>
-          <strong className="mt-4 block text-display leading-none">{number.format(weekly.total)}</strong>
-          <span className="mt-1 block text-meta text-muted">{t("activity.filteredWeek")}</span>
-        </div>
-        <dl className="grid min-w-44 gap-4 text-meta">
-          <div>
-            <dt className="text-muted">{t("activity.mostActive")}</dt>
-            <dd className="mt-1 font-semibold text-ink">
-              {weekly.mostActive
+    <Card padding={5} role="region" aria-labelledby="weekly-title">
+      <Grid columns={{ minWidth: 240, max: 2 }} gap={6} align="start">
+        <VStack gap={3}>
+          <SectionIntro id="weekly-title" title={t("activity.weekly")} description={range} />
+          <Text type="display-1" hasTabularNumbers maxLines={1}>
+            {pending ? "—" : number.format(weekly.total)}
+          </Text>
+          <Text type="supporting">{t("activity.filteredWeek")}</Text>
+        </VStack>
+        <VStack gap={4}>
+          <LabeledValue label={t("activity.mostActive")}>
+            {pending
+              ? "—"
+              : weekly.mostActive
                 ? `${weekdayFormatter.format(weekly.mostActive.date)} · ${number.format(weekly.mostActive.count)}`
                 : t("activity.noActivity")}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted">{t("activity.compared")}</dt>
-            <dd className="mt-1 font-semibold text-ink">
-              {weekly.comparisonPercent === undefined
+          </LabeledValue>
+          <LabeledValue label={t("activity.compared")}>
+            {pending
+              ? "—"
+              : weekly.comparisonPercent === undefined
                 ? t("activity.firstSummary")
                 : `${weekly.comparisonPercent >= 0 ? "+" : ""}${weekly.comparisonPercent}%`}
-            </dd>
-          </div>
-        </dl>
-      </div>
-    </section>
+          </LabeledValue>
+        </VStack>
+      </Grid>
+    </Card>
   );
 }
