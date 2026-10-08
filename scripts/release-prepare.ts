@@ -1,11 +1,19 @@
-import { resolve } from "node:path";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 const versionFiles = ["package.json", "manifest.json"];
 const usage = "Usage: bun run release:prepare <major.minor.patch>";
 
-async function git(root: string, args: string[]): Promise<string> {
+async function git(
+  root: string,
+  args: string[],
+  options: { input?: string; env?: Record<string, string> } = {},
+): Promise<string> {
   const command = Bun.spawn(["git", "-c", "core.fsmonitor=false", ...args], {
     cwd: root,
+    env: options.env ? { ...process.env, ...options.env } : process.env,
+    stdin: options.input === undefined ? "ignore" : new TextEncoder().encode(options.input),
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -44,6 +52,40 @@ function updateVersion(source: string, version: string): string {
     }
   }
   throw new Error("Could not locate the root version field.");
+}
+
+function restoreVersion(source: string, original: string, updated: string, previous: string, next: string): string {
+  if (source === updated) return original;
+  try {
+    const document = JSON.parse(source) as { version?: unknown } | null;
+    return document?.version === next ? updateVersion(source, previous) : source;
+  } catch {
+    return source;
+  }
+}
+
+/** Build the checked tree independently of the user's index, applying Git's clean filters. */
+async function checkedTree(
+  root: string,
+  head: string,
+  documents: { file: string; updated: string }[],
+): Promise<string> {
+  const directory = await mkdtemp(join(tmpdir(), "xflow-release-tree-"));
+  const env = { GIT_INDEX_FILE: join(directory, "index") };
+  try {
+    await git(root, ["read-tree", head], { env });
+    for (const document of documents) {
+      const mode = (await git(root, ["ls-files", "--stage", "--", document.file], { env })).split(" ")[0]!;
+      const blob = await git(root, ["hash-object", "-w", `--path=${document.file}`, "--stdin"], {
+        env,
+        input: document.updated,
+      });
+      await git(root, ["update-index", "--add", "--cacheinfo", mode, blob, document.file], { env });
+    }
+    return await git(root, ["write-tree"], { env });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 }
 
 async function assertTagAvailable(root: string, tag: string): Promise<void> {
@@ -120,12 +162,19 @@ export async function prepareRelease(directory: string, version: string): Promis
       }
     }
     await assertTagAvailable(root, tag);
+    const expectedTree = await checkedTree(root, previousHead, documents);
     await git(root, ["add", "--", ...versionFiles]);
     await git(root, ["commit", "--only", "-m", `chore: prepare release ${tag}`, "--", ...versionFiles]);
     commit = await git(root, ["rev-parse", "HEAD"]);
     for (const file of versionFiles) {
       const committed = JSON.parse(await git(root, ["show", `${commit}:${file}`])) as { version: string };
       if (committed.version !== version) throw new Error(`Committed ${file} version differs from ${version}.`);
+    }
+    if ((await git(root, ["rev-parse", `${commit}^{tree}`])) !== expectedTree) {
+      throw new Error("Committed tree differs from the content that passed bun run check; no release tag was created.");
+    }
+    if (await git(root, ["status", "--porcelain=v1", "--untracked-files=all"])) {
+      throw new Error("Working tree or index changed during the commit; no release tag was created.");
     }
     await git(root, ["tag", "-a", tag, "-m", `XFlow ${tag}`, commit]);
     return { version, tag, commit, branch };
@@ -134,9 +183,11 @@ export async function prepareRelease(directory: string, version: string): Promis
     if (!commit && head === previousHead) {
       await git(root, ["restore", "--staged", `--source=${previousHead}`, "--", ...versionFiles]);
       for (const document of documents) {
-        // Preserve edits made by another process while the quality gate was running.
-        if ((await Bun.file(document.path).text()) === document.updated)
-          await Bun.write(document.path, document.source);
+        const file = Bun.file(document.path);
+        if (!(await file.exists())) continue;
+        const source = await file.text();
+        const restored = restoreVersion(source, document.source, document.updated, document.version, version);
+        if (restored !== source) await Bun.write(document.path, restored);
       }
     } else {
       throw new Error(`Commit ${head} was retained, but this command could not create ${tag}. ${String(error)}`, {

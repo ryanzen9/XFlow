@@ -18,7 +18,7 @@ function git(root: string, ...args: string[]): string {
 }
 
 async function withRepository(
-  mode: "pass" | "fail" | "dirty",
+  mode: "pass" | "fail" | "dirty" | "edit-fail" | "version-fail",
   run: (root: string, initialHead: string) => Promise<void>,
 ): Promise<void> {
   const root = await mkdtemp(join(tmpdir(), "xflow-release-prepare-"));
@@ -53,7 +53,8 @@ async function withRepository(
       `const pkg = await Bun.file("package.json").json();
 const manifest = await Bun.file("manifest.json").json();
 await Bun.write("gate-result.json", JSON.stringify([pkg.version, manifest.version]));
-${mode === "fail" ? "process.exit(1);" : ""}
+${mode === "edit-fail" || mode === "version-fail" ? `pkg.metadata.recovery = "preserved"; ${mode === "version-fail" ? 'pkg.version = "0.1.99";' : ""} await Bun.write("package.json", JSON.stringify(pkg, null, 4) + "\\n");` : ""}
+${mode === "fail" || mode === "edit-fail" || mode === "version-fail" ? "process.exit(1);" : ""}
 ${mode === "dirty" ? 'await Bun.write("unrelated.txt", "Preserve this output.");' : ""}
 `,
     );
@@ -63,6 +64,13 @@ ${mode === "dirty" ? 'await Bun.write("unrelated.txt", "Preserve this output.");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+}
+
+async function writeHook(root: string, name: string, body: string): Promise<void> {
+  await mkdir(join(root, ".git/hooks"), { recursive: true });
+  const path = join(root, ".git/hooks", name);
+  await Bun.write(path, `#!/bin/sh\n${body}\n`);
+  await chmod(path, 0o755);
 }
 
 test("CLI checks the new versions, commits only them and tags that exact commit", async () => {
@@ -242,5 +250,129 @@ test("mismatched versions and detached HEAD are rejected before changing files",
     await expect(prepareRelease(root, "0.1.2")).rejects.toThrow("Check out a branch");
     expect(git(root, "status", "--porcelain")).toBe("");
     expect(git(root, "tag", "--list")).toBe("");
+  });
+});
+
+test.each(["package.json", "manifest.json"])("refuses a hook's unchecked non-version edits in %s", async (file) => {
+  await withRepository("pass", async (root, initialHead) => {
+    await writeHook(
+      root,
+      "pre-commit",
+      `bun -e 'const path = "${file}"; const doc = await Bun.file(path).json(); doc.unchecked = true; await Bun.write(path, JSON.stringify(doc) + "\\n");'
+git add ${file}`,
+    );
+    await expect(prepareRelease(root, "0.1.2")).rejects.toThrow("Committed tree differs");
+    expect(git(root, "rev-parse", "HEAD")).not.toBe(initialHead);
+    expect(JSON.parse(git(root, "show", `HEAD:${file}`))).toMatchObject({ version: "0.1.2", unchecked: true });
+    expect(git(root, "tag", "--list")).toBe("");
+  });
+});
+
+test("refuses unchecked files added to the commit by a hook", async () => {
+  await withRepository("pass", async (root, initialHead) => {
+    await writeHook(root, "pre-commit", 'printf "Unchecked content.\\n" > hook-added.txt\ngit add hook-added.txt');
+    await expect(prepareRelease(root, "0.1.2")).rejects.toThrow("Committed tree differs");
+    expect(git(root, "rev-parse", "HEAD")).not.toBe(initialHead);
+    expect(git(root, "show", "HEAD:hook-added.txt")).toBe("Unchecked content.");
+    expect(git(root, "tag", "--list")).toBe("");
+  });
+});
+
+test("refuses a tag if a hook leaves the checked commit's worktree dirty", async () => {
+  await withRepository("pass", async (root, initialHead) => {
+    await writeHook(root, "post-commit", 'printf "Independent edit.\\n" >> README.md\ngit add README.md');
+    await expect(prepareRelease(root, "0.1.2")).rejects.toThrow("Working tree or index changed");
+    expect(git(root, "rev-parse", "HEAD")).not.toBe(initialHead);
+    expect(git(root, "diff", "--name-only", initialHead, "HEAD").split("\n")).toEqual([
+      "manifest.json",
+      "package.json",
+    ]);
+    expect(await Bun.file(join(root, "README.md")).text()).toContain("Independent edit.");
+    expect(git(root, "status", "--porcelain")).not.toBe("");
+    expect(git(root, "tag", "--list")).toBe("");
+  });
+});
+
+test("a failing gate rolls back only the root version while retaining reformatted metadata", async () => {
+  await withRepository("edit-fail", async (root, initialHead) => {
+    await expect(prepareRelease(root, "0.1.2")).rejects.toThrow("bun run check failed");
+    const source = await Bun.file(join(root, "package.json")).text();
+    expect(JSON.parse(source)).toMatchObject({
+      version: "0.1.1",
+      metadata: { version: "keep", recovery: "preserved" },
+    });
+    expect(source).toContain('\n    "name"');
+    expect((await Bun.file(join(root, "manifest.json")).json()).version).toBe("0.1.1");
+    expect(git(root, "rev-parse", "HEAD")).toBe(initialHead);
+    expect(git(root, "tag", "--list")).toBe("");
+  });
+});
+
+test("a rejecting hook retains non-version edits while rolling back both root versions", async () => {
+  await withRepository("pass", async (root, initialHead) => {
+    await writeHook(
+      root,
+      "pre-commit",
+      `bun -e 'const doc = await Bun.file("manifest.json").json(); doc.metadata.recovery = "preserved"; await Bun.write("manifest.json", JSON.stringify(doc, null, 4) + "\\n");'
+git add manifest.json
+exit 1`,
+    );
+    await expect(prepareRelease(root, "0.1.2")).rejects.toThrow("git commit");
+    expect(await Bun.file(join(root, "manifest.json")).json()).toMatchObject({
+      version: "0.1.1",
+      metadata: { version: "keep", recovery: "preserved" },
+    });
+    expect((await Bun.file(join(root, "package.json")).json()).version).toBe("0.1.1");
+    expect(git(root, "diff", "--cached", "--name-only")).toBe("");
+    expect(git(root, "rev-parse", "HEAD")).toBe(initialHead);
+    expect(git(root, "tag", "--list")).toBe("");
+  });
+});
+
+test("rollback preserves a root version independently changed by the failing gate", async () => {
+  await withRepository("version-fail", async (root, initialHead) => {
+    await expect(prepareRelease(root, "0.1.2")).rejects.toThrow("bun run check failed");
+    expect(await Bun.file(join(root, "package.json")).json()).toMatchObject({
+      version: "0.1.99",
+      metadata: { version: "keep", recovery: "preserved" },
+    });
+    expect((await Bun.file(join(root, "manifest.json")).json()).version).toBe("0.1.1");
+    expect(git(root, "rev-parse", "HEAD")).toBe(initialHead);
+    expect(git(root, "tag", "--list")).toBe("");
+  });
+});
+
+test.each(["invalid", "deleted"])("rollback preserves a hook's %s JSON without masking its failure", async (kind) => {
+  await withRepository("pass", async (root, initialHead) => {
+    await writeHook(
+      root,
+      "pre-commit",
+      `${kind === "invalid" ? 'printf "unfinished JSON" > manifest.json' : "rm manifest.json"}\nexit 1`,
+    );
+    await expect(prepareRelease(root, "0.1.2")).rejects.toThrow("git commit");
+    if (kind === "invalid") expect(await Bun.file(join(root, "manifest.json")).text()).toBe("unfinished JSON");
+    else expect(await Bun.file(join(root, "manifest.json")).exists()).toBe(false);
+    expect((await Bun.file(join(root, "package.json")).json()).version).toBe("0.1.1");
+    expect(git(root, "rev-parse", "HEAD")).toBe(initialHead);
+    expect(git(root, "diff", "--cached", "--name-only")).toBe("");
+    expect(git(root, "tag", "--list")).toBe("");
+  });
+});
+
+test("checked CRLF files are accepted after Git normalizes their committed blobs", async () => {
+  await withRepository("pass", async (root) => {
+    await Bun.write(join(root, ".gitattributes"), "package.json text eol=crlf\nmanifest.json text eol=crlf\n");
+    git(root, "add", ".gitattributes");
+    git(root, "add", "--renormalize", "--", "package.json", "manifest.json");
+    git(root, "commit", "-m", "Normalize version files");
+    await rm(join(root, "package.json"));
+    await rm(join(root, "manifest.json"));
+    git(root, "checkout-index", "--force", "--index", "--", "package.json", "manifest.json");
+    expect((await Bun.file(join(root, "package.json")).text()).includes("\r\n")).toBe(true);
+    expect(git(root, "status", "--porcelain")).toBe("");
+    const release = await prepareRelease(root, "0.1.2");
+    expect(git(root, "rev-parse", `${release.tag}^{}`)).toBe(release.commit);
+    expect(git(root, "show", `${release.commit}:package.json`).includes("\r\n")).toBe(false);
+    expect(git(root, "status", "--porcelain")).toBe("");
   });
 });

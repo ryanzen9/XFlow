@@ -270,7 +270,9 @@ bun run release:prepare 0.1.2
 git push --atomic origin main v0.1.2
 ```
 
-`release:prepare` 同步修改 `package.json` 和 `manifest.json`，执行 `bun run check`，只提交这两个文件，然后创建指向新提交的 annotated 标签 `v0.1.2`。版本使用三段整数且必须递增；现有本地或 `origin` 标签会阻止执行。检查或提交失败时恢复脚本的版本修改；它保留其他进程的改动。命令只准备本地提交和标签，推送后才触发草稿 Release 工作流。
+`release:prepare` 同步修改 `package.json` 和 `manifest.json`，执行 `bun run check`，只提交这两个文件，然后创建指向新提交的 annotated 标签 `v0.1.2`。版本使用三段整数且必须递增；现有本地或 `origin` 标签会阻止执行。命令只准备本地提交和标签，推送后才触发草稿 Release 工作流。
+
+创建标签前，命令会校验提交的完整文件树与通过检查的内容一致（按 Git 的换行与过滤规则归一化），并确认工作区和暂存区干净。如果 hook 改写了提交内容或留下其他改动，保留已完成的提交，但不创建标签。提交尚未创建时，失败会撤销脚本修改的根版本号，保留其他字段和格式调整；被独立修改的版本号、无效 JSON 或已删除的文件也会保留。
 
 ```bash
 bun run release:check     # 质量门禁 + 打包校验，产出可上传 ZIP

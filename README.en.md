@@ -252,7 +252,9 @@ bun run release:prepare 0.1.2
 git push --atomic origin main v0.1.2
 ```
 
-`release:prepare` updates `package.json` and `manifest.json`, runs `bun run check`, commits only those two files, and creates the annotated `v0.1.2` tag at that new commit. Versions use three numeric components and must increase; existing local or `origin` tags block preparation. Failed checks or commits restore the script's version edits while preserving edits made by another process. The command prepares a local commit and tag; pushing triggers the draft Release workflow.
+`release:prepare` updates `package.json` and `manifest.json`, runs `bun run check`, commits only those two files, and creates the annotated `v0.1.2` tag at that new commit. Versions use three numeric components and must increase; existing local or `origin` tags block preparation. The command prepares a local commit and tag; pushing triggers the draft Release workflow.
+
+Before tagging, the command verifies that the entire committed tree matches the checked content after Git's line-ending and filter normalization, and that the worktree and index are clean. If a hook changes the commit or leaves other edits, the completed commit is retained without creating a tag. Failures before a commit restore only the root versions changed by the script, preserving other fields and formatting edits. Independently changed versions, invalid JSON, and deleted files are also preserved.
 
 ```bash
 bun run release:check     # quality gate plus packaging, writes the upload ZIP
