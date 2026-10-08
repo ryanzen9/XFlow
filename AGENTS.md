@@ -17,12 +17,11 @@
 
 - Do not commit `dist/`, `node_modules/`, browser traces, screenshots, local skills, `.env` files or real credentials.
 - Add or update Bun tests for behavior changes.
-- Update `README.md` or `docs/architecture.md` when commands, permissions, persistence or architectural boundaries change.
+- Update `README.md` and `README.en.md` when commands, permissions, persistence or architectural boundaries change.
 
 ## Design
 
-- Please refer to [design guidelines](./design.md) for the visual and interaction principles.
-- Dashboard and Popup use Astryx components and the editable `src/themes/neutral/neutralTheme.ts`, with Astryx's Tailwind bridge. `src/styles/token.css` and `src/styles/theme.css` remain the legacy reference system. Components must not hardcode colours, radii, durations or type sizes — see [design tokens](./docs/design-tokens.md). Preview legacy tokens with `bun run preview:tokens` and Dashboard with `bun run preview:dashboard`.
+- Dashboard and Popup use Astryx components and the editable `src/themes/neutral/neutralTheme.ts`, with Astryx's Tailwind bridge. `src/styles/token.css` and `src/styles/theme.css` remain the legacy reference system. Components must use component props and token-backed utilities for colours, radii, durations and type sizes. Preview legacy tokens with `bun run preview:tokens` and Dashboard with `bun run preview:dashboard`.
 
 ## Skills
 

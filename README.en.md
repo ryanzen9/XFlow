@@ -25,7 +25,7 @@
   <a href="https://ryanzen9.github.io/XFlow/">Project website</a> · <a href="https://ryanzen9.github.io/XFlow/privacy-en.html">Privacy policy</a>
 </p>
 
-> Chrome Web Store currently serves 0.1.0; this repository is preparing the 0.1.1 update. Install from the [XFlow store page](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj). You need your own supported provider API key after installation; provider usage may incur third-party charges.
+> Version 0.1.1 was uploaded to the Chrome Developer Dashboard on October 8, 2026; check the Dashboard for review and publication status. Install from the [XFlow store page](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj). You need your own supported provider API key after installation; provider usage may incur third-party charges.
 
 ## Preview
 
@@ -49,7 +49,7 @@
   <img src="docs/assets/popup-dark.webp" alt="XFlow dark-theme Popup with filtering counts and compact controls" width="320" />
 </p>
 
-Updated October 7, 2026 from the production UI after merging the latest main, using isolated sample data without credentials or provider calls. Popup captures use Simplified Chinese; other captures use English. See the [0.1.1 preview index](docs/previews/README.md) for update notes, API Keys / request-log previews, dimensions and store upload order.
+Updated October 7, 2026 from the production UI using isolated sample data without credentials or provider calls. Popup captures use Simplified Chinese; other captures use English. More previews: [API Keys and health checks](docs/assets/provider-settings.webp) · [Jev request log](docs/assets/jev-request-log.webp).
 
 ## Why XFlow
 
@@ -82,7 +82,7 @@ Blur Veil state machine ── Hover / Reveal / Re-obscure
       └─ Filtered event ──► Activity / Badge / optional S3 merge
 ```
 
-The Content Script only discovers posts, extracts the minimum required text and metadata, renders the veil, and reports events that actually entered the filtered state. External requests, credentials, migrations, activity deduplication, and synchronization remain in the background Service Worker. See the [architecture guide](docs/architecture.md) for the complete boundary.
+The Content Script only discovers posts, extracts the minimum required text and metadata, renders the veil, and reports events that actually entered the filtered state. External requests, credentials, migrations, activity deduplication, and synchronization remain in the background Service Worker.
 
 ## Install from the Chrome Web Store
 
@@ -135,8 +135,6 @@ The API Keys page can send a minimal Jev health check to each provider to verify
 - Hover templates can reference the policy name, hit rate, threshold, model nickname, model ID, and surface.
 - Switch Hover styles between Default, Text emphasis, and High contrast, or keep editing custom CSS.
 - Custom CSS is restricted to documented veil selectors and visual properties; arbitrary page CSS is never injected into X.
-
-See the [Blur Veil design specification](docs/blur-veil-design.md) for interaction and motion constraints.
 
 ## Activity, badge, and retention
 
@@ -205,10 +203,13 @@ bun run benchmark:cache # test and display cache hit-rate and performance metric
 bun run preview:dashboard
 bun run preview:site
 bun run preview:tokens
+bun run clean          # remove build output, caches and duplicate captures; keep release archives
 bun run preview:assets  # refresh documentation images, store artwork and version inventory
 ```
 
-Screenshot tooling and output paths are documented in [Preview assets](docs/previews/README.md). Optional browser regressions require the isolated preview server:
+Screenshot generation requires `agent-browser` (with Chromium), `cwebp`, `webpinfo` and `zip`. `bun run preview:assets` uses isolated sample data and reduced motion without provider calls. Documentation WebPs go to `docs/assets/`; raw PNGs, `manifest.json` and the store-artwork ZIP go to `output/previews/<version>/`. The manifest records source commits, capture time, dimensions, locale, theme and SHA-256; `bun run clean` retains it and the ZIP. The capture server defaults to port `43998`, configurable with `PREVIEW_ASSETS_PORT`.
+
+Optional browser regressions require the isolated preview server:
 
 ```sh
 DASHBOARD_FEEDBACK_PREVIEW_URL=http://127.0.0.1:43997/dashboard.html bun test scripts/qa/dashboard-pages.test.ts scripts/qa/dashboard-feedback.test.ts scripts/qa/dashboard-strategies.test.ts scripts/qa/popup-layout.test.ts scripts/qa/dashboard-health.test.ts
@@ -271,7 +272,7 @@ Entry timestamps are pinned to 2020-01-01, entries are sorted by path, and the w
 - Pushing a tag such as `v0.1.1` opens a draft release with the ZIP, its `.sha256`, and its `.files.txt`; publishing stays a manual decision. A manual run only builds and verifies.
 - Manual runs (`workflow_dispatch`) require the workflow file to exist on the default branch, so `release.yml` becomes available for both tag pushes and manual runs once it is merged into `main`.
 
-See the [project website guide](docs/project-page.md) for local preview and GitHub Pages deployment details.
+Run `bun run preview:site` to preview the website. Website-source or Hero-image changes pushed to `main` trigger the [Pages workflow](.github/workflows/deploy-pages.yml), which builds `site-dist/` and deploys the homepage and both privacy-policy pages.
 
 ## Roadmap
 
@@ -279,13 +280,11 @@ See the [project website guide](docs/project-page.md) for local preview and GitH
 - [x] Extension UI internationalization
 - [x] Chrome Web Store release (0.1.0, September 29, 2026)
 
-## Documentation
+## Resources
 
-- [Architecture, trust boundaries, and persistence](docs/architecture.md)
-- [Blur Veil interaction and motion](docs/blur-veil-design.md)
-- [Design-token layers and themes](docs/design-tokens.md)
-- [Visual and interaction principles](design.md)
-- [中文 README](README.md)
+- [Privacy policy · English](docs/privacy-policy.en.md) · [简体中文](docs/privacy-policy.md)
+
+`docs/` retains images used by the READMEs and website, the [440 × 280 promotional image](docs/assets/small-promo-440x280.png) required by the screenshot script, and both privacy-policy source files read by tests. The store icon reuses the [128 × 128 extension icon](icons/icon-128.png). Release ZIPs, raw captures, image inventories and checksum files stay in the git-ignored `output/` directory.
 
 ## Known limitations and license
 

@@ -24,7 +24,8 @@
     "release:verify": "bun run scripts/release-verify.ts",
     "theme:build": "bunx astryx theme build src/themes/neutral/neutralTheme.ts",
     "theme:check": "bunx astryx theme build --check src/themes/neutral/neutralTheme.ts",
-    "preview:assets": "bun run build && bun run scripts/capture-previews.ts"
+    "preview:assets": "bun run build && bun run scripts/capture-previews.ts",
+    "clean": "bun run scripts/clean.ts"
   },
   "dependencies": {
     "@astryxdesign/core": "^0.6.3",

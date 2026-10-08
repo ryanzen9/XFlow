@@ -24,7 +24,7 @@
   <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> · <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a>
 </p>
 
-> Chrome Web Store 当前公开版本为 0.1.0；本仓库正在准备 0.1.1 更新。可从 [XFlow 商店页面](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj)安装。安装后需要自行配置受支持 Provider 的 API Key；使用 Provider 可能产生第三方费用。
+> 0.1.1 已于 2026-10-08 上传 Chrome 开发者后台；审核与上架状态以后台为准。可从 [XFlow 商店页面](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj)安装。安装后需要自行配置受支持 Provider 的 API Key；使用 Provider 可能产生第三方费用。
 
 ## 界面预览
 
@@ -34,7 +34,7 @@
 
 <table>
   <tr>
-    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="深色主题下的 独立过滤概览、12 周热力图、每周回顾与近期记录" /></td>
+    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="深色主题下的独立过滤概览、12 周热力图、每周回顾与近期记录" /></td>
     <td width="28%"><img src="docs/assets/veil-preview.webp" alt="深色主题下的过滤结果本机预览、命中率与阈值控制" /></td>
   </tr>
   <tr>
@@ -48,7 +48,7 @@
   <img src="docs/assets/popup-dark.webp" alt="XFlow 深色主题 Popup，过滤计数和紧凑监控开关" width="320" />
 </p>
 
-截图更新于 2026-10-07，来自合并最新 main 后的生产界面与隔离模拟数据，不包含凭据，不调用 Provider。Popup 为简体中文，其余为英文界面。版本更新、API Keys / 请求日志预览、图片尺寸与商店上传顺序见 [0.1.1 预览索引](docs/previews/README.md)。
+截图更新于 2026-10-07，使用生产界面与隔离模拟数据，不包含凭据，不调用 Provider。Popup 为简体中文，其余为英文界面。更多预览：[API Keys 与健康检查](docs/assets/provider-settings.webp) · [Jev 请求日志](docs/assets/jev-request-log.webp)。
 
 ## 为什么是 XFlow
 
@@ -82,7 +82,7 @@ Blur Veil 状态机 ── Hover / Reveal / Re-obscure
       └─ Filtered 事件 ──► Activity / Badge / 可选 S3 合并
 ```
 
-Content Script 只负责发现帖子、提取必要文本与元数据、渲染遮罩和上报已实际过滤的事件。外部请求、密钥、迁移、Activity 去重和同步都留在后台 Service Worker。完整边界见 [架构文档](docs/architecture.md)。
+Content Script 只负责发现帖子、提取必要文本与元数据、渲染遮罩和上报已实际过滤的事件。外部请求、密钥、迁移、Activity 去重和同步都留在后台 Service Worker。
 
 ## 从商店安装
 
@@ -135,8 +135,6 @@ API Keys 页面可对每个渠道发起一次最小 Jev 健康检查，用于验
 - Hover 文案支持策略名称、hitrate、阈值、模型昵称、模型 ID 和页面场景变量。
 - Hover 样式可在默认、文字强调和高对比之间切换，也可继续编辑自定义 CSS。
 - 自定义 CSS 只接受列出的遮罩选择器和视觉属性，不会把任意页面 CSS 注入 X。
-
-交互与动画约束见 [Blur Veil 设计规范](docs/blur-veil-design.md)。
 
 ## Activity、Badge 与数据保留
 
@@ -217,8 +215,11 @@ bun run benchmark:cache # 测试并展示分层缓存命中率与性能影响
 bun run preview:dashboard
 bun run preview:site
 bun run preview:tokens
+bun run clean          # 清理构建输出、缓存与重复截图，保留发布包
 bun run preview:assets  # 重新生成文档图片、商店上传图与版本清单
 ```
+
+生成截图需要 `agent-browser`（及 Chromium）、`cwebp`、`webpinfo` 和 `zip`。`bun run preview:assets` 使用隔离模拟数据和 reduced motion，不调用 Provider；文档 WebP 写入 `docs/assets/`，原始 PNG、`manifest.json` 和商店素材 ZIP 写入 `output/previews/<版本>/`。清单记录来源提交、捕获时间、尺寸、语言、主题和 SHA-256，`bun run clean` 保留清单与 ZIP。默认截图服务端口为 `43998`，可用 `PREVIEW_ASSETS_PORT` 调整。
 
 Neutral 主题使用扩展内置的 Figtree 可变字体（Latin / Latin Extended），构建时从 `@fontsource-variable/figtree` 复制到 `dist/fonts/`，无需远程字体请求。运行 `bun run preview:dashboard` 后，打开 `/__preview__/foundation.html` 可检查真实 Astryx Button、TextInput 的明暗模式与键盘焦点；该验证页只由本地预览服务提供，不包含在扩展包中。
 
@@ -230,7 +231,7 @@ Dashboard 默认打开独立的概览页。通用设置、API Keys、策略和�
 DASHBOARD_FEEDBACK_PREVIEW_URL=http://127.0.0.1:43997/dashboard.html bun test scripts/qa/dashboard-pages.test.ts scripts/qa/dashboard-feedback.test.ts scripts/qa/dashboard-strategies.test.ts scripts/qa/popup-layout.test.ts scripts/qa/dashboard-health.test.ts
 ```
 
-测试使用独立浏览器会话和模拟存储，检查概览范围联动、筛选后编辑与优先级保存、页头操作、日志分页、320/375/1024/1280/1440px 布局、明暗主题、中英文及通知生命周期。策略专项回归同时检查长文本边界、真实点击目标与键盘操作；Popup 回归检查紧凑布局、整行点击、键盘开关、失败回退和控制台入口。未指定 URL 时，普通 `bun test` 跳过这四项浏览器测试。模板选择与布局约定见 [`docs/dashboard-layouts.md`](docs/dashboard-layouts.md)。
+测试使用独立浏览器会话和模拟存储，检查概览范围联动、筛选后编辑与优先级保存、页头操作、日志分页、320/375/1024/1280/1440px 布局、明暗主题、中英文及通知生命周期。策略专项回归同时检查长文本边界、真实点击目标与键盘操作；Popup 回归检查紧凑布局、整行点击、键盘开关、失败回退和控制台入口。未指定 URL 时，普通 `bun test` 跳过这些浏览器测试。
 
 缓存基准的样本与探针集中在 `scripts/cache-benchmark-dataset.ts`，覆盖 Exact、Normalized、Template、Semantic 与 Miss 五类缓存路径，以及社区通知、交通、旅行、烹饪、户外、园艺、科学和中西文内容。合成工作负载保持固定的 80/20 命中与未命中比例；本地查询耗时来自 Bun 高精度计时器，Jev 调用减少率来自实际缓存命中结果。端到端耗时对比属于单条顺序请求模型，默认假设每次 Jev 调用为 600ms，可通过 `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800` 调整；使用 `--json` 可输出机器可读结果。该脚本不会读取真实凭据或发起网络请求。
 
@@ -289,7 +290,7 @@ ZIP 内记录的时间戳固定为 2020-01-01，条目按路径排序，且只�
 - 推送 `v0.1.1` 这类标签后会自动创建草稿 Release，附带 ZIP、`.sha256` 与 `.files.txt`；公开发布仍需人工确认。手动触发只构建与校验，不会创建 Release。
 - 手动触发（`workflow_dispatch`）要求工作流文件已存在于默认分支，因此 `release.yml` 的标签触发与手动触发都在合并到 `main` 之后生效。
 
-项目官网预览与 GitHub Pages 发布方式见[官网说明](docs/project-page.md)。
+运行 `bun run preview:site` 可预览官网。推送官网源码或 Hero 图片变更到 `main` 后，[Pages 工作流](.github/workflows/deploy-pages.yml)会构建 `site-dist/` 并部署首页及中英文隐私政策。
 
 ## Roadmap
 
@@ -297,13 +298,11 @@ ZIP 内记录的时间戳固定为 2020-01-01，条目按路径排序，且只�
 - [x] 扩展界面国际化
 - [x] Chrome Web Store 发布（0.1.0，2026-09-29）
 
-## 文档
+## 资源
 
-- [架构、信任边界与持久化](docs/architecture.md)
-- [Blur Veil 交互与动画](docs/blur-veil-design.md)
-- [设计 token 分层与主题](docs/design-tokens.md)
-- [视觉与交互原则](design.md)
-- [English README](README.en.md)
+- [隐私政策 · 简体中文](docs/privacy-policy.md) · [English](docs/privacy-policy.en.md)
+
+`docs/` 保留 README / 官网使用的图片、截图生成脚本需要的 [440 × 280 宣传图](docs/assets/small-promo-440x280.png)，以及隐私政策测试读取的中英文源文件。商店图标复用 [128 × 128 扩展图标](icons/icon-128.png)。发布 ZIP、原始截图、图片清单及其校验文件保存在 Git 忽略的 `output/`。
 
 ## 已知限制与许可证
 

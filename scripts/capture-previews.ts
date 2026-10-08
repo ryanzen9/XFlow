@@ -288,13 +288,14 @@ try {
     assets,
   };
   await Bun.write(resolve(output, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
-  await mkdir(resolve(root, "docs/previews"), { recursive: true });
-  await Bun.write(resolve(root, `docs/previews/${version}.json`), JSON.stringify(manifest, null, 2) + "\n");
   await mkdir(resolve(output, "store"), { recursive: true });
   for (const file of ["01-popup.png", "02-activity-dashboard.png", "03-strategy-and-veil.png", "manifest.json"])
     await copyFile(resolve(output, file), resolve(output, "store", file));
-  for (const file of ["store-icon-128.png", "small-promo-440x280.png"])
-    await copyFile(resolve(root, "docs/chrome-web-store/assets", file), resolve(output, "store", file));
+  await copyFile(resolve(root, "icons/icon-128.png"), resolve(output, "store/store-icon-128.png"));
+  await copyFile(
+    resolve(root, "docs/assets/small-promo-440x280.png"),
+    resolve(output, "store/small-promo-440x280.png"),
+  );
   await Bun.write(
     resolve(output, "store/README.md"),
     `# XFlow ${version} preview artwork\n\nCaptured from ${sourceCommit}, main ${mergedMain}.\n\nUpload the three numbered PNGs in order: Popup, filtering overview, strategy editor/local veil preview. All are English UI, dark theme, 1280 × 800. Sample data only; no real provider calls. The Popup presentation frame contains the real 320 × 400 Popup. Icon: 128 × 128; small promo: 440 × 280.\n\nSee manifest.json for capture timestamps, dimensions, and SHA-256. These artwork files do not certify an extension ZIP or a published Store release.\n`,
