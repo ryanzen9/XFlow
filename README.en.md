@@ -198,6 +198,7 @@ bun run build:dev       # generate dist/ with localhost debug origins
 bun run check           # complete quality gate
 bun run release:check   # quality gate plus packaging checks, writes the upload ZIP
 bun run release:package # production build and packaging checks only
+bun run release:prepare 0.1.2 # update versions, check, commit and create the local tag
 bun run release:verify  # package twice and compare the bytes
 bun run benchmark:cache # test and display cache hit-rate and performance metrics
 bun run preview:dashboard
@@ -243,6 +244,17 @@ An interactive terminal prompts for the key with hidden input when `TYPESAFE_API
 The Dashboard preview uses an isolated localStorage mock. It does not read installed extension data or call a model. The token index is served at `http://127.0.0.1:43993/` and exposes resolved values in both Light and Dark themes.
 
 ## Release packaging
+
+Run on a synced, clean `main` branch containing the features to release:
+
+```bash
+bun run release:prepare 0.1.2
+git push --atomic origin main v0.1.2
+```
+
+`release:prepare` updates `package.json` and `manifest.json`, runs `bun run check`, commits only those two files, and creates the annotated `v0.1.2` tag at that new commit. Versions use three numeric components and must increase; existing local or `origin` tags block preparation. The command prepares a local commit and tag; pushing triggers the draft Release workflow.
+
+Before tagging, the command verifies that the entire committed tree matches the checked content after Git's line-ending and filter normalization, and that the worktree and index are clean. If a hook changes the commit or leaves other edits, the completed commit is retained without creating a tag. Failures before a commit restore only the root versions changed by the script, preserving other fields and formatting edits. Independently changed versions, invalid JSON, and deleted files are also preserved.
 
 ```bash
 bun run release:check     # quality gate plus packaging, writes the upload ZIP

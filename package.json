@@ -21,6 +21,7 @@
     "check": "bun run format:check && bun run lint && bun run typecheck && bun test && bun run build && bun run build:site",
     "release:check": "bun run scripts/release-check.ts",
     "release:package": "bun run scripts/release-package.ts",
+    "release:prepare": "bun run scripts/release-prepare.ts",
     "release:verify": "bun run scripts/release-verify.ts",
     "theme:build": "bunx astryx theme build src/themes/neutral/neutralTheme.ts",
     "theme:check": "bunx astryx theme build --check src/themes/neutral/neutralTheme.ts",
