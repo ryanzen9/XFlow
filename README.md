@@ -20,7 +20,6 @@
   Jev For your X: customize filtering of ads, emotional content, political content, and more on X / Twitter. Enjoy a cleaner X browsing experience.
 </p>
 
-
 <p align="center">
   <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> ｜ <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a> ｜
   <a href="https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj">Chrome 商店</a>
