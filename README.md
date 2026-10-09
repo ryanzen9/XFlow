@@ -7,11 +7,28 @@
 <p align="center">
   <a href="#简体中文">简体中文</a> · <a href="#english">English</a>
 </p>
-
 <p align="center">
   <a href="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml"><img src="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <img src="https://img.shields.io/badge/version-0.1.1-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.1" />
   <img src="https://img.shields.io/badge/Manifest-V3-525252?style=flat-square&labelColor=0a0a0a" alt="Manifest V3" />
+</p>
+
+<p align="center">
+  Jev For your X：自定义过滤 X / Twitter 中的广告，情绪化，政治内容等内容。打造清爽的 X 浏览体验。
+</p>
+<p align="center">
+  Jev For your X: customize filtering of ads, emotional content, political content, and more on X / Twitter. Enjoy a cleaner X browsing experience.
+</p>
+
+
+<p align="center">
+  <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> ｜ <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a> ｜
+  <a href="https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj">Chrome 商店</a>
+</p>
+
+<p align="center">
+  <a href="https://ryanzen9.github.io/XFlow/">Project website</a> · <a href="https://ryanzen9.github.io/XFlow/privacy-en.html">Privacy policy</a> ·
+  <a href="https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj">Chrome Web Store</a>
 </p>
 
 # 简体中文
@@ -28,15 +45,6 @@
 - [隐私与权限](#zh-privacy)
 - [实测与回归（2026-10-09）](#zh-typesafe-results)
 - [资源](#zh-resources)
-
-<p align="center">
-  Jev For your X：自定义过滤 X / Twitter 中的广告，情绪化，政治内容等内容。打造清爽的 X 浏览体验。
-</p>
-
-<p align="center">
-  <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> ｜ <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a> ｜
-  <a href="https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj">Chrome 商店</a>
-</p>
 
 <a id="zh-preview"></a>
 
@@ -255,15 +263,6 @@ bun run benchmark:cache --live-typesafe --samples=24 --warm-runs=3
 - [Privacy and permissions](#en-privacy)
 - [Benchmarks and regression tests (2026-10-09)](#en-typesafe-results)
 - [Resources](#en-resources)
-
-<p align="center">
-  Jev For your X: customize filtering of ads, emotional content, political content, and more on X / Twitter. Enjoy a cleaner X browsing experience.
-</p>
-
-<p align="center">
-  <a href="https://ryanzen9.github.io/XFlow/">Project website</a> · <a href="https://ryanzen9.github.io/XFlow/privacy-en.html">Privacy policy</a> ·
-  <a href="https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj">Chrome Web Store</a>
-</p>
 
 <a id="en-preview"></a>
 
