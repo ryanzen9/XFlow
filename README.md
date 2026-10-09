@@ -1,30 +1,44 @@
+<a id="top"></a>
+
 <p align="center">
-  <img src="logo.png" alt="XFlow" width="160" />
+  <img src="logo-dark.png" alt="XFlow" width="160" />
 </p>
 
 <p align="center">
-  <strong>简体中文</strong> · <a href="README.en.md">English</a>
+  <a href="#简体中文">简体中文</a> · <a href="#english">English</a>
 </p>
 
 <p align="center">
   <a href="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml"><img src="https://github.com/ryanzen9/XFlow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <img src="https://img.shields.io/badge/version-0.1.1-525252?style=flat-square&labelColor=0a0a0a" alt="Version 0.1.1" />
   <img src="https://img.shields.io/badge/Manifest-V3-525252?style=flat-square&labelColor=0a0a0a" alt="Manifest V3" />
-  <img src="https://img.shields.io/badge/React-19-525252?style=flat-square&labelColor=0a0a0a" alt="React 19" />
-  <img src="https://img.shields.io/badge/TypeScript-5-525252?style=flat-square&labelColor=0a0a0a" alt="TypeScript 5" />
-  <img src="https://img.shields.io/badge/Bun-1.3-525252?style=flat-square&labelColor=0a0a0a" alt="Bun 1.3" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-4-525252?style=flat-square&labelColor=0a0a0a" alt="Tailwind CSS 4" />
+</p>
+
+# 简体中文
+
+- [界面预览](#zh-preview)
+- [为什么是 XFlow](#zh-why-xflow)
+- [工作方式](#zh-how-it-works)
+- [从商店安装](#zh-install-store)
+- [从源码安装（开发者）](#zh-install-source)
+- [Provider](#zh-providers)
+- [策略与交互](#zh-policies)
+- [Activity、Badge 与数据保留](#zh-activity)
+- [S3 同步](#zh-s3)
+- [隐私与权限](#zh-privacy)
+- [TypeSafe 实测效果（2026-09-23）](#zh-typesafe-results)
+- [资源](#zh-resources)
+
+<p align="center">
+  Jev For your X：自定义过滤 X / Twitter 中的广告，情绪化，政治内容等内容。打造清爽的 X 浏览体验。
 </p>
 
 <p align="center">
-  Jev For your X：过滤 X / Twitter 中的广告，并自定义其他内容的过滤规则。
+  <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> ｜ <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a> ｜
+  <a href="https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj">Chrome 商店</a>
 </p>
 
-<p align="center">
-  <a href="https://ryanzen9.github.io/XFlow/">项目官网</a> · <a href="https://ryanzen9.github.io/XFlow/privacy.html">隐私政策</a>
-</p>
-
-> 0.1.1 已于 2026-10-08 上传 Chrome 开发者后台；审核与上架状态以后台为准。可从 [XFlow 商店页面](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj)安装。安装后需要自行配置受支持 Provider 的 API Key；使用 Provider 可能产生第三方费用。
+<a id="zh-preview"></a>
 
 ## 界面预览
 
@@ -50,18 +64,20 @@
 
 截图更新于 2026-10-07，使用生产界面与隔离模拟数据，不包含凭据，不调用 Provider。Popup 为简体中文，其余为英文界面。更多预览：[API Keys 与健康检查](docs/assets/provider-settings.webp) · [Jev 请求日志](docs/assets/jev-request-log.webp)。
 
+<a id="zh-why-xflow"></a>
+
 ## 为什么是 XFlow
 
-|      | 能力                      | 当前行为                                                                                                                 |
-| ---- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `01` | 广告与推广过滤            | 默认策略识别广告、推广、垃圾信息及诈骗诱导；只处理命中启用策略的内容。                                                   |
-| `02` | 自定义内容策略            | 为时间线和评论区分别配置多条规则、提示词、Hit Rate 与 P1 → Pn 优先级。                                                   |
-| `03` | Multi-provider Jev        | 显式选择 OpenRouter、Vercel AI Gateway 或 TypeSafe；失败时不进行隐式渠道降级。                                           |
-| `04` | Local-first activity      | 在本机记录去重后的过滤事件，提供今日/累计计数、Heatmap、趋势、周报、历史与页面 Badge。                                   |
-| `05` | Versioned S3 sync         | 可选同步配置和 Activity；配置按版本决定方向，事件按稳定 ID 合并，清除状态由墓碑保护。                                    |
-| `06` | Local credential boundary | Provider Key 与 S3 凭据只留在扩展本机存储，不进入 Content Script、配置 JSON 或 S3 文档。                                 |
-| `07` | 可恢复的过滤结果          | 命中内容在原页面中隐藏，用户可随时显示；Popup 与 Dashboard 支持 Light / Dark 主题。                                      |
-| `08` | Astryx Neutral UI         | Dashboard 与 Popup 使用 Astryx Neutral 组件、Figtree 字体和统一 token。两者共享 Light / Dark 设置并支持 reduced motion。 |
+|      | 能力                      | 当前行为                                                                                 |
+| ---- | ------------------------- | ---------------------------------------------------------------------------------------- |
+| `01` | 快速精准                  | 基于 Jev 快速精准识别广告、推广、垃圾信息及诈骗诱导。                                    |
+| `02` | 自定义策略                | 为时间线和评论区分别配置多条规则、提示词。                                               |
+| `03` | 多渠道                    | 支持 OpenRouter、Vercel AI Gateway 或 TypeSafe 官方渠道。                                |
+| `04` | 本地优先                  | 全部数据优先保存本机，源代码开源，确保用户隐私。Api Key 留存本机，坚决不入网。           |
+| `05` | Versioned S3 sync         | 支持 S3 协议，跨设备同步状态。                                                           |
+| `06` | Local credential boundary | Provider Key 与 S3 凭据只留在扩展本机存储，不进入 Content Script、配置 JSON 或 S3 文档。 |
+
+<a id="zh-how-it-works"></a>
 
 ## 工作方式
 
@@ -84,9 +100,13 @@ Blur Veil 状态机 ── Hover / Reveal / Re-obscure
 
 Content Script 只负责发现帖子、提取必要文本与元数据、渲染遮罩和上报已实际过滤的事件。外部请求、密钥、迁移、Activity 去重和同步都留在后台 Service Worker。
 
+<a id="zh-install-store"></a>
+
 ## 从商店安装
 
 在 [Chrome Web Store 的 XFlow 页面](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj) 点击“添加至 Chrome”，然后打开扩展的 Dashboard，在 **API Keys** 中保存至少一个 Provider Key 并设为当前渠道。打开或刷新 `https://x.com/home` 即可使用已启用的过滤策略。
+
+<a id="zh-install-source"></a>
 
 ## 从源码安装（开发者）
 
@@ -114,6 +134,8 @@ bun run check
 
 每次重新构建后，需要在扩展管理页重新加载扩展，并刷新已打开的 X 页面。
 
+<a id="zh-providers"></a>
+
 ## Provider
 
 | 渠道              | 模型                | Adapter API                     |
@@ -126,6 +148,8 @@ bun run check
 
 API Keys 页面可对每个渠道发起一次最小 Jev 健康检查，用于验证已保存密钥与接口是否可用。健康检查会产生一次真实 Provider 请求，可能计入第三方用量。
 
+<a id="zh-policies"></a>
+
 ## 策略与交互
 
 - 时间线和评论区拥有独立策略表，分别从 P1 开始排序。
@@ -136,6 +160,8 @@ API Keys 页面可对每个渠道发起一次最小 Jev 健康检查，用于验
 - Hover 样式可在默认、文字强调和高对比之间切换，也可继续编辑自定义 CSS。
 - 自定义 CSS 只接受列出的遮罩选择器和视觉属性，不会把任意页面 CSS 注入 X。
 
+<a id="zh-activity"></a>
+
 ## Activity、Badge 与数据保留
 
 - Popup 展示今日和累计过滤数；Toolbar Badge 只统计当前 Tab 当前页面生命周期内的唯一内容，0 时隐藏。
@@ -145,6 +171,8 @@ API Keys 页面可对每个渠道发起一次最小 Jev 健康检查，用于验
 - 详细历史在 30 天后压缩；事件身份在 12 周后折叠为按设备合并的紧凑计数，以维持累计值并限制存储增长。
 - 日志页可单独清理作者、内容预览、原文链接和命中策略，保留每日统计与累计数量。
 - 全部清除会写入 `clearedAt` 墓碑，避免旧设备或远程对象恢复已清除记录。
+
+<a id="zh-s3"></a>
 
 ## S3 同步
 
@@ -158,91 +186,15 @@ S3 使用 path-style URL：`{endpoint}/{bucket}/{objectKey}`。首次保存 Endp
 
 Bucket 需要允许扩展来源执行 GET、PUT 和 CORS 预检。
 
-## 本地决策与用户标注
-
-Background Worker 按“单条标注 → 作者规则 → 用户模板/语义规则 → 精确缓存 → 归一化缓存 → 模板缓存 → 语义缓存 → Jev”处理内容。缓存绑定当前页面策略与 Provider 的稳定指纹；策略内容、顺序、敏感度或 Provider 改变后，旧缓存不会跨版本复用。
-
-每条检测到的内容右上角都有 `J` 入口；远程判定尚未返回或 Provider 未配置时也可以主动标注。菜单可查看命中率和来源，并选择：
-
-- 仅隐藏当前 Tweet（存在稳定 Tweet ID 时持久化；缺少 `/status/{id}` 时只作用于当前页面，不写入自动缓存或相似内容学习）
-- 显示当前 Tweet（按 Tweet ID 保存）
-- 纠正当前策略判定
-- 减少类似内容
-- 屏蔽类似内容
-- 屏蔽此作者
-- 允许此作者内容
-
-前两项只作用于当前内容；相似内容操作会同时形成可同步的用户模板/语义规则；作者操作形成可同步的作者规则。显式用户选择始终高于缓存和 Jev。普通缓存默认保留 7 天，并在后台按最近访问时间清理，总量最多保留 5,000 条；模板缓存至少需要两个高置信一致样本，自动语义复用采用本地特征哈希向量、余弦相似度和 Top-K 一致性检查。
+<a id="zh-privacy"></a>
 
 ## 隐私与权限
 
 完整说明见 [XFlow 隐私政策](https://ryanzen9.github.io/XFlow/privacy.html)（[English](https://ryanzen9.github.io/XFlow/privacy-en.html)；[仓库源文件](docs/privacy-policy.md)）。
 
-- 内容判断只会把已启用范围内、从 X 页面提取的文本发送到当前选中的 Provider；用户主动运行健康检查时，还会发送不含 X 内容的固定合成测试数据。
-- Provider API Key 与 S3 凭据保存在 `chrome.storage.local`，目前没有额外加密。
-- Content Script 只能读取不含密钥的 `chrome.storage.session` 设置镜像。
-- 远程 S3 文档可包含配置、Activity 和用户反馈形成的长期判断规则；后者可能包含规范化帖子正文、语义词、帖子及作者 ID、判断结果和设备 ID。清除 Activity 不会清除这些规则，它们不会自动过期。
-- 配置 JSON 和远程 S3 文档不包含 Provider API Key 或 S3 凭据。
-- Activity 保存内容 ID、短文本预览、作者、对应 X 帖子 URL、过滤时间、命中策略和必要状态；不保存 HTML、DOM、Cookie、Session、媒体文件或完整浏览路径。
-- Jev 请求日志只保存在本机，不进入配置 JSON 或 S3 同步文档，也不包含 API Key、请求正文或 Provider 原始错误。
-- 固定主机权限仅包含 X / Twitter 与三个 Provider；S3 Endpoint 通过用户操作授予可选权限。
-- 生产 `manifest.json` 不声明任何 localhost / 127.0.0.1 来源；本地 http 调试来源只由 `bun run build:dev` 注入。
+<a id="zh-typesafe-results"></a>
 
-生产清单要求 Chrome 123 或更高版本：界面配色通过 `light-dark()` 解析。扩展名称、描述与工具栏提示来自 `_locales/en` 与 `_locales/zh_CN`，图标为 `icons/` 下四个独立尺寸的 PNG。
-
-加载扩展前，请自行审阅 [`manifest.json`](manifest.json) 与所选 Provider 的数据政策。不要在 Issue、日志、测试或截图中提交真实凭据。
-
-## 开发
-
-项目统一使用 Bun：
-
-```bash
-bun run format          # Oxfmt 写入格式
-bun run format:check    # 检查格式
-bun run lint            # Oxlint，warning 视为失败
-bun run lint:fix        # 修复可自动处理的规则
-bun run typecheck       # TypeScript 静态检查
-bun test                # Bun 单元测试
-bun run theme:build     # 从可编辑的 Neutral 主题源码生成 Astryx CSS/JS
-bun run theme:check     # 验证 Astryx 主题产物与源码一致
-bun run build           # 生成 dist/
-bun run build:dev       # 生成 dist/，额外注入 localhost 调试来源
-bun run check           # 完整质量门禁
-bun run release:check   # 完整质量门禁 + 打包校验，产出可上传 ZIP
-bun run release:package # 只做生产构建与打包校验
-bun run release:prepare 0.1.2 # 同步版本、检查、提交并创建本地标签
-bun run release:verify  # 连续打包两次并逐字节比较
-bun run benchmark:cache # 测试并展示分层缓存命中率与性能影响
-bun run preview:dashboard
-bun run preview:site
-bun run preview:tokens
-bun run clean          # 清理构建输出、缓存与重复截图，保留发布包
-bun run preview:assets  # 重新生成文档图片、商店上传图与版本清单
-```
-
-生成截图需要 `agent-browser`（及 Chromium）、`cwebp`、`webpinfo` 和 `zip`。`bun run preview:assets` 使用隔离模拟数据和 reduced motion，不调用 Provider；文档 WebP 写入 `docs/assets/`，原始 PNG、`manifest.json` 和商店素材 ZIP 写入 `output/previews/<版本>/`。清单记录来源提交、捕获时间、尺寸、语言、主题和 SHA-256，`bun run clean` 保留清单与 ZIP。默认截图服务端口为 `43998`，可用 `PREVIEW_ASSETS_PORT` 调整。
-
-Neutral 主题使用扩展内置的 Figtree 可变字体（Latin / Latin Extended），构建时从 `@fontsource-variable/figtree` 复制到 `dist/fonts/`，无需远程字体请求。运行 `bun run preview:dashboard` 后，打开 `/__preview__/foundation.html` 可检查真实 Astryx Button、TextInput 的明暗模式与键盘焦点；该验证页只由本地预览服务提供，不包含在扩展包中。
-
-Dashboard 默认打开独立的概览页。通用设置、API Keys、策略和数据使用分组面板；策略与日志支持搜索和状态筛选，主要保存操作固定在页头。
-
-安装 `agent-browser` 并启动 Dashboard 预览后，可运行页面与通知回归测试（将 URL 端口替换为预览服务实际端口）：
-
-```bash
-DASHBOARD_FEEDBACK_PREVIEW_URL=http://127.0.0.1:43997/dashboard.html bun test scripts/qa/dashboard-pages.test.ts scripts/qa/dashboard-feedback.test.ts scripts/qa/dashboard-strategies.test.ts scripts/qa/popup-layout.test.ts scripts/qa/dashboard-health.test.ts
-```
-
-测试使用独立浏览器会话和模拟存储，检查概览范围联动、筛选后编辑与优先级保存、页头操作、日志分页、320/375/1024/1280/1440px 布局、明暗主题、中英文及通知生命周期。策略专项回归同时检查长文本边界、真实点击目标与键盘操作；Popup 回归检查紧凑布局、整行点击、键盘开关、失败回退和控制台入口。未指定 URL 时，普通 `bun test` 跳过这些浏览器测试。
-
-缓存基准的样本与探针集中在 `scripts/cache-benchmark-dataset.ts`，覆盖 Exact、Normalized、Template、Semantic 与 Miss 五类缓存路径，以及社区通知、交通、旅行、烹饪、户外、园艺、科学和中西文内容。合成工作负载保持固定的 80/20 命中与未命中比例；本地查询耗时来自 Bun 高精度计时器，Jev 调用减少率来自实际缓存命中结果。端到端耗时对比属于单条顺序请求模型，默认假设每次 Jev 调用为 600ms，可通过 `sh scripts/cache-benchmark.sh --requests=2000 --jev-latency-ms=800` 调整；使用 `--json` 可输出机器可读结果。该脚本不会读取真实凭据或发起网络请求。
-
-真实 TypeSafe 模式通过官方 `@typesafe-ai/sdk` 处理 20–50 条内置脱敏样本，并分别验证 Exact、Normalized、Template 与 Semantic 四类流量。在交互式 TTY 中，界面会随冷请求、缓存写入和每个 warm 批次刷新，显示进行中的 SDK 请求、整体和分层缓存命中率、缓存占用与耗时；非交互运行仍在结束时输出报告，`--json` 保持纯 JSON 输出。由于生产批次上限为 5，冷阶段会产生 4–10 次真实 Provider 请求，之后使用每轮不同的探针验证缓存是否完全避免远程请求：
-
-```bash
-sh scripts/cache-benchmark.sh --live-typesafe --samples=24 --warm-runs=3
-```
-
-#### TypeSafe 实测效果（2026-09-23）
+## TypeSafe 实测效果（2026-09-23）
 
 一次 `jev-latest` 实测使用 24 条冷样本和 3 轮 warm 探针，结果如下：
 
@@ -260,63 +212,219 @@ sh scripts/cache-benchmark.sh --live-typesafe --samples=24 --warm-runs=3
 未设置 `TYPESAFE_API_KEY` 时，交互式终端会隐藏输入 Key；CI 可使用环境变量传入。Key 只存在于当前进程内存，不会打印、保存到扩展存储或写入报告。不要使用 `--key=...`，以免密钥进入 Shell 历史或进程列表。报告包含各类型命中率、SDK 调用减少率、真实延迟、构建包逻辑体积，以及缓存 IndexedDB 序列化载荷的前后变化；浏览器文件系统开销会因平台而异。`--posts=20..50` 仍作为 `--samples` 的兼容别名，`--json` 可输出机器可读结果。
 
 Dashboard 预览使用隔离的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。设计 token 索引页位于 `http://127.0.0.1:43993/`，可切换 Light / Dark 并查看解析值。
-
-## 发布打包
-
-在已同步、包含待发布功能且工作区干净的 `main` 上运行：
-
-```bash
-bun run release:prepare 0.1.2
-git push --atomic origin main v0.1.2
-```
-
-`release:prepare` 同步修改 `package.json` 和 `manifest.json`，执行 `bun run check`，只提交这两个文件，然后创建指向新提交的 annotated 标签 `v0.1.2`。版本使用三段整数且必须递增；现有本地或 `origin` 标签会阻止执行。命令只准备本地提交和标签，推送后才触发草稿 Release 工作流。
-
-创建标签前，命令会校验提交的完整文件树与通过检查的内容一致（按 Git 的换行与过滤规则归一化），并确认工作区和暂存区干净。如果 hook 改写了提交内容或留下其他改动，保留已完成的提交，但不创建标签。提交尚未创建时，失败会撤销脚本修改的根版本号，保留其他字段和格式调整；被独立修改的版本号、无效 JSON 或已删除的文件也会保留。
-
-```bash
-bun run release:check     # 质量门禁 + 打包校验，产出可上传 ZIP
-bun run release:package   # 仅生产构建 + 打包校验
-bun run release:verify    # 连续打包两次并逐字节比较，验证可复现
-```
-
-`release:check` 与 `release:package` 都会先清空 `dist/` 与 `output/release/`，再以 `--release` 重新构建（不生成 source map），然后：
-
-- 断言权限、manifest / package 版本一致性、本地化键与图标尺寸，并确认包内文件恰好是 manifest、扩展页面及 CSS 引用的资源和声明的字体许可。Figtree 字体随包携带 `fonts/OFL.txt`。
-- 扫描产物中的 `eval(`、`new Function(`、`importScripts(`、`sourceMappingURL`、远程页面资源与 localhost 来源。
-- 生成 `output/release/xflow-<version>.zip`，ZIP 根目录直接包含 `manifest.json`，不包含 `dist/` 外层目录。
-- 用内置 ZIP 校验加系统 `unzip -t` / `unzip -Z1` 交叉验证，输出 SHA-256 与逐文件清单。
-
-ZIP 内记录的时间戳固定为 2020-01-01，条目按路径排序，且只依赖 Bun 与 `node:zlib`，因此同一份提交在任何机器上都会生成完全相同的字节。`output/`、`*.zip`、`*.crx`、`*.pem` 均被 Git 忽略。
-
-## 持续集成与发布自动化
-
-| 工作流                                                           | 触发                              | 作用                                                                                       |
-| ---------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------ |
-| [`.github/workflows/ci.yml`](.github/workflows/ci.yml)           | 推送到 `main`、Pull Request、手动 | 质量门禁（格式、Lint、类型、测试、生产构建）；另一个并行任务打包并证明归档可复现           |
-| [`.github/workflows/release.yml`](.github/workflows/release.yml) | 推送 `v*` 标签、手动              | 校验标签与版本一致，跑完整发布门禁，再次验证可复现，上传 ZIP 并创建**草稿** GitHub Release |
-
-- 两个工作流都只用 Bun：`oven-sh/setup-bun` 从 `package.json` 的 `packageManager` 读取版本，依赖用 `bun install --frozen-lockfile` 安装。
-- 所有 Action 固定到提交 SHA，并在行尾注释标注对应版本，避免可变标签被改写。
-- 打包任务连续打包两次并逐字节比较，任何引入时间戳或随机标识的依赖都会让 CI 失败。
-- 推送 `v0.1.1` 这类标签后会自动创建草稿 Release，附带 ZIP、`.sha256` 与 `.files.txt`；公开发布仍需人工确认。手动触发只构建与校验，不会创建 Release。
-- 手动触发（`workflow_dispatch`）要求工作流文件已存在于默认分支，因此 `release.yml` 的标签触发与手动触发都在合并到 `main` 之后生效。
-
-运行 `bun run preview:site` 可预览官网。推送官网源码或 Hero 图片变更到 `main` 后，[Pages 工作流](.github/workflows/deploy-pages.yml)会构建 `site-dist/` 并部署首页及中英文隐私政策。
-
-## Roadmap
-
-- [x] 分层内容决策缓存、用户标注与重复判断去重
-- [x] 扩展界面国际化
-- [x] Chrome Web Store 发布（0.1.0，2026-09-29）
+<a id="zh-resources"></a>
 
 ## 资源
 
 - [隐私政策 · 简体中文](docs/privacy-policy.md) · [English](docs/privacy-policy.en.md)
 
-`docs/` 保留 README / 官网使用的图片、截图生成脚本需要的 [440 × 280 宣传图](docs/assets/small-promo-440x280.png)，以及隐私政策测试读取的中英文源文件。商店图标复用 [128 × 128 扩展图标](icons/icon-128.png)。发布 ZIP、原始截图、图片清单及其校验文件保存在 Git 忽略的 `output/`。
+[返回顶部](#top) · [English](#english)
 
-## 已知限制与许可证
+---
 
-- X / Twitter DOM 变化可能导致内容提取失效，需要同步更新选择器与测试夹具。
-- 本仓库尚未添加开源许可证；公开可见不代表自动授予复制、修改或分发权利。
+# English
+
+- [Preview](#en-preview)
+- [Why XFlow](#en-why-xflow)
+- [How it works](#en-how-it-works)
+- [Install from the Chrome Web Store](#en-install-store)
+- [Install from source (developers)](#en-install-source)
+- [Providers](#en-providers)
+- [Policies and interaction](#en-policies)
+- [Activity, badge, and retention](#en-activity)
+- [S3 synchronization](#en-s3)
+- [Privacy and permissions](#en-privacy)
+- [TypeSafe results (2026-09-23)](#en-typesafe-results)
+- [Resources](#en-resources)
+
+<p align="center">
+  Jev For your X: customize filtering of ads, emotional content, political content, and more on X / Twitter. Enjoy a cleaner X browsing experience.
+</p>
+
+<p align="center">
+  <a href="https://ryanzen9.github.io/XFlow/">Project website</a> · <a href="https://ryanzen9.github.io/XFlow/privacy-en.html">Privacy policy</a> ·
+  <a href="https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj">Chrome Web Store</a>
+</p>
+
+<a id="en-preview"></a>
+
+## Preview
+
+<p align="center">
+  <img src="docs/assets/strategy-editor.webp" alt="XFlow ad and custom content filtering strategy editor in the dark theme" width="100%" />
+</p>
+
+<table>
+  <tr>
+    <td width="72%"><img src="docs/assets/dashboard-activity.webp" alt="XFlow filtering overview, 12-week heatmap, weekly review and recent records in the dark theme" /></td>
+    <td width="28%"><img src="docs/assets/veil-preview.webp" alt="Local filtering result preview with hit-rate and threshold controls in the dark theme" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Overview: 12-week Activity, weekly review and recent records</sub></td>
+    <td align="center"><sub>A local filtering result preview that never calls a model</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/assets/popup-light.webp" alt="XFlow light-theme Popup with filtering counts and compact controls" width="320" />
+  <img src="docs/assets/popup-dark.webp" alt="XFlow dark-theme Popup with filtering counts and compact controls" width="320" />
+</p>
+
+Updated October 7, 2026 from the production UI using isolated sample data without credentials or provider calls. Popup captures use Simplified Chinese; other captures use English. More previews: [API Keys and health checks](docs/assets/provider-settings.webp) · [Jev request log](docs/assets/jev-request-log.webp).
+
+<a id="en-why-xflow"></a>
+
+## Why XFlow
+
+|      | Capability                | Current behavior                                                                                                                           |
+| ---- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `01` | Fast and accurate         | Jev quickly and accurately identifies ads, promotions, spam, and scams.                                                                    |
+| `02` | Custom policies           | Configure separate rules and prompts for timelines and replies.                                                                            |
+| `03` | Multiple providers        | Supports OpenRouter, Vercel AI Gateway, and the official TypeSafe provider.                                                                |
+| `04` | Local first               | All data is stored locally first, and the source code is open to protect user privacy. API keys stay on the device and are never uploaded. |
+| `05` | Versioned S3 sync         | Supports the S3 protocol to synchronize state across devices.                                                                              |
+| `06` | Local credential boundary | Keep provider keys and S3 credentials in extension-local storage, outside Content Scripts, editable JSON, and S3 documents.                |
+
+<a id="en-how-it-works"></a>
+
+## How it works
+
+```text
+X / Twitter DOM
+      │
+      ▼
+Content Script ── normalized text ──► Background Service Worker
+      │                                      │
+      │                                      ├─ policy orchestration
+      │                                      └─ selected Jev provider
+      │                                                   │
+      ◄──────── probability + matched policy ─────────────┘
+      │
+      ▼
+Blur Veil state machine ── Hover / Reveal / Re-obscure
+      │
+      └─ Filtered event ──► Activity / Badge / optional S3 merge
+```
+
+The Content Script only discovers posts, extracts the minimum required text and metadata, renders the veil, and reports events that actually entered the filtered state. External requests, credentials, migrations, activity deduplication, and synchronization remain in the background Service Worker.
+
+<a id="en-install-store"></a>
+
+## Install from the Chrome Web Store
+
+Select **Add to Chrome** on the [XFlow store page](https://chromewebstore.google.com/detail/xflow/jelihbmknilmpbgjjjcmcbchmjloghnj). Then open the Dashboard, save a supported provider key under **API Keys**, and select that provider. Open or refresh `https://x.com/home` to use enabled filtering strategies.
+
+<a id="en-install-source"></a>
+
+## Install from source (developers)
+
+Requirements:
+
+- [Bun](https://bun.sh/) 1.3.13 or a compatible release
+- Chrome, Edge, or another Manifest V3 Chromium browser
+- An API key for at least one supported provider
+
+```bash
+git clone https://github.com/ryanzen9/XFlow.git
+cd XFlow
+bun install
+bun run check
+```
+
+`bun run check` runs formatting checks, linting, TypeScript, Bun tests, and the production build. Output is written to `dist/`.
+
+Then:
+
+1. Open `chrome://extensions` and enable **Developer mode**.
+2. Select **Load unpacked** and choose the project's `dist/` directory.
+3. Open the XFlow Dashboard, save at least one credential under **API Keys**, and select that provider.
+4. Open or refresh `https://x.com/home`.
+
+After rebuilding, reload the extension from the extensions page and refresh any open X tabs.
+
+<a id="en-providers"></a>
+
+## Providers
+
+| Provider          | Model               | Adapter API                     |
+| ----------------- | ------------------- | ------------------------------- |
+| OpenRouter        | `typesafe/jev-1.13` | `@openrouter/sdk` Decisions API |
+| Vercel AI Gateway | `typesafe-ai/jev`   | AI SDK `experimental_evaluate`  |
+| TypeSafe          | `jev-latest`        | `@typesafe-ai/sdk` System One   |
+
+The active provider is always an explicit user choice. XFlow does not silently forward content to another provider after a failure, avoiding unexpected data routing or cost changes.
+
+The API Keys page can send a minimal Jev health check to each provider to verify the saved credential and endpoint. This is a real provider request and may count toward third-party usage or charges.
+
+<a id="en-policies"></a>
+
+## Policies and interaction
+
+- Timelines and replies have independent policy queues, each ordered from P1.
+- The first policy whose probability reaches its own threshold wins; lower-priority results are considered only after higher-priority misses.
+- Dashboard Hit Rate is the minimum match probability needed to veil a post. Adjust it with a number, slider, or Low (80%), Medium (70%), and Strict (50%) presets. Existing settings remain compatible with the legacy `sensitivity` field.
+- Saving a policy first reveals existing veils smoothly, then re-evaluates affected content with the new configuration. This may create new API requests.
+- Hover templates can reference the policy name, hit rate, threshold, model nickname, model ID, and surface.
+- Switch Hover styles between Default, Text emphasis, and High contrast, or keep editing custom CSS.
+- Custom CSS is restricted to documented veil selectors and visual properties; arbitrary page CSS is never injected into X.
+
+<a id="en-activity"></a>
+
+## Activity, badge, and retention
+
+- The Popup shows today's and all-time filter totals. The toolbar badge counts unique content only for the current page lifecycle in the current tab and stays hidden at zero.
+- The Dashboard provides a 12-week heatmap, seven-day trend, current calendar-week review, and 30 days of filter history.
+- The Log page also keeps up to 200 Jev request metadata entries for 30 days, including provider, model, duration, item/question counts, and outcome. It never stores API Keys or post text, can be cleared separately, and prunes expired records at background startup and during daily maintenance.
+- An event is marked incorrect only after **Not supposed to be filtered** is explicitly selected. A temporary reveal is not automatically treated as a mistake.
+- Detailed history is compacted after 30 days. Event identity is folded into compact per-device counts after 12 weeks, retaining all-time totals while bounding storage.
+- The Log page can clear authors, content previews, original links, and matched strategies while retaining daily statistics and all-time totals.
+- Clearing activity writes a `clearedAt` tombstone so an older device or remote object cannot restore deleted records.
+
+<a id="en-s3"></a>
+
+## S3 synchronization
+
+S3 uses a path-style URL: `{endpoint}/{bucket}/{objectKey}`. XFlow requests optional host access when an endpoint is first saved. Once enabled, it synchronizes after config writes, at browser startup, and every 15 minutes. The production manifest only declares `https://*/*`, so a local S3 endpoint on `http://localhost` or `http://127.0.0.1` requires `bun run build:dev` first.
+
+- A newer local config, or a missing remote object, pushes the local document.
+- A newer remote config is pulled and applied.
+- Activity merges by stable content ID in either direction. Archived counts use the per-device maximum, and status advances monotonically through `Filtered → Revealed → Marked Incorrect`.
+
+User feedback, user-created template/semantic rules, and author rules are durable knowledge synchronized with the configuration document. Multi-device merges take the union by feedback ID; conflicts for the same feedback entry are resolved by `updatedAt` and device ID. Configuration versions and knowledge revisions advance independently, so knowledge updates cannot cause an older configuration to overwrite newer policies on another device. Regular Jev cache entries, semantic vectors, and temporary runtime state remain in local IndexedDB. They are not uploaded to S3 or included in real-time filtering requests.
+
+The bucket must allow GET, PUT, and CORS preflight requests from the extension origin.
+
+<a id="en-privacy"></a>
+
+## Privacy and permissions
+
+See the full [XFlow Privacy Policy](https://ryanzen9.github.io/XFlow/privacy-en.html) ([简体中文](https://ryanzen9.github.io/XFlow/privacy.html); [source](docs/privacy-policy.en.md)).
+
+<a id="en-typesafe-results"></a>
+
+## TypeSafe results (2026-09-23)
+
+One live run with `jev-latest`, 24 cold samples, and three warm rounds produced these results:
+
+| Metric               |                                                               Observed |
+| -------------------- | ---------------------------------------------------------------------: |
+| Cold phase           |                                                5 SDK batches in 2.44 s |
+| Warm phase           |                     72/72 local cache hits; 6.009 ms average per round |
+| SDK calls avoided    |     15/20 (75%); all 15 calls expected during warm rounds were avoided |
+| Intended cache layer | Exact, Normalized, Template, and Semantic each hit 18/18 probes (100%) |
+| Latency change       |                    99.75% lower for one warm round than the cold phase |
+| Cache payload        |                               About 101.20 KiB added across 92 records |
+
+These figures come from one run and demonstrate the benefit after cache seeding; they do not predict latency for every provider run. “Traffic-type accuracy” measures whether probes reached their intended cache layer, not model classification accuracy. The `blur` / `allow` split and 56.9% average probability have no human-labeled ground truth in this benchmark. The reported 3.5% compares the cache payload with the 2.86 MiB runtime extension assets; serialized payload bytes are an estimate, not browser disk usage.
+
+An interactive terminal prompts for the key with hidden input when `TYPESAFE_API_KEY` is unset; CI may supply that environment variable. The key stays in process memory and is never printed, persisted, or written to reports. Do not use a `--key=...` argument, which could leak through shell history or process listings. The report includes per-traffic hit rates, avoided SDK calls, measured latency, logical build-package size, and the before/after serialized IndexedDB cache payload estimate; browser filesystem overhead varies by platform. `--posts=20..50` remains a compatibility alias for `--samples`, and `--json` is supported.
+
+The Dashboard preview uses an isolated localStorage mock. It does not read installed extension data or call a model. The token index is served at `http://127.0.0.1:43993/` and exposes resolved values in both Light and Dark themes.
+
+<a id="en-resources"></a>
+
+## Resources
+
+- [Privacy policy · English](docs/privacy-policy.en.md) · [简体中文](docs/privacy-policy.md)
+
+[Back to top](#top) · [简体中文](#简体中文)
