@@ -26,7 +26,7 @@
 - [Activity、Badge 与数据保留](#zh-activity)
 - [S3 同步](#zh-s3)
 - [隐私与权限](#zh-privacy)
-- [TypeSafe 实测效果（2026-09-23）](#zh-typesafe-results)
+- [实测与回归（2026-10-09）](#zh-typesafe-results)
 - [资源](#zh-resources)
 
 <p align="center">
@@ -194,24 +194,43 @@ Bucket 需要允许扩展来源执行 GET、PUT 和 CORS 预检。
 
 <a id="zh-typesafe-results"></a>
 
-## TypeSafe 实测效果（2026-09-23）
+## 实测与回归（2026-10-09）
 
-一次 `jev-latest` 实测使用 24 条冷样本和 3 轮 warm 探针，结果如下：
+XFlow 0.1.1 使用 Bun 1.3.13 完成复测。真实 TypeSafe 实测通过官方 SDK 调用 `jev-latest`，包含 24 条脱敏冷样本和 3 轮 warm 探针；[本次测量数据](docs/benchmarks/2026-10-09.json)记录版本、来源提交与各项结果。
 
-| 指标            |                                                 实测结果 |
-| --------------- | -------------------------------------------------------: |
-| 冷阶段          |                                   5 次 SDK 批次，2.44 秒 |
-| warm 阶段       |                  72/72 本地缓存命中，平均每轮 6.009 毫秒 |
-| 避免的 SDK 调用 |          15/20（75%）；warm 阶段的 15 次预期调用全部避免 |
-| 预期缓存层命中  | Exact、Normalized、Template、Semantic 均为 18/18（100%） |
-| 延迟变化        |                        冷阶段与 warm 单轮相比减少 99.75% |
-| 缓存载荷        |                          增加约 101.20 KiB，共 92 条记录 |
+| 重点指标        | 本次结果                                                                                  |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| 自动化验证      | 262 项 Bun 测试 + 5 项浏览器回归全部通过，扩展与网站生产构建通过。                        |
+| 真实 SDK 冷阶段 | 5 次 SDK 批次处理 24 条样本，共 1.905 秒。                                                |
+| warm 缓存命中   | 72/72（100%），平均每轮 6.467 ms；Exact、Normalized、Template、Semantic 各命中 18/18。    |
+| 避免的 SDK 调用 | 15/20（75%），warm 阶段新增 SDK 调用为 0。                                                |
+| 本地缓存查询    | 2,000 次合成请求，平均 0.221 ms、P95 0.488 ms，错误缓存层命中为 0。                       |
+| 缓存载荷        | 增加 101.30 KiB、共 92 条记录，约为 4.03 MiB 运行时构建文件（不含 source maps）的 2.46%。 |
 
-这些数据来自一次实测，用于展示缓存预热后的收益，不代表所有 Provider 延迟。`Traffic-type accuracy` 衡量探针是否命中预期缓存层，不代表模型分类准确率；本轮 `blur` / `allow` 分布和 56.9% 平均概率也没有人工标签作为正确性基准。报告中的 3.5% 是缓存载荷相对 2.86 MiB 运行时扩展文件的比例；缓存字节数为序列化载荷估算，不等同于浏览器实际磁盘占用。
+这是一次实测。缓存使用 Bun 环境的内存后备；载荷为序列化估算，浏览器 IndexedDB 磁盘开销与 X 页面端到端耗时需另行测量。四层命中率衡量预期缓存路径，模型分类准确率需要人工作答基准。合成请求的 80% 命中率由数据集设定，其中的 800 ms/Jev 是建模参数。
 
-未设置 `TYPESAFE_API_KEY` 时，交互式终端会隐藏输入 Key；CI 可使用环境变量传入。Key 只存在于当前进程内存，不会打印、保存到扩展存储或写入报告。不要使用 `--key=...`，以免密钥进入 Shell 历史或进程列表。报告包含各类型命中率、SDK 调用减少率、真实延迟、构建包逻辑体积，以及缓存 IndexedDB 序列化载荷的前后变化；浏览器文件系统开销会因平台而异。`--posts=20..50` 仍作为 `--samples` 的兼容别名，`--json` 可输出机器可读结果。
+### 真实 SDK 实测进度
 
-Dashboard 预览使用隔离的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。设计 token 索引页位于 `http://127.0.0.1:43993/`，可切换 Light / Dark 并查看解析值。
+![真实 TypeSafe SDK 实测的冷调用、缓存写入、warm 探针和最终结果](docs/assets/typesafe-benchmark-2026-10-09.gif)
+
+GIF 来自同一次真实运行的 56 个进度帧，放慢展示短于 100 ms 的阶段，最终结果停留 4 秒；耗时以表格和测量数据为准。密钥通过隐藏输入提供，只留在进程内存，没有写入文件、扩展存储或录制。
+
+### 界面回归预览
+
+![隔离模拟数据下的 XFlow 概览、趋势、策略列表和编辑器操作](docs/assets/dashboard-regression-2026-10-09.gif)
+
+界面 GIF 使用隔离模拟数据，不调用 Provider，展示概览、趋势、策略列表和编辑器。五项浏览器回归覆盖 Dashboard 页面、策略编辑、通知、健康检查界面及 Popup，共 647 次断言通过。
+
+复测命令：
+
+```bash
+bun run check
+bun run benchmark:cache --requests=2000 --jev-latency-ms=800 --json
+bun run benchmark:cache --live-typesafe --samples=24 --warm-runs=3
+```
+
+未设置 `TYPESAFE_API_KEY` 时，交互式终端会隐藏输入 Key；CI 可通过环境变量提供。不要使用 `--key=...`，以免密钥进入 Shell 历史或进程列表。Dashboard 预览使用隔离的 localStorage Mock，不读取已安装扩展的数据，也不会请求模型。
+
 <a id="zh-resources"></a>
 
 ## 资源
@@ -234,7 +253,7 @@ Dashboard 预览使用隔离的 localStorage Mock，不读取已安装扩展的�
 - [Activity, badge, and retention](#en-activity)
 - [S3 synchronization](#en-s3)
 - [Privacy and permissions](#en-privacy)
-- [TypeSafe results (2026-09-23)](#en-typesafe-results)
+- [Benchmarks and regression tests (2026-10-09)](#en-typesafe-results)
 - [Resources](#en-resources)
 
 <p align="center">
@@ -402,24 +421,42 @@ See the full [XFlow Privacy Policy](https://ryanzen9.github.io/XFlow/privacy-en.
 
 <a id="en-typesafe-results"></a>
 
-## TypeSafe results (2026-09-23)
+## Benchmarks and regression tests (2026-10-09)
 
-One live run with `jev-latest`, 24 cold samples, and three warm rounds produced these results:
+XFlow 0.1.1 was retested with Bun 1.3.13. The live TypeSafe benchmark calls `jev-latest` through the official SDK with 24 sanitized cold samples and three warm rounds. The [measurement data](docs/benchmarks/2026-10-09.json) records the version, source commit, and results.
 
-| Metric               |                                                               Observed |
-| -------------------- | ---------------------------------------------------------------------: |
-| Cold phase           |                                                5 SDK batches in 2.44 s |
-| Warm phase           |                     72/72 local cache hits; 6.009 ms average per round |
-| SDK calls avoided    |     15/20 (75%); all 15 calls expected during warm rounds were avoided |
-| Intended cache layer | Exact, Normalized, Template, and Semantic each hit 18/18 probes (100%) |
-| Latency change       |                    99.75% lower for one warm round than the cold phase |
-| Cache payload        |                               About 101.20 KiB added across 92 records |
+| Key metric           | Observed result                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Automated validation | All 262 Bun tests and 5 browser regressions passed; extension and website production builds passed.          |
+| Live SDK cold phase  | 5 SDK batches evaluated 24 samples in 1.905 s.                                                               |
+| Warm cache hits      | 72/72 (100%), averaging 6.467 ms per round; Exact, Normalized, Template, and Semantic each hit 18/18 probes. |
+| SDK calls avoided    | 15/20 (75%), with 0 additional SDK calls during warm rounds.                                                 |
+| Local cache lookups  | 2,000 synthetic requests averaged 0.221 ms, with a 0.488 ms P95 and 0 unexpected cache-layer matches.        |
+| Cache payload        | 101.30 KiB added across 92 records, about 2.46% of the 4.03 MiB runtime build files excluding source maps.   |
 
-These figures come from one run and demonstrate the benefit after cache seeding; they do not predict latency for every provider run. “Traffic-type accuracy” measures whether probes reached their intended cache layer, not model classification accuracy. The `blur` / `allow` split and 56.9% average probability have no human-labeled ground truth in this benchmark. The reported 3.5% compares the cache payload with the 2.86 MiB runtime extension assets; serialized payload bytes are an estimate, not browser disk usage.
+These figures come from one run. The cache uses Bun's in-memory fallback, and payload bytes are a serialized estimate; browser IndexedDB disk usage and end-to-end X page latency need separate measurements. Layer hit rates measure intended cache routing; model classification accuracy requires human-labeled ground truth. The synthetic dataset fixes the hit rate at 80%, and its 800 ms/Jev value is a modeling parameter.
 
-An interactive terminal prompts for the key with hidden input when `TYPESAFE_API_KEY` is unset; CI may supply that environment variable. The key stays in process memory and is never printed, persisted, or written to reports. Do not use a `--key=...` argument, which could leak through shell history or process listings. The report includes per-traffic hit rates, avoided SDK calls, measured latency, logical build-package size, and the before/after serialized IndexedDB cache payload estimate; browser filesystem overhead varies by platform. `--posts=20..50` remains a compatibility alias for `--samples`, and `--json` is supported.
+### Live SDK benchmark progress
 
-The Dashboard preview uses an isolated localStorage mock. It does not read installed extension data or call a model. The token index is served at `http://127.0.0.1:43993/` and exposes resolved values in both Light and Dark themes.
+![Real TypeSafe SDK cold calls, cache seeding, warm probes, and final results](docs/assets/typesafe-benchmark-2026-10-09.gif)
+
+The GIF contains 56 progress frames from the same live run. Stages shorter than 100 ms are slowed for readability, and the final result stays visible for four seconds; use the table and measurement data for timings. The key was provided through hidden input and remained in process memory, outside files, extension storage, and recordings.
+
+### UI regression preview
+
+![XFlow overview, trend, strategy list, and editor using isolated mock data](docs/assets/dashboard-regression-2026-10-09.gif)
+
+The UI GIF uses isolated mock data without provider calls and shows the overview, trend, strategy list, and editor. Five browser regressions cover Dashboard pages, strategy editing, notifications, health-check controls, and the Popup, with 647 assertions passing.
+
+Reproduce the benchmarks:
+
+```bash
+bun run check
+bun run benchmark:cache --requests=2000 --jev-latency-ms=800 --json
+bun run benchmark:cache --live-typesafe --samples=24 --warm-runs=3
+```
+
+An interactive terminal prompts for the key with hidden input when `TYPESAFE_API_KEY` is unset; CI may supply it through that environment variable. Avoid `--key=...`, which could expose the key in shell history or process listings. The Dashboard preview uses an isolated localStorage mock without reading installed extension data or calling a model.
 
 <a id="en-resources"></a>
 

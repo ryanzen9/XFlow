@@ -1,0 +1,179 @@
+{
+  "version": "0.1.1",
+  "sourceCommit": "671e954b005c2c9b75a52867204def7b0d261a66",
+  "startedAt": "2026-10-09T08:02:28.096Z",
+  "completedAt": "2026-10-09T08:02:30.037Z",
+  "timezone": "Asia/Shanghai",
+  "runtime": "Bun 1.3.13",
+  "validation": {
+    "qualityGate": {
+      "testsPassed": 262,
+      "testsFailed": 0,
+      "browserTestsSkipped": 5,
+      "extensionBuildPassed": true,
+      "websiteBuildPassed": true
+    },
+    "browserRegressions": {
+      "testsPassed": 5,
+      "testsFailed": 0,
+      "assertions": 647,
+      "dataSource": "isolated preview with mock extension storage and provider responses"
+    }
+  },
+  "liveTypeSafe": {
+    "modelId": "jev-latest",
+    "samples": 24,
+    "warmRuns": 3,
+    "cacheBackend": "production cache helpers with Bun in-memory fallback; serialized payload estimate",
+    "cold": {
+      "elapsedMs": 1904.543292,
+      "seedElapsedMs": 4.092375,
+      "sdkCalls": 5,
+      "resultCount": 24
+    },
+    "warm": {
+      "elapsedMs": [5.581, 5.052917, 8.76825],
+      "averageMs": 6.467389,
+      "hits": 72,
+      "requests": 72,
+      "hitRate": 1,
+      "sdkCalls": 0,
+      "scenarios": {
+        "exact-cache": {
+          "requests": 18,
+          "expectedHits": 18,
+          "cacheHits": 18,
+          "hitRate": 1
+        },
+        "normalized-cache": {
+          "requests": 18,
+          "expectedHits": 18,
+          "cacheHits": 18,
+          "hitRate": 1
+        },
+        "template-cache": {
+          "requests": 18,
+          "expectedHits": 18,
+          "cacheHits": 18,
+          "hitRate": 1
+        },
+        "semantic-cache": {
+          "requests": 18,
+          "expectedHits": 18,
+          "cacheHits": 18,
+          "hitRate": 1
+        }
+      }
+    },
+    "sdkCalls": 5,
+    "sdkCallsAvoided": 15,
+    "baselineSdkCalls": 20,
+    "sdkCallAvoidanceRate": 0.75,
+    "latencyReductionRate": 0.9966042310368234,
+    "footprint": {
+      "extension": {
+        "packageBytes": 4223804,
+        "sourceMapBytes": 12788591,
+        "files": 25
+      },
+      "cacheBefore": {
+        "entries": 0,
+        "payloadBytes": 8,
+        "stores": {
+          "exactCache": {
+            "entries": 0,
+            "payloadBytes": 2
+          },
+          "normalizedCache": {
+            "entries": 0,
+            "payloadBytes": 2
+          },
+          "templateCache": {
+            "entries": 0,
+            "payloadBytes": 2
+          },
+          "semanticCache": {
+            "entries": 0,
+            "payloadBytes": 2
+          }
+        }
+      },
+      "cacheAfter": {
+        "entries": 92,
+        "payloadBytes": 103742,
+        "stores": {
+          "exactCache": {
+            "entries": 24,
+            "payloadBytes": 27076
+          },
+          "normalizedCache": {
+            "entries": 24,
+            "payloadBytes": 27076
+          },
+          "templateCache": {
+            "entries": 20,
+            "payloadBytes": 22514
+          },
+          "semanticCache": {
+            "entries": 24,
+            "payloadBytes": 27076
+          }
+        }
+      },
+      "cacheDeltaBytes": 103734,
+      "combinedGrowthRate": 0.02455937822872463
+    }
+  },
+  "syntheticCache": {
+    "requests": 2000,
+    "seedEntries": 1220,
+    "expectedCounts": {
+      "exact-cache": 700,
+      "normalized-cache": 400,
+      "template-cache": 300,
+      "semantic-cache": 200,
+      "miss": 400
+    },
+    "counts": {
+      "exact-cache": 700,
+      "normalized-cache": 400,
+      "template-cache": 300,
+      "semantic-cache": 200,
+      "miss": 400
+    },
+    "mismatches": 0,
+    "hits": 1600,
+    "misses": 400,
+    "hitRate": 0.8,
+    "providerCallRate": 0.2,
+    "measured": {
+      "seedTotalMs": 116.313792,
+      "lookupTotalMs": 442.7572069999994,
+      "averageLookupMs": 0.22137860349999972,
+      "p50LookupMs": 0.106,
+      "p95LookupMs": 0.488167,
+      "lookupsPerSecond": 4517.148379247054
+    },
+    "modeled": {
+      "providerLatencyMs": 800,
+      "withoutCacheMs": 1600000,
+      "withCacheMs": 320442.757207,
+      "savedMs": 1279557.242793,
+      "latencyReductionRate": 0.799723276745625
+    }
+  },
+  "recordings": [
+    {
+      "file": "docs/assets/typesafe-benchmark-2026-10-09.gif",
+      "bytes": 194999,
+      "sha256": "03dce0626e98b7e4cd566e3ca688c02756710c830a6c49eef846e0763bf6eb67",
+      "description": "56 recorded live progress frames; sub-100 ms stages extended; final result held for 4 seconds"
+    },
+    {
+      "file": "docs/assets/dashboard-regression-2026-10-09.gif",
+      "bytes": 525375,
+      "sha256": "cb710c55801bbbea3332e5065afb284c6983e37d3c3dce1e168edb0caab43e0c",
+      "description": "edited recording of the production Dashboard preview with isolated mock data and no provider calls"
+    }
+  ]
+}
